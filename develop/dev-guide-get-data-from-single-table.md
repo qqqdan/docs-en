@@ -1,40 +1,60 @@
 ---
-title: Query data from a single table
+title: Query Data from a Single Table
 summary: This document describes how to query data from a single table in a database.
 ---
 
 <!-- markdownlint-disable MD029 -->
 
-# 単一のテーブルからデータをクエリする {#query-data-from-a-single-table}
+# Query Data from a Single Table {#query-data-from-a-single-table}
 
-このドキュメントでは、SQLおよびさまざまなプログラミング言語を使用して、データベース内の単一のテーブルからデータをクエリする方法について説明します。
+This document describes how to use SQL and various programming languages to query data from a single table in a database.
 
-## あなたが始める前に {#before-you-begin}
+## Before you begin {#before-you-begin}
 
-次のコンテンツでは、TiDBの単一のテーブルからデータをクエリする方法を示す例として[書店](/develop/dev-guide-bookshop-schema-design.md)のアプリケーションを取り上げます。
+The following content takes the [Bookshop](/develop/dev-guide-bookshop-schema-design.md) application as an example to show how to query data from a single table in TiDB.
 
-データをクエリする前に、次の手順を完了していることを確認してください。
+Before querying data, make sure that you have completed the following steps:
 
-1.  TiDBクラスタを構築します（ [TiDB Cloud](/develop/dev-guide-build-cluster-in-cloud.md)または[TiUP](/production-deployment-using-tiup.md)を使用することをお勧めします）。
-2.  [Bookshopアプリケーションのテーブルスキーマとサンプルデータをインポートします](/develop/dev-guide-bookshop-schema-design.md#import-table-structures-and-data) 。
-3.  [TiDBに接続する](/develop/dev-guide-connect-to-tidb.md) 。
+<CustomContent platform="tidb">
 
-## 簡単なクエリを実行する {#execute-a-simple-query}
+1.  Build a TiDB cluster (using [TiDB Cloud](/develop/dev-guide-build-cluster-in-cloud.md) or [TiUP](/production-deployment-using-tiup.md) is recommended).
 
-Bookshopアプリケーションのデータベースでは、 `authors`テーブルに著者の基本情報が格納されています。 `SELECT ... FROM ...`ステートメントを使用して、データベースからデータを照会できます。
+</CustomContent>
 
-<SimpleTab>
-<div label="SQL" href="simple-sql">
+<CustomContent platform="tidb-cloud">
 
-MySQLクライアントで次のSQLステートメントを実行します。
+1.  Build a TiDB cluster using [TiDB Cloud](/develop/dev-guide-build-cluster-in-cloud.md).
 
-{{< copyable "" >}}
+</CustomContent>
+
+2.  [Import table schema and sample data of the Bookshop application](/develop/dev-guide-bookshop-schema-design.md#import-table-structures-and-data).
+
+<CustomContent platform="tidb">
+
+3.  [Connect to TiDB](/develop/dev-guide-connect-to-tidb.md).
+
+</CustomContent>
+
+<CustomContent platform="tidb-cloud">
+
+3.  [Connect to TiDB](/tidb-cloud/connect-to-tidb-cluster.md).
+
+</CustomContent>
+
+## Execute a simple query {#execute-a-simple-query}
+
+In the database of the Bookshop application, the `authors` table stores the basic information of authors. You can use the `SELECT ... FROM ...` statement to query data from the database.
+
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
+
+Execute the following SQL statement in a MySQL client:
 
 ```sql
 SELECT id, name FROM authors;
 ```
 
-出力は次のとおりです。
+The output is as follows:
 
 ```
 +------------+--------------------------+
@@ -56,17 +76,14 @@ SELECT id, name FROM authors;
 ```
 
 </div>
-<div label="Java" href="simple-java">
+<div label="Java" value="java">
 
-Javaでは、クラス`Author`を宣言することにより、作成者の基本情報を格納できます。データベースの[タイプ](/data-type-overview.md)と[値の範囲](/data-type-numeric.md)に応じて適切なJavaデータ型を選択する必要があります。例えば：
+In Java, to store the basic information of authors, you can declare a class `Author`. You should choose appropriate Java data types according to the [Data types](/data-type-overview.md) and [Value range](/data-type-numeric.md) in the database. For example:
 
--   タイプ`Int`の変数を使用して、タイプ`int`のデータを格納します。
--   タイプ`Long`の変数を使用して、タイプ`bigint`のデータを格納します。
--   タイプ`Short`の変数を使用して、タイプ`tinyint`のデータを格納します。
--   タイプ`String`の変数を使用して、タイプ`varchar`のデータを格納します。
--   ..。
-
-{{< copyable "" >}}
+-   Use a variable of type `Int` to store data of type `int`.
+-   Use a variable of type `Long` to store data of type `bigint`.
+-   Use a variable of type `Short` to store data of type `tinyint`.
+-   Use a variable of type `String` to store data of type `varchar`.
 
 ```java
 public class Author {
@@ -82,12 +99,10 @@ public class Author {
 }
 ```
 
-{{< copyable "" >}}
-
 ```java
 public class AuthorDAO {
 
-    // Omit initialization of instance variables...
+    // Omit initialization of instance variables.
 
     public List<Author> getAuthors() throws SQLException {
         List<Author> authors = new ArrayList<>();
@@ -97,7 +112,7 @@ public class AuthorDAO {
             ResultSet rs = stmt.executeQuery("SELECT id, name FROM authors");
             while (rs.next()) {
                 Author author = new Author();
-                author.setId( rs.getLong("id"));
+                author.setId(rs.getLong("id"));
                 author.setName(rs.getString("name"));
                 authors.add(author);
             }
@@ -107,40 +122,47 @@ public class AuthorDAO {
 }
 ```
 
--   [JDBCドライバーを使用したTiDBへの接続](/develop/dev-guide-connect-to-tidb.md#jdbc)の後、 `conn.createStatus()`で`Statement`オブジェクトを作成できます。
--   次に、 `stmt.executeQuery("query_sql")`を呼び出して、TiDBへのデータベースクエリ要求を開始します。
--   クエリ結果は`ResultSet`のオブジェクトに保存されます。 `ResultSet`をトラバースすることにより、返された結果を`Author`オブジェクトにマップできます。
+<CustomContent platform="tidb">
+
+-   After [connecting to TiDB using the JDBC driver](/develop/dev-guide-connect-to-tidb.md#jdbc), you can create a `Statement` object with `conn.createStatus()`.
+
+</CustomContent>
+
+<CustomContent platform="tidb-cloud">
+
+-   After [connecting to TiDB using the JDBC driver](/develop/dev-guide-choose-driver-or-orm.md#java-drivers), you can create a `Statement` object with `conn.createStatus()`.
+
+</CustomContent>
+
+-   Then call `stmt.executeQuery("query_sql")` to initiate a database query request to TiDB.
+-   The query results are stored in a `ResultSet` object. By traversing `ResultSet`, the returned results can be mapped to the `Author` object.
 
 </div>
 </SimpleTab>
 
-## 結果をフィルタリングする {#filter-results}
+## Filter results {#filter-results}
 
-`WHERE`ステートメントを使用して、クエリ結果をフィルタリングできます。
+To filter query results, you can use the `WHERE` statement.
 
-たとえば、次のコマンドは、すべての作成者の中で1998年に生まれた作成者を照会します。
+For example, the following command queries authors who were born in 1998 among all authors:
 
-<SimpleTab>
-<div label="SQL" href="filter-sql">
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
-`WHERE`ステートメントにフィルター条件を追加します。
-
-{{< copyable "" >}}
+Add filter conditions in the `WHERE` statement:
 
 ```sql
 SELECT * FROM authors WHERE birth_year = 1998;
 ```
 
 </div>
-<div label="Java" href="filter-java">
+<div label="Java" value="java">
 
-Javaでは、同じSQLを使用して、動的パラメーターを使用したデータ照会要求を処理できます。
+In Java, you can use the same SQL to handle data query requests with dynamic parameters.
 
-これは、パラメーターをSQLステートメントに連結することで実行できます。ただし、この方法は、アプリケーションのセキュリティに潜在的な[SQLインジェクション](https://en.wikipedia.org/wiki/SQL_injection)のリスクをもたらします。
+This can be done by concatenating parameters into a SQL statement. However, this method poses a potential [SQL Injection](https://en.wikipedia.org/wiki/SQL_injection) risk to the security of the application.
 
-このようなクエリを処理するには、通常のステートメントの代わりに[プリペアドステートメント](/develop/dev-guide-prepared-statement.md)を使用します。
-
-{{< copyable "" >}}
+To deal with such queries, use a [Prepared statement](/develop/dev-guide-prepared-statement.md) instead of a normal statement.
 
 ```java
 public List<Author> getAuthorsByBirthYear(Short birthYear) throws SQLException {
@@ -153,7 +175,7 @@ public List<Author> getAuthorsByBirthYear(Short birthYear) throws SQLException {
         ResultSet rs = stmt.executeQuery();
         while (rs.next()) {
             Author author = new Author();
-            author.setId( rs.getLong("id"));
+            author.setId(rs.getLong("id"));
             author.setName(rs.getString("name"));
             authors.add(author);
         }
@@ -165,13 +187,14 @@ public List<Author> getAuthorsByBirthYear(Short birthYear) throws SQLException {
 </div>
 </SimpleTab>
 
-## 結果を並べ替える {#sort-results}
+## Sort results {#sort-results}
 
-`ORDER BY`ステートメントを使用すると、クエリ結果を並べ替えることができます。
+To sort query results, you can use the `ORDER BY` statement.
 
-たとえば、次のSQLステートメントは、 `authors`のテーブルを`birth_year`列に従って降順（ `DESC` ）に並べ替えることにより、最年少の作成者のリストを取得します。
+For example, the following SQL statement is to get a list of the youngest authors by sorting the `authors` table in descending order (`DESC`) according to the `birth_year` column.
 
-{{< copyable "" >}}
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
 ```sql
 SELECT id, name, birth_year
@@ -179,7 +202,37 @@ FROM authors
 ORDER BY birth_year DESC;
 ```
 
-結果は次のとおりです。
+</div>
+
+<div label="Java" value="java">
+
+```java
+public List<Author> getAuthorsSortByBirthYear() throws SQLException {
+    List<Author> authors = new ArrayList<>();
+    try (Connection conn = ds.getConnection()) {
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("""
+            SELECT id, name, birth_year
+            FROM authors
+            ORDER BY birth_year DESC;
+            """);
+
+        while (rs.next()) {
+            Author author = new Author();
+            author.setId(rs.getLong("id"));
+            author.setName(rs.getString("name"));
+            author.setBirthYear(rs.getShort("birth_year"));
+            authors.add(author);
+        }
+    }
+    return authors;
+}
+```
+
+</div>
+</SimpleTab>
+
+The result is as follows:
 
 ```
 +-----------+------------------------+------------+
@@ -199,11 +252,12 @@ ORDER BY birth_year DESC;
 300000 rows in set (0.23 sec)
 ```
 
-## クエリ結果の数を制限する {#limit-the-number-of-query-results}
+## Limit the number of query results {#limit-the-number-of-query-results}
 
-`LIMIT`ステートメントを使用して、クエリ結果の数を制限できます。
+To limit the number of query results, you can use the `LIMIT` statement.
 
-{{< copyable "" >}}
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
 ```sql
 SELECT id, name, birth_year
@@ -212,7 +266,38 @@ ORDER BY birth_year DESC
 LIMIT 10;
 ```
 
-結果は次のとおりです。
+</div>
+
+<div label="Java" value="java">
+
+```java
+public List<Author> getAuthorsWithLimit(Integer limit) throws SQLException {
+    List<Author> authors = new ArrayList<>();
+    try (Connection conn = ds.getConnection()) {
+        PreparedStatement stmt = conn.prepareStatement("""
+            SELECT id, name, birth_year
+            FROM authors
+            ORDER BY birth_year DESC
+            LIMIT ?;
+            """);
+        stmt.setInt(1, limit);
+        ResultSet rs = stmt.executeQuery();
+        while (rs.next()) {
+            Author author = new Author();
+            author.setId(rs.getLong("id"));
+            author.setName(rs.getString("name"));
+            author.setBirthYear(rs.getShort("birth_year"));
+            authors.add(author);
+        }
+    }
+    return authors;
+}
+```
+
+</div>
+</SimpleTab>
+
+The result is as follows:
 
 ```
 +-----------+------------------------+------------+
@@ -232,15 +317,16 @@ LIMIT 10;
 10 rows in set (0.11 sec)
 ```
 
-`LIMIT`ステートメントを使用すると、この例ではクエリ時間が`0.23 sec`から`0.11 sec`に大幅に短縮されます。詳細については、 [TopNとLimit](/topn-limit-push-down.md)を参照してください。
+With the `LIMIT` statement, the query time is significantly reduced from `0.23 sec` to `0.11 sec` in this example. For more information, see [TopN and Limit](/topn-limit-push-down.md).
 
-## クエリの集計 {#aggregate-queries}
+## Aggregate queries {#aggregate-queries}
 
-データ全体の状況をよりよく理解するために、 `GROUP BY`ステートメントを使用してクエリ結果を集計できます。
+To have a better understanding of the overall data situation, you can use the `GROUP BY` statement to aggregate query results.
 
-たとえば、著者がさらに生まれた年を知りたい場合は、 `authors`のテーブルを`birth_year`の列でグループ化し、各年を数えることができます。
+For example, if you want to know which years there are more authors born, you can group the `authors` table by the `birth_year` column, and then count for each year:
 
-{{< copyable "" >}}
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
 ```sql
 SELECT birth_year, COUNT (DISTINCT id) AS author_count
@@ -249,7 +335,46 @@ GROUP BY birth_year
 ORDER BY author_count DESC;
 ```
 
-結果は次のとおりです。
+</div>
+
+<div label="Java" value="java">
+
+```java
+public class AuthorCount {
+    private Short birthYear;
+    private Integer authorCount;
+
+    public AuthorCount() {}
+
+     // Skip the getters and setters.
+}
+
+public List<AuthorCount> getAuthorCountsByBirthYear() throws SQLException {
+    List<AuthorCount> authorCounts = new ArrayList<>();
+    try (Connection conn = ds.getConnection()) {
+        Statement stmt = conn.createStatement();
+        ResultSet rs = stmt.executeQuery("""
+            SELECT birth_year, COUNT(DISTINCT id) AS author_count
+            FROM authors
+            GROUP BY birth_year
+            ORDER BY author_count DESC;
+            """);
+
+        while (rs.next()) {
+            AuthorCount authorCount = new AuthorCount();
+            authorCount.setBirthYear(rs.getShort("birth_year"));
+            authorCount.setAuthorCount(rs.getInt("author_count"));
+            authorCounts.add(authorCount);
+        }
+    }
+    return authorCount;
+}
+```
+
+</div>
+</SimpleTab>
+
+The result is as follows:
 
 ```
 +------------+--------------+
@@ -270,4 +395,4 @@ ORDER BY author_count DESC;
 71 rows in set (0.00 sec)
 ```
 
-`COUNT`の関数に加えて、TiDBは他の集約関数もサポートします。詳細については、 [集約（GROUP BY）関数](/functions-and-operators/aggregate-group-by-functions.md)を参照してください。
+In addition to the `COUNT` function, TiDB also supports other aggregate functions. For more information, see [Aggregate (GROUP BY) Functions](/functions-and-operators/aggregate-group-by-functions.md).

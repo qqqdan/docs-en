@@ -3,22 +3,22 @@ title: Literal Values
 summary: This article introduces the literal values ​​of TiDB SQL statements.
 ---
 
-# リテラル値 {#literal-values}
+# Literal Values {#literal-values}
 
-TiDBリテラル値には、文字リテラル、数値リテラル、日時リテラル、16進数、バイナリリテラル、およびNULLリテラルが含まれます。このドキュメントでは、これらのリテラル値のそれぞれを紹介します。
+TiDB literal values include character literals, numeric literals, time and date literals, hexadecimal, binary literals, and NULL literals. This document introduces each of these literal values.
 
-このドキュメントでは、文字列リテラル、数値リテラル、NULL値、16進リテラル、日付と時刻のリテラル、ブール値リテラル、およびビット値リテラルについて説明します。
+This document describes String literals, Numeric literals, NULL values, Hexadecimal literals, Date and time literals, Boolean literals, and Bit-value literals.
 
-## 文字列リテラル {#string-literals}
+## String literals {#string-literals}
 
-文字列はバイトまたは文字のシーケンスであり、一重引用符`'`文字または二重引用符`"`文字で囲まれています。例えば：
+A string is a sequence of bytes or characters, enclosed within either single quote `'` or double quote `"` characters. For example:
 
 ```
 'example string'
 "example string"
 ```
 
-隣り合って配置された引用符で囲まれた文字列は、1つの文字列に連結されます。次の行は同等です。
+Quoted strings placed next to each other are concatenated to a single string. The following lines are equivalent:
 
 ```
 'a string'
@@ -26,20 +26,20 @@ TiDBリテラル値には、文字リテラル、数値リテラル、日時リ�
 "a" ' ' "string"
 ```
 
-`ANSI_QUOTES` SQL MODEが有効になっている場合、二重引用符で囲まれた文字列は識別子として解釈されるため、文字列リテラルは一重引用符でのみ引用できます。
+If the `ANSI_QUOTES` SQL MODE is enabled, string literals can be quoted only within single quotation marks because a string quoted within double quotation marks is interpreted as an identifier.
 
-文字列は、次の2つのタイプに分けられます。
+The string is divided into the following two types:
 
--   バイナリ文字列：バイトのシーケンスで構成され、文字セットと照合順序は両方とも`binary`であり、互いに比較すると**バイト**を単位として使用します。
--   非バイナリ文字列：文字のシーケンスで構成され、 `binary`以外のさまざまな文字セットと照合があります。互いに比較すると、非バイナリ文字列は**文字**を単位として使用します。文字セットによっては、文字に複数のバイトが含まれる場合があります。
+-   Binary string: It consists of a sequence of bytes, whose charset and collation are both `binary`, and uses **byte** as the unit when compared with each other.
+-   Non-binary string: It consists of a sequence of characters and has various charsets and collations other than `binary`. When compared with each other, non-binary strings use **characters** as the unit. A character might contain multiple bytes, depending on the charset.
 
-文字列リテラルには、特定の文字セットと照合順序を使用する文字列として指定するために、オプションの`character set introducer`と`COLLATE clause`を含めることができます。
+A string literal may have an optional `character set introducer` and `COLLATE clause`, to designate it as a string that uses a specific character set and collation.
 
 ```
 [_charset_name]'string' [COLLATE collation_name]
 ```
 
-例えば：
+For example:
 
 ```
 SELECT _latin1'string';
@@ -47,7 +47,7 @@ SELECT _binary'string';
 SELECT _utf8'string' COLLATE utf8_bin;
 ```
 
-N&#39;literal&#39;（またはn&#39;literal&#39;）を使用して、国別文字セットに文字列を作成できます。次のステートメントは同等です。
+You can use N'literal' (or n'literal') to create a string in the national character set. The following statements are equivalent:
 
 ```
 SELECT N'some text';
@@ -55,77 +55,77 @@ SELECT n'some text';
 SELECT _utf8'some text';
 ```
 
-文字列内のいくつかの特殊文字を表すために、エスケープ文字を使用してエスケープできます。
+To represent some special characters in a string, you can use escape characters to escape:
 
-| エスケープ文字  | 意味                         |
-| :------- | :------------------------- |
-| \ 0      | ASCII NUL（X&#39;00&#39;）文字 |
-| \ &#39;  | 一重引用符`'`文字                 |
-| \ &quot; | 二重引用符`"`文字                 |
-| \ b      | バックスペース文字                  |
-| \ n      | 改行（改行）文字                   |
-| \ r      | キャリッジリターン文字                |
-| \ t      | タブ文字                       |
-| \ z      | ASCII 26（Ctrl + Z）         |
-| \\       | バックスラッシュ`\`文字              |
-| \％       | `%`文字                      |
-| \ _      | `_`文字                      |
+| Escape Characters | Meaning                          |
+| :---------------- | :------------------------------- |
+| \0                | An ASCII NUL (X'00') character   |
+| \'                | A single quote `'` character     |
+| \"                | A double quote `"` character     |
+| \b                | A backspace character            |
+| \n                | A line break (newline) character |
+| \r                | A carriage return character      |
+| \t                | A tab character                  |
+| \z                | ASCII 26 (Ctrl + Z)              |
+| \\                | A backslash `\` character        |
+| \%                | A `%` character                  |
+| \_                | A `_` character                  |
 
-`'`で囲まれた文字列で`"`を表す場合、または`"`で囲まれた文字列で`'`を表す場合は、エスケープ文字を使用する必要はありません。
+If you want to represent `"` in the string surrounded by `'`, or `'` in the string surrounded by `"`, you do not need to use escape characters.
 
-詳細については、 [MySQLの文字列リテラル](https://dev.mysql.com/doc/refman/5.7/en/string-literals.html)を参照してください。
+For more information, see [String Literals in MySQL](https://dev.mysql.com/doc/refman/5.7/en/string-literals.html).
 
-## 数値リテラル {#numeric-literals}
+## Numeric literals {#numeric-literals}
 
-数値リテラルには、整数リテラルとDECIMALリテラル、および浮動小数点リテラルが含まれます。
+Numeric literals include integer and DECIMAL literals and floating-point literals.
 
-整数には、小数点記号として`.`を含めることができます。数字の前に`-`または`+`を付けて、それぞれ負または正の値を示すことができます。
+Integer may include `.` as a decimal separator. Numbers may be preceded by `-` or `+` to indicate a negative or positive value respectively.
 
-正確な値の数値リテラルは`1, .2, 3.4, -5, -6.78, +9.10`として表すことができます。
+Exact-value numeric literals can be represented as `1, .2, 3.4, -5, -6.78, +9.10`.
 
-数値リテラルは、 `1.2E3, 1.2E-3, -1.2E3, -1.2E-3`などの科学的記数法で表すこともできます。
+Numeric literals can also be represented in scientific notation, such as `1.2E3, 1.2E-3, -1.2E3, -1.2E-3`.
 
-詳細については、 [MySQLの数値リテラル](https://dev.mysql.com/doc/refman/5.7/en/number-literals.html)を参照してください。
+For more information, see [Numeric Literals in MySQL](https://dev.mysql.com/doc/refman/5.7/en/number-literals.html).
 
-## 日付と時刻のリテラル {#date-and-time-literals}
+## Date and time literals {#date-and-time-literals}
 
-日付と時刻のリテラル値は、引用符で囲まれた文字列や数値など、いくつかの形式で表すことができます。 TiDBが日付を予期する場合、 `'2017-08-24'` 、および`'20170824'`のいずれかを日付として解釈し`20170824` 。
+Date and time literal values can be represented in several formats, such as quoted strings or as numbers. When TiDB expects a date, it interprets any of `'2017-08-24'`, `'20170824'` and `20170824` as a date.
 
-TiDBは、次の日付形式をサポートしています。
+TiDB supports the following date formats:
 
--   `'YYYY-MM-DD'`または`'YY-MM-DD'` ：ここでの`-`の区切り文字は厳密ではありません。句読点を使用できます。 `'2017&08&24'` 、 `'2017-08-24'`はすべて有効な日付形式`'2012@12^31'` 。唯一の特別な句読点は「。」です。これは、整数部分と小数部分を区切るための小数点として扱われます。日付と時刻は`T`または空白で区切ることができます。たとえば、 `2017-8-24 10:42:00`と`2017-8-24T10:42:00`は同じ日時を表します。
--   `'YYYYMMDDHHMMSS'`または`'YYMMDDHHMMSS'` ：たとえば、 `'20170824104520'`と`'170824104520'`は`'2017-08-24 10:45:20'`と見なされます。ただし、 `'170824304520'`などの範囲外の値を指定した場合、その値は有効な日付として扱われません。 `YYYYMMDD HHMMSS`などの`YYYYMMDD HH:MM:DD`た形式は`YYYY-MM-DD HHMMSS`に失敗することに注意してください。
--   `YYYYMMDDHHMMSS`または`YYMMDDHHMMSS` ：これらの形式には一重引用符または二重引用符はなく、数字であることに注意してください。たとえば、 `20170824104520`は`'2017-08-24 10:45:20'`として解釈されます。
+-   `'YYYY-MM-DD'` or `'YY-MM-DD'`: The `-` delimiter here is not strict. It can be any punctuation. For example, `'2017-08-24'`, `'2017&08&24'`, `'2012@12^31'` are all valid date formats. The only special punctuation is '.', which is is treated as a decimal point to separate the integer and fractional parts. Date and time can be separated by `T` or a white space. For example, `2017-8-24 10:42:00` and `2017-8-24T10:42:00` represents the same date and time.
+-   `'YYYYMMDDHHMMSS'` or `'YYMMDDHHMMSS'`: For example, `'20170824104520'` and `'170824104520'` are regarded as `'2017-08-24 10:45:20'`. However, if you provide a value out of range, such as `'170824304520'`, it is not treated as a valid date. Note that incorrect formats such as `YYYYMMDD HHMMSS`, `YYYYMMDD HH:MM:DD`, or `YYYY-MM-DD HHMMSS` will fail to insert.
+-   `YYYYMMDDHHMMSS` or `YYMMDDHHMMSS`: Note that these formats have no single or double quotes, but a number. For example, `20170824104520` is interpreted as `'2017-08-24 10:45:20'`.
 
-DATETIMEまたはTIMESTAMP値の後には、マイクロ秒の精度（6桁）を表すために使用される小数部を続けることができます。小数部分は、常に残りの時間から小数点`.`で区切る必要があります。
+DATETIME or TIMESTAMP values can be followed by a fractional part, used to represent microseconds precision (6 digits). The fractional part should always be separated from the rest of the time by a decimal point `.`.
 
-2桁のみを含む年の値があいまいです。 4桁の年形式を使用することをお勧めします。 TiDBは、次の規則に従って2桁の年の値を解釈します。
+The year value containing only two digits is ambiguous. It is recommended to use the four-digit year format. TiDB interprets the two-digit year value according to the following rules:
 
--   年の値が`70-99`の範囲にある場合は、 `1970-1999`に変換されます。
--   年の値が`00-69`の範囲にある場合は、 `2000-2069`に変換されます。
+-   If the year value is in the range of `70-99`, it is converted to `1970-1999`.
+-   If the year value is in the range of `00-69`, it is converted to `2000-2069`.
 
-10未満の月または日の値の場合、 `'2017-8-4'`は`'2017-08-04'`と同じです。同じことが時間にも当てはまります。たとえば、 `'2017-08-24 1:2:3'`は`'2017-08-24 01:02:03'`と同じです。
+For month or day values ​​less than 10, `'2017-8-4'` is the same as `'2017-08-04'`. The same is true for Time. For example, `'2017-08-24 1:2:3'` is the same as `'2017-08-24 01:02:03'`.
 
-日付または時刻の値が必要な場合、TiDBは値の長さに応じて指定された形式を選択します。
+When the date or time value is required, TiDB selects the specified format according to the length of the value:
 
--   6桁： `YYMMDD` 。
--   12桁： `YYMMDDHHMMSS` 。
--   8桁： `YYYYMMDD` 。
--   14桁： `YYYYMMDDHHMMSS` 。
+-   6 digits: `YYMMDD`.
+-   12 digits: `YYMMDDHHMMSS`.
+-   8 digits: `YYYYMMDD`.
+-   14 digits: `YYYYMMDDHHMMSS`.
 
-TiDBは、時間値に対して次の形式をサポートしています。
+TiDB supports the following formats for time values:
 
--   `'D HH:MM:SS'` 、 `'SS'` `'HH:MM:SS'` `'D HH:MM'`は`'D HH'` `D`意味し、有効な値の範囲は`'HH:MM'` `0-34` 。
--   `HHMMSS`形式の数値：たとえば、 `231010`は`'23:10:10'`として解釈されます。
--   `SS` 、および`MMSS`形式のいずれかの数値は、時間と見なすことができ`HHMMSS` 。
+-   `'D HH:MM:SS'`, or `'HH:MM:SS'`, `'HH:MM'`, `'D HH:MM'`, `'D HH'`, `'SS'`: `D` means days and the valid value range is `0-34`.
+-   A number in `HHMMSS` format: For example, `231010` is interpreted as `'23:10:10'`.
+-   A number in any of `SS`, `MMSS`, and `HHMMSS`formats can be regarded as time.
 
-Timeタイプの小数点も`.`で、小数点の後に最大6桁の精度があります。
+The decimal point of the Time type is also `.`, with a precision of up to 6 digits after the decimal point.
 
-詳細については、 [MySQLの日付と時刻のリテラル](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-literals.html)を参照してください。
+See [MySQL date and time literals](https://dev.mysql.com/doc/refman/5.7/en/date-and-time-literals.html) for more details.
 
-## ブールリテラル {#boolean-literals}
+## Boolean Literals {#boolean-literals}
 
-定数`TRUE`と`FALSE`は、それぞれ1と0に等しく、大文字と小文字は区別されません。
+The constants `TRUE` and `FALSE` are equal to 1 and 0 respectively, which are not case sensitive.
 
 {{< copyable "" >}}
 
@@ -142,11 +142,11 @@ SELECT TRUE, true, tRuE, FALSE, FaLsE, false;
 1 row in set (0.00 sec)
 ```
 
-## 16進リテラル {#hexadecimal-literals}
+## Hexadecimal literals {#hexadecimal-literals}
 
-16進リテラル値は、 `X'val'`または`0xval`表記を使用して書き込まれます。ここで、 `val`には16進数字が含まれます。先頭の`0x`は大文字と小文字が区別され、 `0X`と書くことはできません。
+Hexadecimal literal values are written using `X'val'` or `0xval` notation, where `val` contains hexadecimal digits. A leading `0x` is case sensitive and cannot be written as `0X`.
 
-法的な16進リテラル：
+Legal hexadecimal literals:
 
 ```
 X'ac12'
@@ -157,14 +157,14 @@ x'12AC'
 0x12AC
 ```
 
-不正な16進リテラル：
+Illegal hexadecimal literals:
 
 ```
 X'1z' (z is not a hexadecimal legal digit)
 0X12AC (0X must be written as 0x)
 ```
 
-`X'val'`表記を使用して記述された16進リテラルには、偶数の桁が含まれている必要があります。 `val`の長さが奇数（たとえば、 `X'A'`または`X'11A'` ）の場合、構文エラーを回避するために、値に先行ゼロを埋め込みます。
+Hexadecimal literals written using `X'val'` notation must contain an even number of digits. If the length of `val` is an odd number (for example, `X'A'` or `X'11A'`), to avoid the syntax error, pad the value with a leading zero:
 
 ```sql
 mysql> select X'aff';
@@ -178,9 +178,9 @@ mysql> select X'0aff';
 1 row in set (0.00 sec)
 ```
 
-デフォルトでは、16進リテラルは2進文字列です。
+By default, a hexadecimal literal is a binary string.
 
-文字列または数値を16進形式の文字列に変換するには、次の`HEX()`関数を使用します。
+To convert a string or a number to a string in hexadecimal format, use the `HEX()` function:
 
 ```sql
 mysql> SELECT HEX('TiDB');
@@ -200,11 +200,11 @@ mysql> SELECT X'54694442';
 1 row in set (0.00 sec)
 ```
 
-## ビット値リテラル {#bit-value-literals}
+## Bit-value literals {#bit-value-literals}
 
-ビット値リテラルは、 `b'val'`または`0bval`表記を使用して記述されます。 `val`は、0と1を使用して書き込まれた2進値です。先頭の`0b`は大文字と小文字が区別され、 `0B`と書くことはできません。
+Bit-value literals are written using `b'val'` or `0bval` notation. The `val` is a binary value written using zeros and ones. A leading `0b` is case sensitive and cannot be written as `0B`.
 
-有効なビット値リテラル：
+Legal bit-value literals:
 
 ```
 b'01'
@@ -212,16 +212,16 @@ B'01'
 0b01
 ```
 
-不正なビット値リテラル：
+Illegal bit-value literals:
 
 ```
 b'2' (2 is not a binary digit; it must be 0 or 1)
 0B01 (0B must be written as 0b)
 ```
 
-デフォルトでは、ビット値リテラルはバイナリ文字列です。
+By default, a bit-value literal is a binary string.
 
-ビット値はバイナリ値として返されますが、MySQLクライアントではうまく表示されない場合があります。ビット値を印刷可能な形式に変換するには、 `BIN()`や`HEX()`などの変換関数を使用できます。
+Bit values are returned as binary values, which may not display well in the MySQL client. To convert a bit value to printable form, you can use a conversion function such as `BIN()` or `HEX()`.
 
 ```sql
 CREATE TABLE t (b BIT(8));
@@ -240,10 +240,10 @@ mysql> SELECT b+0, BIN(b), HEX(b) FROM t;
 3 rows in set (0.00 sec)
 ```
 
-## NULL値 {#null-values}
+## NULL Values {#null-values}
 
-`NULL`はデータが空であることを意味します。これは大文字と小文字を区別せず、 `\N` （大文字と小文字を区別）と同義です。
+`NULL` means the data is empty, which is case-insensitive, and is synonymous with `\N` (case-sensitive).
 
-> **ノート：**
+> **Note:**
 >
-> `NULL`は`0`と同じではなく、空の文字列`''`でもありません。
+> `NULL` is not the same as `0`, nor the empty string `''`.

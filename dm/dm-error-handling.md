@@ -1,87 +1,87 @@
 ---
-title: Handle Errors
+title: Handle Errors in TiDB Data Migration
 summary: Learn about the error system and how to handle common errors when you use DM.
 ---
 
-# エラーの処理 {#handle-errors}
+# Handle Errors in TiDB Data Migration {#handle-errors-in-tidb-data-migration}
 
-このドキュメントでは、エラーシステムと、DMを使用する場合の一般的なエラーの処理方法を紹介します。
+This document introduces the error system and how to handle common errors when you use DM.
 
-## エラーシステム {#error-system}
+## Error system {#error-system}
 
-エラーシステムでは、通常、特定のエラーの情報は次のとおりです。
+In the error system, usually, the information of a specific error is as follows:
 
--   `code` ：エラーコード。
+-   `code`: error code.
 
-    DMは、同じエラータイプに対して同じエラーコードを使用します。 DMのバージョンが変わってもエラーコードは変わりません。
+    DM uses the same error code for the same error type. An error code does not change as the DM version changes.
 
-    一部のエラーはDMの反復中に削除される可能性がありますが、エラーコードは削除されません。 DMは、新しいエラーに対して既存のエラーコードではなく、新しいエラーコードを使用します。
+    Some errors might be removed during the DM iteration, while the error codes are not. DM uses a new error code instead of an existing one for a new error.
 
--   `class` ：エラータイプ。
+-   `class`: error type.
 
-    エラーが発生したコンポーネント（エラーソース）をマークするために使用されます。
+    It is used to mark the component where an error occurs (error source).
 
-    次の表に、すべてのエラータイプ、エラーソース、およびエラーサンプルを示します。
+    The following table displays all error types, error sources, and error samples.
 
-    | エラータイプ            | エラーソース                                  | エラーサンプル                                                                                                                                                                                                                                                                                          |
-    | :---------------- | :-------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-    | `database`        | データベース操作                                | `[code=10003:class=database:scope=downstream:level=medium] database driver: invalid connection`                                                                                                                                                                                                  |
-    | `functional`      | DMの基本的な機能                               | `[code=11005:class=functional:scope=internal:level=high] not allowed operation: alter multiple tables in one statement`                                                                                                                                                                          |
-    | `config`          | 設定が正しくありません                             | `[code=20005:class=config:scope=internal:level=medium] empty source-id not valid`                                                                                                                                                                                                                |
-    | `binlog-op`       | ビンログ操作                                  | `[code=22001:class=binlog-op:scope=internal:level=high] empty UUIDs not valid`                                                                                                                                                                                                                   |
-    | `checkpoint`      | チェックポイント操作                              | `[code=24002:class=checkpoint:scope=internal:level=high] save point bin.1234 is older than current pos bin.1371`                                                                                                                                                                                 |
-    | `task-check`      | タスクチェックの実行                              | `[code=26003:class=task-check:scope=internal:level=medium] new table router error`                                                                                                                                                                                                               |
-    | `relay-event-lib` | リレーモジュールの基本機能を実行する                      | `[code=28001:class=relay-event-lib:scope=internal:level=high] parse server-uuid.index`                                                                                                                                                                                                           |
-    | `relay-unit`      | リレー処理装置                                 | `[code=30015:class=relay-unit:scope=upstream:level=high] TCPReader get event: ERROR 1236 (HY000): Could not open log file`                                                                                                                                                                       |
-    | `dump-unit`       | ダンプ処理装置                                 | `[code=32001:class=dump-unit:scope=internal:level=high] mydumper runs with error: CRITICAL **: 15:12:17.559: Error connecting to database: Access denied for user 'root'@'172.17.0.1' (using password: NO)`                                                                                      |
-    | `load-unit`       | 負荷処理装置                                  | `[code=34002:class=load-unit:scope=internal:level=high] corresponding ending of sql: ')' not found`                                                                                                                                                                                              |
-    | `sync-unit`       | 同期処理装置                                  | `[code=36027:class=sync-unit:scope=internal:level=high] Column count doesn't match value count: 9 (columns) vs 10 (values)`                                                                                                                                                                      |
-    | `dm-master`       | DMマスターサービス                              | `[code=38008:class=dm-master:scope=internal:level=high] grpc request error: rpc error: code = Unavailable desc = all SubConns are in TransientFailure, latest connection error: connection error: desc = "transport: Error while dialing dial tcp 172.17.0.2:8262: connect: connection refused"` |
-    | `dm-worker`       | DMワーカーサービス                              | `[code=40066:class=dm-worker:scope=internal:level=high] ExecuteDDL timeout, try use query-status to query whether the DDL is still blocking`                                                                                                                                                     |
-    | `dm-tracer`       | DMトレーサーサービス                             | `[code=42004:class=dm-tracer:scope=internal:level=medium] trace event test.1 not found`                                                                                                                                                                                                          |
-    | `schema-tracker`  | スキーマトラッカー（増分データレプリケーション中）               | `[code=44006:class=schema-tracker:scope=internal:level=high],"cannot track DDL: ALTER TABLE test DROP COLUMN col1"`                                                                                                                                                                              |
-    | `scheduler`       | （データ移行タスクの）スケジューリング操作                   | `[code=46001:class=scheduler:scope=internal:level=high],"the scheduler has not started"`                                                                                                                                                                                                         |
-    | `dmctl`           | dmctl内で、または他のコンポーネントと相互作用するときにエラーが発生します | `[code=48001:class=dmctl:scope=internal:level=high],"can not create grpc connection"`                                                                                                                                                                                                            |
+    | Error Type        | Error Source                                                            | Error Sample                                                                                                                                                                                                                                                                                     |
+    | :---------------- | :---------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+    | `database`        | Database operations                                                     | `[code=10003:class=database:scope=downstream:level=medium] database driver: invalid connection`                                                                                                                                                                                                  |
+    | `functional`      | Underlying functions of DM                                              | `[code=11005:class=functional:scope=internal:level=high] not allowed operation: alter multiple tables in one statement`                                                                                                                                                                          |
+    | `config`          | Incorrect configuration                                                 | `[code=20005:class=config:scope=internal:level=medium] empty source-id not valid`                                                                                                                                                                                                                |
+    | `binlog-op`       | Binlog operations                                                       | `[code=22001:class=binlog-op:scope=internal:level=high] empty UUIDs not valid`                                                                                                                                                                                                                   |
+    | `checkpoint`      | checkpoint operations                                                   | `[code=24002:class=checkpoint:scope=internal:level=high] save point bin.1234 is older than current pos bin.1371`                                                                                                                                                                                 |
+    | `task-check`      | Performing task check                                                   | `[code=26003:class=task-check:scope=internal:level=medium] new table router error`                                                                                                                                                                                                               |
+    | `relay-event-lib` | Executing the basic functions of the relay module                       | `[code=28001:class=relay-event-lib:scope=internal:level=high] parse server-uuid.index`                                                                                                                                                                                                           |
+    | `relay-unit`      | relay processing unit                                                   | `[code=30015:class=relay-unit:scope=upstream:level=high] TCPReader get event: ERROR 1236 (HY000): Could not open log file`                                                                                                                                                                       |
+    | `dump-unit`       | dump processing unit                                                    | `[code=32001:class=dump-unit:scope=internal:level=high] mydumper runs with error: CRITICAL **: 15:12:17.559: Error connecting to database: Access denied for user 'root'@'172.17.0.1' (using password: NO)`                                                                                      |
+    | `load-unit`       | load processing unit                                                    | `[code=34002:class=load-unit:scope=internal:level=high] corresponding ending of sql: ')' not found`                                                                                                                                                                                              |
+    | `sync-unit`       | sync processing unit                                                    | `[code=36027:class=sync-unit:scope=internal:level=high] Column count doesn't match value count: 9 (columns) vs 10 (values)`                                                                                                                                                                      |
+    | `dm-master`       | DM-master service                                                       | `[code=38008:class=dm-master:scope=internal:level=high] grpc request error: rpc error: code = Unavailable desc = all SubConns are in TransientFailure, latest connection error: connection error: desc = "transport: Error while dialing dial tcp 172.17.0.2:8262: connect: connection refused"` |
+    | `dm-worker`       | DM-worker service                                                       | `[code=40066:class=dm-worker:scope=internal:level=high] ExecuteDDL timeout, try use query-status to query whether the DDL is still blocking`                                                                                                                                                     |
+    | `dm-tracer`       | DM-tracer service                                                       | `[code=42004:class=dm-tracer:scope=internal:level=medium] trace event test.1 not found`                                                                                                                                                                                                          |
+    | `schema-tracker`  | schema-tracker (during incremental data replication)                    | `[code=44006:class=schema-tracker:scope=internal:level=high],"cannot track DDL: ALTER TABLE test DROP COLUMN col1"`                                                                                                                                                                              |
+    | `scheduler`       | Scheduling operations (of data migration tasks)                         | `[code=46001:class=scheduler:scope=internal:level=high],"the scheduler has not started"`                                                                                                                                                                                                         |
+    | `dmctl`           | An error occurs within dmctl or when it interacts with other components | `[code=48001:class=dmctl:scope=internal:level=high],"can not create grpc connection"`                                                                                                                                                                                                            |
 
--   `scope` ：エラースコープ。
+-   `scope`: Error scope.
 
-    エラーが発生したときにDMオブジェクトのスコープとソースをマークするために使用されます。 `scope`には、 `not-set` 、および`downstream`の`upstream`つのタイプが含まれ`internal` 。
+    It is used to mark the scope and source of DM objects when an error occurs. `scope` includes four types: `not-set`, `upstream`, `downstream`, and `internal`.
 
-    エラーのロジックにアップストリームデータベースとダウンストリームデータベース間のリクエストが直接含まれる場合、スコープは`upstream`または`downstream`に設定されます。それ以外の場合は、現在`internal`に設定されています。
+    If the logic of the error directly involves requests between upstream and downstream databases, the scope is set to `upstream` or `downstream`; otherwise, it is currently set to `internal`.
 
--   `level` ：エラーレベル。
+-   `level`: Error level.
 
-    `low` 、および`medium`を含むエラーの重大度`high` 。
+    The severity level of the error, including `low`, `medium`, and `high`.
 
-    -   `low`レベルのエラーは通常、ユーザーの操作と誤った入力に関連しています。移行タスクには影響しません。
-    -   `medium`レベルのエラーは通常、ユーザー構成に関連しています。新しく開始されたサービスに影響します。ただし、既存のDM移行ステータスには影響しません。
-    -   `high`レベルのエラーは、移行タスクの中断を回避するために解決する必要があるため、通常は注意が必要です。
+    -   The `low` level error usually relates to user operations and incorrect inputs. It does not affect migration tasks.
+    -   The `medium` level error usually relates to user configurations. It affects some newly started services; however, it does not affect the existing DM migration status.
+    -   The `high` level error usually needs your attention, since you need to resolve it to avoid the possible interruption of a migration task.
 
--   `message` ：エラーの説明。
+-   `message`: Error descriptions.
 
-    エラーの詳細な説明。エラーメッセージのすべての追加レイヤーをエラーコールチェーンにラップして保存するために、 [エラー。ラップ](https://godoc.org/github.com/pkg/errors#hdr-Adding_context_to_an_error)モードが採用されています。最外層でラップされたメッセージの説明はDMのエラーを示し、最内層でラップされたメッセージの説明はエラーの原因を示します。
+    Detailed descriptions of the error. To wrap and store every additional layer of error message on the error call chain, the [errors.Wrap](https://godoc.org/github.com/pkg/errors#hdr-Adding_context_to_an_error) mode is adopted. The message description wrapped at the outermost layer indicates the error in DM and the message description wrapped at the innermost layer indicates the error source.
 
--   `workaround` ：エラー処理方法（オプション）
+-   `workaround`: Error handling methods (optional)
 
-    このエラーの処理方法。一部の確認済みエラー（構成エラーなど）については、DMは対応する手動処理方法を`workaround`で示しています。
+    The handling methods for this error. For some confirmed errors (such as configuration errors), DM gives the corresponding manual handling methods in `workaround`.
 
--   エラースタック情報（オプション）
+-   Error stack information (optional)
 
-    DMがエラースタック情報を出力するかどうかは、エラーの重大度と必要性によって異なります。エラースタックは、エラーが発生したときに完全なスタック呼び出し情報を記録します。基本情報やエラーメッセージからエラーの原因がわからない場合は、エラースタックを使用してエラー発生時のコードの実行パスをたどることができます。
+    Whether DM outputs the error stack information depends on the error severity and the necessity. The error stack records the complete stack call information when the error occurs. If you cannot figure out the error cause based on the basic information and the error message, you can trace the execution path of the code when the error occurs using the error stack.
 
-エラーコードの完全なリストについては、 [エラーコードリスト](https://github.com/pingcap/dm/blob/master/_utils/terror_gen/errors_release.txt)を参照してください。
+For the complete list of error codes, refer to the [error code lists](https://github.com/pingcap/dm/blob/master/_utils/terror_gen/errors_release.txt).
 
-## トラブルシューティング {#troubleshooting}
+## Troubleshooting {#troubleshooting}
 
-DMの実行中にエラーが発生した場合は、次の手順を実行してこのエラーのトラブルシューティングを行ってください。
+If you encounter an error while running DM, take the following steps to troubleshoot this error:
 
-1.  `query-status`コマンドを実行して、タスクの実行状態とエラー出力を確認してください。
+1.  Execute the `query-status` command to check the task running status and the error output.
 
-2.  エラーに関連するログファイルを確認してください。ログファイルはDM-masterノードとDM-workerノードにあります。エラーに関する重要な情報を取得するには、 [エラーシステム](#error-system)を参照してください。次に、 [一般的なエラーの処理](#handle-common-errors)のセクションをチェックして解決策を見つけます。
+2.  Check the log files related to the error. The log files are on the DM-master and DM-worker nodes. To get key information about the error, refer to the [error system](#error-system). Then check the [Handle Common Errors](#handle-common-errors) section to find the solution.
 
-3.  エラーがこのドキュメントでカバーされておらず、ログを確認したりメトリックを監視したりしても問題を解決できない場合は、R＆Dに連絡できます。
+3.  If the error is not covered in this document, and you cannot solve the problem by checking the log or monitoring metrics, [get support](/support.md) from PingCAP or the community.
 
-4.  エラーが解決したら、dmctlを使用してタスクを再開します。
+4.  After the error is resolved, restart the task using dmctl.
 
     {{< copyable "" >}}
 
@@ -89,80 +89,80 @@ DMの実行中にエラーが発生した場合は、次の手順を実行して
     resume-task ${task name}
     ```
 
-ただし、場合によっては、データ移行タスクをリセットする必要があります。詳しくは[データ移行タスクをリセットする](/dm/dm-faq.md#how-to-reset-the-data-migration-task)をご覧ください。
+However, you need to reset the data migration task in some cases. For details, refer to [Reset the Data Migration Task](/dm/dm-faq.md#how-to-reset-the-data-migration-task).
 
-## 一般的なエラーを処理する {#handle-common-errors}
+## Handle common errors {#handle-common-errors}
 
-| エラーコード       | エラーの説明                                                                                                                                                           | 処理する方法                                                                                                                                                                                                                                                                       |
-| :----------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `code=10001` | 異常なデータベース操作。                                                                                                                                                     | エラーメッセージとエラースタックをさらに分析します。                                                                                                                                                                                                                                                   |
-| `code=10002` | 基盤となるデータベースからの`bad connection`のエラー。これは通常、DMとダウンストリームTiDBインスタンス間の接続が異常であり（ネットワーク障害、TiDBの再起動などが原因である可能性があります）、現在要求されているデータがTiDBに送信されないことを示します。                     | DMは、このようなエラーの自動回復を提供します。リカバリが長期間成功しない場合は、ネットワークまたはTiDBのステータスを確認してください。                                                                                                                                                                                                       |
-| `code=10003` | 基盤となるデータベースからの`invalid connection`のエラー。これは通常、DMとダウンストリームTiDBインスタンス間の接続が異常であり（ネットワーク障害、TiDBの再起動などが原因である可能性があります）、現在要求されているデータの一部がTiDBに送信されていることを示します。             | DMは、このようなエラーの自動回復を提供します。長期間リカバリが成功しない場合は、エラーメッセージをさらに確認し、実際の状況に基づいて情報を分析します。                                                                                                                                                                                                 |
-| `code=10005` | `QUERY`タイプのSQLステートメントを実行するときに発生します。                                                                                                                              |                                                                                                                                                                                                                                                                              |
-| `code=10006` | `INSERT` 、または`UPDATE`タイプのDDLステートメントおよびDMLステートメントを含む`EXECUTE`タイプのSQLステートメントを実行するときに発生し`DELETE` 。より詳細なエラー情報については、通常、データベース操作で返されるエラーコードとエラー情報を含むエラーメッセージを確認してください。 |                                                                                                                                                                                                                                                                              |
-|              |                                                                                                                                                                  |                                                                                                                                                                                                                                                                              |
-| `code=11006` | DMの組み込みパーサーが互換性のないDDLステートメントを解析するときに発生します。                                                                                                                       | 解決策については[データ移行-互換性のないDDLステートメント](/dm/dm-faq.md#how-to-handle-incompatible-ddl-statements)を参照してください。                                                                                                                                                                          |
-| `code=20010` | タスク構成で提供されるデータベースパスワードを復号化するときに発生します。                                                                                                                            | 構成タスクで提供されたダウンストリームデータベースのパスワードが[dmctlを使用して正しく暗号化されている](/dm/dm-manage-source.md#encrypt-the-database-password)であるかどうかを確認します。                                                                                                                                                 |
-| `code=26002` | タスクチェックはデータベース接続の確立に失敗します。より詳細なエラー情報については、通常、データベース操作で返されるエラーコードとエラー情報を含むエラーメッセージを確認してください。                                                                      | DM-masterが配置されているマシンにアップストリームへのアクセス許可があるかどうかを確認します。                                                                                                                                                                                                                          |
-| `code=32001` | 異常なダンプ処理装置                                                                                                                                                       | エラーメッセージに`mydumper: argument list too long.`が含まれている場合は、block-allowリストに従って、 `task.yaml`ファイルのMydumper引数`extra-args`に`--regex`の正規表現を手動で追加して、エクスポートするテーブルを構成します。たとえば、 `hello`という名前のすべてのテーブルをエクスポートするには、 `--regex '.*\\.hello$'`を追加します。すべてのテーブルをエクスポートするには、 `--regex '.*'`を追加します。 |
-| `code=38008` | DMコンポーネント間のgRPC通信でエラーが発生します。                                                                                                                                     | `class`を確認してください。どのコンポーネントの相互作用でエラーが発生するかを調べます。通信エラーの種類を判別してください。 gRPC接続の確立時にエラーが発生した場合は、通信サーバーが正常に動作しているか確認してください。                                                                                                                                                          |
+| Error Code   | Error Description                                                                                                                                                                                                                                                                                           | How to Handle                                                                                                                                                                                                                                                                                                                                                                      |
+| :----------- | :---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `code=10001` | Abnormal database operation.                                                                                                                                                                                                                                                                                | Further analyze the error message and error stack.                                                                                                                                                                                                                                                                                                                                 |
+| `code=10002` | The `bad connection` error from the underlying database. It usually indicates that the connection between DM and the downstream TiDB instance is abnormal (possibly caused by network failure or TiDB restart) and the currently requested data is not sent to TiDB.                                        | DM provides automatic recovery for such error. If the recovery is not successful for a long time, check the network or TiDB status.                                                                                                                                                                                                                                                |
+| `code=10003` | The `invalid connection` error from the underlying database. It usually indicates that the connection between DM and the downstream TiDB instance is abnormal (possibly caused by network failure or TiDB restart) and the currently requested data is partly sent to TiDB.                                 | DM provides automatic recovery for such error. If the recovery is not successful for a long time, further check the error message and analyze the information based on the actual situation.                                                                                                                                                                                       |
+| `code=10005` | Occurs when performing the `QUERY` type SQL statements.                                                                                                                                                                                                                                                     |                                                                                                                                                                                                                                                                                                                                                                                    |
+| `code=10006` | Occurs when performing the `EXECUTE` type SQL statements, including DDL statements and DML statements of the `INSERT`, `UPDATE`or `DELETE` type. For more detailed error information, check the error message which usually includes the error code and error information returned for database operations. |                                                                                                                                                                                                                                                                                                                                                                                    |
+|              |                                                                                                                                                                                                                                                                                                             |                                                                                                                                                                                                                                                                                                                                                                                    |
+| `code=11006` | Occurs when the built-in parser of DM parses the incompatible DDL statements.                                                                                                                                                                                                                               | Refer to [Data Migration - incompatible DDL statements](/dm/dm-faq.md#how-to-handle-incompatible-ddl-statements) for solution.                                                                                                                                                                                                                                                     |
+| `code=20010` | Occurs when decrypting the database password that is provided in task configuration.                                                                                                                                                                                                                        | Check whether the downstream database password provided in the configuration task is [correctly encrypted using dmctl](/dm/dm-manage-source.md#encrypt-the-database-password).                                                                                                                                                                                                     |
+| `code=26002` | The task check fails to establish database connection. For more detailed error information, check the error message which usually includes the error code and error information returned for database operations.                                                                                           | Check whether the machine where DM-master is located has permission to access the upstream.                                                                                                                                                                                                                                                                                        |
+| `code=32001` | Abnormal dump processing unit                                                                                                                                                                                                                                                                               | If the error message contains `mydumper: argument list too long.`, configure the table to be exported by manually adding the `--regex` regular expression in the Mydumper argument `extra-args` in the `task.yaml` file according to the block-allow list. For example, to export all tables named `hello`, add `--regex '.*\\.hello$'`; to export all tables, add `--regex '.*'`. |
+| `code=38008` | An error occurs in the gRPC communication among DM components.                                                                                                                                                                                                                                              | Check `class`. Find out the error occurs in the interaction of which components. Determine the type of communication error. If the error occurs when establishing gRPC connection, check whether the communication server is working normally.                                                                                                                                     |
 
-### <code>invalid connection</code>エラーが返されて移行タスクが中断された場合はどうすればよいですか？ {#what-can-i-do-when-a-migration-task-is-interrupted-with-the-code-invalid-connection-code-error-returned}
+### What can I do when a migration task is interrupted with the <code>invalid connection</code> error returned? {#what-can-i-do-when-a-migration-task-is-interrupted-with-the-code-invalid-connection-code-error-returned}
 
-#### 理由 {#reason}
+#### Reason {#reason}
 
-`invalid connection`エラーは、DMとダウンストリームTiDBデータベース間の接続に異常（ネットワーク障害、TiDB再起動、TiKVビジーなど）が発生し、現在の要求のデータの一部がTiDBに送信されたことを示します。
+The `invalid connection` error indicates that anomalies have occurred in the connection between DM and the downstream TiDB database (such as network failure, TiDB restart, and TiKV busy) and that a part of the data for the current request has been sent to TiDB.
 
-#### ソリューション {#solutions}
+#### Solutions {#solutions}
 
-DMには、移行タスクでデータをダウンストリームに同時に移行する機能があるため、タスクが中断されると、いくつかのエラーが発生する可能性があります。これらのエラーは、 `query-status`を使用して確認できます。
+Because DM has the feature of concurrently migrating data to the downstream in migration tasks, several errors might occur when a task is interrupted. You can check these errors by using `query-status`.
 
--   インクリメンタルレプリケーションプロセス中に`invalid connection`のエラーのみが発生した場合、DMはタスクを自動的に再試行します。
--   バージョンの問題が原因でDMが自動的に再試行しない、または再試行に失敗した場合は、 `stop-task`を使用してタスクを停止し、 `start-task`を使用してタスクを再開します。
+-   If only the `invalid connection` error occurs during the incremental replication process, DM retries the task automatically.
+-   If DM does not or fails to retry automatically because of version problems, use `stop-task` to stop the task and then use `start-task` to restart the task.
 
-### 移行タスクが<code>driver: bad connection</code>エラーが返されました {#a-migration-task-is-interrupted-with-the-code-driver-bad-connection-code-error-returned}
+### A migration task is interrupted with the <code>driver: bad connection</code> error returned {#a-migration-task-is-interrupted-with-the-code-driver-bad-connection-code-error-returned}
 
-#### 理由 {#reason}
+#### Reason {#reason}
 
-`driver: bad connection`エラーは、DMとアップストリームTiDBデータベース間の接続に異常（ネットワーク障害、TiDB再起動など）が発生し、現在の要求のデータがその時点でTiDBに送信されていないことを示します。
+The `driver: bad connection` error indicates that anomalies have occurred in the connection between DM and the upstream TiDB database (such as network failure and TiDB restart) and that the data of the current request has not yet been sent to TiDB at that moment.
 
-#### 解決 {#solution}
+#### Solution {#solution}
 
-DMの現在のバージョンは、エラー時に自動的に再試行します。自動再試行をサポートしていない以前のバージョンを使用している場合は、 `stop-task`コマンドを実行してタスクを停止できます。次に、 `start-task`を実行してタスクを再開します。
+The current version of DM automatically retries on error. If you use the previous version which does not support automatically retry, you can execute the `stop-task` command to stop the task. Then execute `start-task` to restart the task.
 
-### リレーユニットがエラー<code>event from * in * diff from passed-in event *</code>スローするか、移行タスクが中断され、 <code>get binlog error ERROR 1236 (HY000)</code>や<code>binlog checksum mismatch, data may be corrupted</code> {#the-relay-unit-throws-error-code-event-from-in-diff-from-passed-in-event-code-or-a-migration-task-is-interrupted-with-failing-to-get-or-parse-binlog-errors-like-code-get-binlog-error-error-1236-hy000-code-and-code-binlog-checksum-mismatch-data-may-be-corrupted-code-returned}
+### The relay unit throws error <code>event from * in * diff from passed-in event *</code> or a migration task is interrupted with failing to get or parse binlog errors like <code>get binlog error ERROR 1236 (HY000)</code> and <code>binlog checksum mismatch, data may be corrupted</code> returned {#the-relay-unit-throws-error-code-event-from-in-diff-from-passed-in-event-code-or-a-migration-task-is-interrupted-with-failing-to-get-or-parse-binlog-errors-like-code-get-binlog-error-error-1236-hy000-code-and-code-binlog-checksum-mismatch-data-may-be-corrupted-code-returned}
 
-#### 理由 {#reason}
+#### Reason {#reason}
 
-リレーログプルまたはインクリメンタルレプリケーションのDMプロセス中に、アップストリームbinlogファイルのサイズが**4 GB**を超えると、この2つのエラーが発生する可能性があります。
+During the DM process of relay log pulling or incremental replication, this two errors might occur if the size of the upstream binlog file exceeds **4 GB**.
 
-**原因：**リレーログを書き込む場合、DMはbinlogの位置とbinlogファイルのサイズに基づいてイベント検証を実行し、複製されたbinlogの位置をチェックポイントとして保存する必要があります。ただし、公式のMySQLは`uint32`を使用してbinlogの位置を格納します。これは、4 GBを超えるbinlogファイルのbinlog位置がオーバーフローし、上記のエラーが発生することを意味します。
+**Cause:** When writing relay logs, DM needs to perform event verification based on binlog positions and the size of the binlog file, and store the replicated binlog positions as checkpoints. However, the official MySQL uses `uint32` to store binlog positions. This means the binlog position for a binlog file over 4 GB overflows, and then the errors above occur.
 
-#### ソリューション {#solutions}
+#### Solutions {#solutions}
 
-リレーユニットの場合、次のソリューションを使用して手動で移行を回復します。
+For relay units, manually recover migration using the following solution:
 
-1.  エラーが発生したときに、対応するbinlogファイルのサイズが4GBを超えたことをアップストリームで識別します。
+1.  Identify in the upstream that the size of the corresponding binlog file has exceeded 4GB when the error occurs.
 
-2.  DMワーカーを停止します。
+2.  Stop the DM-worker.
 
-3.  アップストリームの対応するbinlogファイルをリレーログファイルとしてリレーログディレクトリにコピーします。
+3.  Copy the corresponding binlog file in the upstream to the relay log directory as the relay log file.
 
-4.  リレーログディレクトリで、対応する`relay.meta`のファイルを更新して、次のbinlogファイルからプルします。 DM-workerに`enable_gtid`を指定した場合は、 `true`ファイルを更新するときに、次の`relay.meta`ファイルに対応するGTIDを変更する必要があります。それ以外の場合は、GTIDを変更する必要はありません。
+4.  In the relay log directory, update the corresponding `relay.meta` file to pull from the next binlog file. If you have specified `enable_gtid` to `true` for the DM-worker, you need to modify the GTID corresponding to the next binlog file when updating the `relay.meta` file. Otherwise, you don't need to modify the GTID.
 
-    例：エラーが発生した場合、 `binlog-name = "mysql-bin.004451"`と`binlog-pos = 2453` 。それらをそれぞれ`binlog-name = "mysql-bin.004452"`と`binlog-pos = 4`に更新し、 `binlog-gtid`を`f0e914ef-54cf-11e7-813d-6c92bf2fa791:1-138218058`に更新します。
+    Example: when the error occurs, `binlog-name = "mysql-bin.004451"` and `binlog-pos = 2453`. Update them respectively to `binlog-name = "mysql-bin.004452"` and `binlog-pos = 4`, and update `binlog-gtid` to `f0e914ef-54cf-11e7-813d-6c92bf2fa791:1-138218058`.
 
-5.  DMワーカーを再起動します。
+5.  Restart the DM-worker.
 
-binlogレプリケーション処理装置の場合、次のソリューションを使用して手動でマイグレーションをリカバリーします。
+For binlog replication processing units, manually recover migration using the following solution:
 
-1.  エラーが発生したときに、対応するbinlogファイルのサイズが4GBを超えたことをアップストリームで識別します。
+1.  Identify in the upstream that the size of the corresponding binlog file has exceeded 4GB when the error occurs.
 
-2.  `stop-task`を使用して移行タスクを停止します。
+2.  Stop the migration task using `stop-task`.
 
-3.  グローバルチェックポイントおよびダウンストリーム`dm_meta`データベースの各テーブルチェックポイントの`binlog_name`を、エラーのあるbinlogファイルの名前に更新します。 `binlog_pos`を、移行が完了した有効な位置の値（たとえば、4）に更新します。
+3.  Update the `binlog_name` in the global checkpoints and in each table checkpoint of the downstream `dm_meta` database to the name of the binlog file in error; update `binlog_pos` to a valid position value for which migration has completed, for example, 4.
 
-    例：エラーのあるタスクの名前は`dm_test` 、対応するs `source-id`は`replica-1` 、対応するbinlogファイルは`mysql-bin|000001.004451`です。次のコマンドを実行します。
+    Example: the name of the task in error is `dm_test`, the corresponding s`source-id` is `replica-1`, and the corresponding binlog file is `mysql-bin|000001.004451`. Execute the following command:
 
     {{< copyable "" >}}
 
@@ -170,40 +170,40 @@ binlogレプリケーション処理装置の場合、次のソリューショ�
     UPDATE dm_test_syncer_checkpoint SET binlog_name='mysql-bin|000001.004451', binlog_pos = 4 WHERE id='replica-1';
     ```
 
-4.  再入可能を確保するために、移行タスク構成の`syncers`セクションで`safe-mode: true`を指定します。
+4.  Specify `safe-mode: true` in the `syncers` section of the migration task configuration to ensure re-entrant.
 
-5.  `start-task`を使用して移行タスクを開始します。
+5.  Start the migration task using `start-task`.
 
-6.  `query-status`を使用して移行タスクのステータスを表示します。 `safe-mode`を元の値に復元し、元のエラートリガーリレーログファイルの移行が完了したら、移行タスクを再開できます。
+6.  View the status of the migration task using `query-status`. You can restore `safe-mode` to the original value and restart the migration task when migration is done for the original error-triggering relay log files.
 
-### <code>Access denied for user &#39;root&#39;@&#39;172.31.43.27&#39; (using password: YES)</code>た。タスクを照会するか、ログを確認すると表示されます {#code-access-denied-for-user-root-172-31-43-27-using-password-yes-code-shows-when-you-query-the-task-or-check-the-log}
+### <code>Access denied for user 'root'@'172.31.43.27' (using password: YES)</code> shows when you query the task or check the log {#code-access-denied-for-user-root-172-31-43-27-using-password-yes-code-shows-when-you-query-the-task-or-check-the-log}
 
-すべてのDM構成ファイルのデータベース関連のパスワードには、 `dmctl`で暗号化されたパスワードを使用することをお勧めします。データベースパスワードが空の場合、暗号化する必要はありません。プレーンテキストのパスワードを暗号化する方法については、 [dmctlを使用してデータベースパスワードを暗号化します](/dm/dm-manage-source.md#encrypt-the-database-password)を参照してください。
+For database related passwords in all the DM configuration files, it is recommended to use the passwords encrypted by `dmctl`. If a database password is empty, it is unnecessary to encrypt it. For how to encrypt the plaintext password, see [Encrypt the database password using dmctl](/dm/dm-manage-source.md#encrypt-the-database-password).
 
-さらに、アップストリームおよびダウンストリームデータベースのユーザーは、対応する読み取りおよび書き込み権限を持っている必要があります。データ移行タスクの開始時にも[対応する特権を自動的に事前チェックします](/dm/dm-precheck.md)データ移行。
+In addition, the user of the upstream and downstream databases must have the corresponding read and write privileges. Data Migration also [prechecks the corresponding privileges automatically](/dm/dm-precheck.md) while starting the data migration task.
 
-### <code>load</code>処理装置は、 <code>packet for query is too large. Try adjusting the &#39;max_allowed_packet&#39; variable</code> {#the-code-load-code-processing-unit-reports-the-error-code-packet-for-query-is-too-large-try-adjusting-the-max-allowed-packet-variable-code}
+### The <code>load</code> processing unit reports the error <code>packet for query is too large. Try adjusting the 'max_allowed_packet' variable</code> {#the-code-load-code-processing-unit-reports-the-error-code-packet-for-query-is-too-large-try-adjusting-the-max-allowed-packet-variable-code}
 
-#### 理由 {#reasons}
+#### Reasons {#reasons}
 
--   MySQLクライアントとMySQL/TiDBサーバーの両方に`max_allowed_packet`のクォータ制限があります。 `max_allowed_packet`が制限を超えると、クライアントはエラーメッセージを受け取ります。現在、最新バージョンのDMおよびTiDBサーバーの場合、デフォルト値の`max_allowed_packet`は`64M`です。
+-   Both MySQL client and MySQL/TiDB server have the quota limits for `max_allowed_packet`. If any `max_allowed_packet` exceeds a limit, the client receives the error message. Currently, for the latest version of DM and TiDB server, the default value of `max_allowed_packet` is `64M`.
 
--   DMの完全なデータインポート処理装置は、DMのダンプ処理装置によってエクスポートされたSQLファイルの分割をサポートしていません。
+-   The full data import processing unit in DM does not support splitting the SQL file exported by the Dump processing unit in DM.
 
-#### ソリューション {#solutions}
+#### Solutions {#solutions}
 
--   ダンプ処理装置には、 `extra-args`の`statement-size`オプションを設定することをお勧めします。
+-   It is recommended to set the `statement-size` option of `extra-args` for the Dump processing unit:
 
-    デフォルトの`--statement-size`設定によれば、ダンプ処理装置によって生成されるデフォルトのサイズ`Insert Statement`は約`1M`です。このデフォルト設定では、ほとんどの場合、負荷処理装置はエラー`packet for query is too large. Try adjusting the 'max_allowed_packet' variable`を報告しません。
+    According to the default `--statement-size` setting, the default size of `Insert Statement` generated by the Dump processing unit is about `1M`. With this default setting, the load processing unit does not report the error `packet for query is too large. Try adjusting the 'max_allowed_packet' variable` in most cases.
 
-    データダンプ中に次の`WARN`のログを受け取る場合があります。この`WARN`のログは、ダンププロセスには影響しません。これは、幅の広いテーブルがダンプされることを意味するだけです。
+    Sometimes you might receive the following `WARN` log during the data dump. This `WARN` log does not affect the dump process. This only means that wide tables are dumped.
 
     ```
     Row bigger than statement_size for xxx
     ```
 
--   ワイドテーブルの1行が`64M`を超える場合は、次の構成を変更して、構成が有効になっていることを確認する必要があります。
+-   If the single row of the wide table exceeds `64M`, you need to modify the following configurations and make sure the configurations take effect.
 
-    -   TiDBサーバーで`set @@global.max_allowed_packet=134217728` （ `134217728` = 128 MB）を実行します。
+    -   Execute `set @@global.max_allowed_packet=134217728` (`134217728` = 128 MB) in the TiDB server.
 
-    -   まず、DMタスク構成ファイルの`target-database`セクションに`max-allowed-packet: 134217728` （128 MB）を追加します。次に、 `stop-task`コマンドを実行し、 `start-task`コマンドを実行します。
+    -   First add the `max-allowed-packet: 134217728` (128 MB) to the `target-database` section in the DM task configuration file. Then, execute the `stop-task` command and execute the `start-task` command.

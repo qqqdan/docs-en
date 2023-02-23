@@ -1,62 +1,62 @@
 ---
-title: Software and Hardware Requirements
+title: Software and Hardware Requirements for TiDB Data Migration
 summary: Learn the software and hardware requirements for DM cluster.
 ---
 
-# ソフトウェアとハードウェアの要件 {#software-and-hardware-requirements}
+# Software and Hardware Requirements for TiDB Data Migration {#software-and-hardware-requirements-for-tidb-data-migration}
 
-TiDBデータ移行（DM）は、主流のLinuxオペレーティングシステムをサポートします。特定のバージョン要件については、次の表を参照してください。
+TiDB Data Migration (DM) supports mainstream Linux operating systems. See the following table for specific version requirements:
 
-| Linux OS                 |  バージョン  |
-| :----------------------- | :-----: |
-| Red Hat Enterprise Linux |  7.3以降  |
-| CentOS                   |  7.3以降  |
-| Oracle Enterprise Linux  |  7.3以降  |
-| Ubuntu LTS               | 16.04以降 |
+| Linux OS                 |     Version    |
+| :----------------------- | :------------: |
+| Red Hat Enterprise Linux |  7.3 or later  |
+| CentOS                   |  7.3 or later  |
+| Oracle Enterprise Linux  |  7.3 or later  |
+| Ubuntu LTS               | 16.04 or later |
 
-DMは、Intelアーキテクチャサーバーおよび主流の仮想化環境に展開して実行できます。
+DM can be deployed and run on Intel architecture servers and mainstream virtualization environments.
 
-## 推奨されるサーバー要件 {#recommended-server-requirements}
+## Recommended server requirements {#recommended-server-requirements}
 
-DMは、64ビットの汎用ハードウェアサーバープラットフォーム（Intel x86-64アーキテクチャ）に展開して実行できます。開発、テスト、および実稼働環境で使用されるサーバーの場合、このセクションでは、推奨されるハードウェア構成を示します（これらには、オペレーティングシステムで使用されるリソースは含まれていません）。
+DM can be deployed and run on a 64-bit generic hardware server platform (Intel x86-64 architecture). For servers used in the development, testing, and production environments, this section illustrates recommended hardware configurations (these do not include the resources used by the operating system).
 
-### 開発およびテスト環境 {#development-and-test-environments}
+### Development and test environments {#development-and-test-environments}
 
-| 成分     | CPU  | メモリー    | ローカルストレージ                        | 通信網            | インスタンスの数（最小要件）        |
-| ------ | ---- | ------- | -------------------------------- | -------------- | --------------------- |
-| DMマスター | 4コア+ | 8GB以上   | SAS、200GB以上                      | ギガビットネットワークカード | 1                     |
-| DMワーカー | 8コア+ | 16 GB + | SAS、200 GB以上（移行されたデータのサイズよりも大きい） | ギガビットネットワークカード | アップストリームMySQLインスタンスの数 |
+| Component | CPU     | Memory | Local Storage                                             | Network              | Number of Instances (Minimum Requirement) |
+| --------- | ------- | ------ | --------------------------------------------------------- | -------------------- | ----------------------------------------- |
+| DM-master | 4 core+ | 8 GB+  | SAS, 200 GB+                                              | Gigabit network card | 1                                         |
+| DM-worker | 8 core+ | 16 GB+ | SAS, 200 GB+ (Greater than the size of the migrated data) | Gigabit network card | The number of upstream MySQL instances    |
 
-> **ノート：**
+> **Note:**
 >
-> -   テスト環境では、機能検証に使用されるDM-masterとDM-workerを同じサーバーにデプロイできます。
-> -   パフォーマンステスト結果の精度への干渉を防ぐために、パフォーマンスの低いストレージおよびネットワークハードウェア構成を使用することは**お勧め**しません。
-> -   機能のみを検証する必要がある場合は、DMマスターを単一のマシンに展開できます。デプロイされるDM-workerの数は、アップストリームのMySQLインスタンスの数以上である必要があります。高可用性を確保するには、より多くのDMワーカーをデプロイすることをお勧めします。
-> -   DM-workerは、 `dump`フェーズと`load`フェーズで完全なデータを保存します。したがって、DM-workerのディスク容量は、移行するデータの合計量よりも大きい必要があります。移行タスクでリレーログが有効になっている場合、DM-workerはアップストリームのbinlogデータを保存するために追加のディスクスペースを必要とします。
+> -   In the test environment, DM-master and DM-worker used for functional verification can be deployed on the same server.
+> -   To prevent interference with the accuracy of the performance test results, it is **not recommended** to use low-performance storage and network hardware configurations.
+> -   If you need to verify the function only, you can deploy a DM-master on a single machine. The number of DM-worker deployed must be greater than or equal to the number of upstream MySQL instances. To ensure high availability, it is recommended to deploy more DM-workers.
+> -   DM-worker stores full data in the `dump` and `load` phases. Therefore, the disk space for DM-worker needs to be greater than the total amount of data to be migrated. If the relay log is enabled for the migration task, DM-worker needs additional disk space to store upstream binlog data.
 
-### 本番環境 {#production-environment}
+### Production environment {#production-environment}
 
-| 成分     | CPU   | メモリー    | ハードディスクの種類                       | 通信網              | インスタンスの数（最小要件）             |
-| ------ | ----- | ------- | -------------------------------- | ---------------- | -------------------------- |
-| DMマスター | 4コア+  | 8GB以上   | SAS、200GB以上                      | ギガビットネットワークカード   | 3                          |
-| DMワーカー | 16コア+ | 32 GB + | SSD、200 GB以上（移行されたデータのサイズよりも大きい） | 10ギガビットネットワークカード | アップストリームMySQLインスタンスの数よりも多い |
-| モニター   | 8コア+  | 16 GB + | SAS、200GB以上                      | ギガビットネットワークカード   | 1                          |
+| Component | CPU      | Memory | Hard Disk Type                                            | Network                 | Number of Instances (Minimum Requirement)           |
+| --------- | -------- | ------ | --------------------------------------------------------- | ----------------------- | --------------------------------------------------- |
+| DM-master | 4 core+  | 8 GB+  | SAS, 200 GB+                                              | Gigabit network card    | 3                                                   |
+| DM-worker | 16 core+ | 32 GB+ | SSD, 200 GB+ (Greater than the size of the migrated data) | 10 Gigabit network card | Greater than the number of upstream MySQL instances |
+| Monitor   | 8 core+  | 16 GB+ | SAS, 200 GB+                                              | Gigabit network card    | 1                                                   |
 
-> **ノート：**
+> **Note:**
 >
-> -   実稼働環境では、DM-masterとDM-workerを同じサーバーにデプロイして実行することはお勧めしません。これは、DM-workerがデータをディスクに書き込むときに、DM-masterの高可用性コンポーネントによるディスクの使用を妨げる可能性があるためです。 。
-> -   パフォーマンスの問題が発生した場合は、 [DMのConfiguration / コンフィグレーションを最適化する](/dm/dm-tune-configuration.md)のドキュメントに従ってタスク構成ファイルを変更することをお勧めします。構成ファイルを調整してもパフォーマンスが効果的に最適化されない場合は、サーバーのハードウェアのアップグレードを試みることができます。
+> -   In the production environment, it is not recommended to deploy and run DM-master and DM-worker on the same server, because when DM-worker writes data to disks, it might interfere with the use of disks by DM-master's high availability component.
+> -   If a performance issue occurs, you are recommended to modify the task configuration file according to the [Optimize Configuration of DM](/dm/dm-tune-configuration.md) document. If the performance is not effectively optimized by tuning the configuration file, you can try to upgrade the hardware of your server.
 
-## ダウンストリームストレージスペースの要件 {#downstream-storage-space-requirements}
+## Downstream storage space requirements {#downstream-storage-space-requirements}
 
-ターゲットTiKVクラスタには、インポートされたデータを格納するのに十分なディスク容量が必要です。 [標準のハードウェア要件](/hardware-and-software-requirements.md)に加えて、ターゲットTiKVクラスタのストレージスペースは**、データソースのサイズxレプリカの数x2**よりも大きくする必要があります。たとえば、クラスタがデフォルトで3つのレプリカを使用する場合、ターゲットTiKVクラスタには、データソースのサイズの6倍を超えるストレージスペースが必要です。数式には`x 2`あります。理由は次のとおりです。
+The target TiKV cluster must have enough disk space to store the imported data. In addition to the [standard hardware requirements](/hardware-and-software-requirements.md), the storage space of the target TiKV cluster must be larger than **the size of the data source x the number of replicas x 2**. For example, if the cluster uses 3 replicas by default, the target TiKV cluster must have a storage space larger than 6 times the size of the data source. The formula has `x 2` because:
 
--   インデックスには余分なスペースが必要になる場合があります。
--   RocksDBにはスペース増幅効果があります。
+-   Indexes might take extra space.
+-   RocksDB has a space amplification effect.
 
-次のSQLステートメントを使用して`data-length`フィールドを要約すると、データ量を見積もることができます。
+You can estimate the data volume by using the following SQL statements to summarize the `data-length` field:
 
--   MiBですべてのスキーマのサイズを計算します。 `${schema_name}`をスキーマ名に置き換えます。
+-   Calculate the size of all schemas, in MiB. Replace `${schema_name}` with your schema name.
 
     {{< copyable "" >}}
 
@@ -64,10 +64,10 @@ DMは、64ビットの汎用ハードウェアサーバープラットフォー�
     select table_schema,sum(data_length)/1024/1024 as data_length,sum(index_length)/1024/1024 as index_length,sum(data_length+index_length)/1024/1024 as sum from information_schema.tables where table_schema = "${schema_name}" group by table_schema;
     ```
 
--   最大のテーブルのサイズをMiBで計算します。 ${schema_name}をスキーマ名に置き換えます。
+-   Calculate the size of the largest table, in MiB. Replace ${schema_name} with your schema name.
 
     {{< copyable "" >}}
 
     ```sql
-    select table_name,table_schema,sum(data_length)/1024/1024 as data_length,sum(index_length)/1024/1024 as index_length,sum(data_length+index_length)/1024/1024 as sum from information_schema.tables where table_schema = "${schema_name}" group by table_name,table_schema order by sum  desc limit 5;
+    select table_name,table_schema,sum(data_length)/1024/1024 as data_length,sum(index_length)/1024/1024 as index_length,sum(data_length+index_length)/1024/1024 as sum from information_schema.tables where table_schema = "${schema_name}" group by table_name,table_schema order by sum desc limit 5;
     ```

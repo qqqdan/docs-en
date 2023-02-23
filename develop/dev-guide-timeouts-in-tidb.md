@@ -3,41 +3,41 @@ title: Timeouts in TiDB
 summary: Learn about timeouts in TiDB, and solutions for troubleshooting errors.
 ---
 
-# TiDBのタイムアウト {#timeouts-in-tidb}
+# Timeouts in TiDB {#timeouts-in-tidb}
 
-このドキュメントでは、エラーのトラブルシューティングに役立つTiDBのさまざまなタイムアウトについて説明します。
+This document describes various timeouts in TiDB to help you troubleshoot errors.
 
-## GCタイムアウト {#gc-timeout}
+## GC timeout {#gc-timeout}
 
-TiDBのトランザクション実装は、MVCC（Multiple Version Concurrency Control）メカニズムを使用します。新しく書き込まれたデータが古いデータを上書きする場合、古いデータは置き換えられませんが、新しく書き込まれたデータと一緒に保持されます。バージョンはタイムスタンプによって区別されます。 TiDBは、定期的なガベージコレクション（GC）のメカニズムを使用して、不要になった古いデータをクリーンアップします。
+TiDB's transaction implementation uses the MVCC (Multiple Version Concurrency Control) mechanism. When the newly written data overwrites the old data, the old data will not be replaced, but kept together with the newly written data. The versions are distinguished by the timestamp. TiDB uses the mechanism of periodic Garbage Collection (GC) to clean up the old data that is no longer needed.
 
-デフォルトでは、各MVCCバージョン（整合性スナップショット）は10分間保持されます。読み取りに10分以上かかるトランザクションは、エラー`GC life time is shorter than transaction duration`を受け取ります。
+By default, each MVCC version (consistency snapshots) is kept for 10 minutes. Transactions that take longer than 10 minutes to read will receive an error `GC life time is shorter than transaction duration`.
 
-読み取り時間を長くする必要がある場合、たとえば、フルバックアップに**Mydumper**を使用している場合（ <strong>Mydumper</strong>は一貫性のあるスナップショットをバックアップします）、TiDBの`mysql.tidb`テーブルの`tikv_gc_life_time`の値を調整して、MVCCバージョンの保持時間を増やすことができます。 `tikv_gc_life_time`はグローバルかつ即座に有効になることに注意してください。値を大きくすると、既存のすべてのスナップショットの寿命が長くなり、値を小さくすると、すべてのスナップショットの寿命がすぐに短くなります。 MVCCのバージョンが多すぎると、TiKVの処理効率に影響します。したがって、 <strong>Mydumper</strong>を使用して完全バックアップを実行した後、 `tikv_gc_life_time`を以前の設定に戻す必要があります。
+If you need longer read time, for example, when you are using **Mydumper** for full backups (<strong>Mydumper</strong> backs up consistent snapshots), you can adjust the value of `tikv_gc_life_time` in the `mysql.tidb` table in TiDB to increase the MVCC version retention time. Note that `tikv_gc_life_time` takes effect globally and immediately. Increasing the value will increase the life time of all existing snapshots, and decreasing it will immediately shorten the life time of all snapshots. Too many MVCC versions will impact TiKV's processing efficiency. So you need to change `tikv_gc_life_time` back to the previous setting in time after doing a full backup with <strong>Mydumper</strong>.
 
-GCの詳細については、 [GCの概要](/garbage-collection-overview.md)を参照してください。
+For more information about GC, see [GC Overview](/garbage-collection-overview.md).
 
-## トランザクションタイムアウト {#transaction-timeout}
+## Transaction timeout {#transaction-timeout}
 
-GCは進行中のトランザクションには影響しません。ただし、実行できるペシミスティックトランザクションの数には上限があり、トランザクションタイムアウトの制限と、トランザクションで使用されるメモリの制限があります。 TiDBプロファイルの`[performance]`カテゴリでトランザクションタイムアウトを`max-txn-ttl`ずつ変更できます。デフォルトでは`60`分です。
+GC does not affect ongoing transactions. However, there is still an upper limit to the number of pessimistic transactions that can run, with a limit on the transaction timeout and a limit on the memory used by the transaction. You can modify the transaction timeout by `max-txn-ttl` under the `[performance]` category of the TiDB profile, `60` minutes by default.
 
-`INSERT INTO t10 SELECT * FROM t1`などのSQLステートメントはGCの影響を受けませんが、 `max-txn-ttl`を超えた後のタイムアウトのためにロールバックされます。
+SQL statements such as `INSERT INTO t10 SELECT * FROM t1` are not affected by GC, but will be rolled back due to timeout after exceeding `max-txn-ttl`.
 
-## SQL実行タイムアウト {#sql-execution-timeout}
+## SQL execution timeout {#sql-execution-timeout}
 
-TiDBは、単一のSQLステートメントの実行時間を制限するためのシステム変数（デフォルトでは`max_execution_time` 、制限なしを示す）も提供し`0` 。 `max_execution_time`は現在、 `SELECT`のステートメントだけでなく、すべてのタイプのステートメントに対して有効です。単位は`ms`ですが、実際の精度はミリ秒レベルではなく`100ms`レベルです。
+TiDB also provides a system variable (`max_execution_time`, `0` by default, indicating no limit) to limit the execution time of a single SQL statement. `max_execution_time` currently takes effect for all types of statements, not just the `SELECT` statements. The unit is `ms`, but the actual precision is at the `100ms` level instead of the millisecond level.
 
-## JDBCクエリタイムアウト {#jdbc-query-timeout}
+## JDBC query timeout {#jdbc-query-timeout}
 
-MySQL JDBCの`setQueryTimeout()`のクエリタイムアウト設定は、TiDBでは機能し***ません***。これは、クライアントがタイムアウトを検出すると、データベースに`KILL`コマンドを送信するためです。ただし、tidb-serverは負荷分散されており、間違ったtidb-serverでの接続の終了を回避するために、この`KILL`コマンドは実行されません。クエリタイムアウトの影響を確認するには、 `MAX_EXECUTION_TIME`を使用する必要があります。
+MySQL JDBC's query timeout setting for `setQueryTimeout()` does ***NOT*** work for TiDB, because the client sends a `KILL` command to the database when it detects the timeout. However, the tidb-server is load balanced, and it will not execute this `KILL` command to avoid termination of the connection on a wrong tidb-server. You need to use `MAX_EXECUTION_TIME` to check the query timeout effect.
 
-TiDBは、次のMySQL互換のタイムアウト制御パラメーターを提供します。
+TiDB provides the following MySQL-compatible timeout control parameters.
 
--   **wait_timeout**は、Javaアプリケーションへの接続の非対話型アイドルタイムアウトを制御します。値はデフォルトで`0`であり、接続を無期限にアイドル状態にすることができます。
--   **Interactive_timeout**は、Javaアプリケーションへの接続のインタラクティブアイドルタイムアウトを制御します。デフォルト値は`8 hours`です。
--   **max_execution_time**は、接続でのSQL実行のタイムアウトを制御します。デフォルトの値は`0`です。これにより、接続が無限にビジーになります。つまり、SQLステートメントが無限に長時間実行されます。
+-   **wait_timeout**, controls the non-interactive idle timeout for the connection to Java applications. Since TiDB v5.4, the default value of `wait_timeout` is `28800` seconds, which is 8 hours. For TiDB versions earlier than v5.4, the default value is `0`, which means the timeout is unlimited.
+-   **interactive_timeout**, controls the interactive idle timeout for the connection to Java applications. The value is `8 hours` by default.
+-   **max_execution_time**, controls the timeout for SQL execution in the connection. The value is `0` by default, which allows the connection to be infinitely busy, that is, an SQL statement is executed for an infinitely long time.
 
-ただし、実際の実稼働環境では、アイドル状態の接続と無期限に実行されるSQLステートメントは、データベースとアプリケーションの両方に悪影響を及ぼします。アプリケーションの接続文字列でこれらの2つのセッションレベル変数を構成することにより、アイドル状態の接続やSQLステートメントの無期限の実行を回避できます。たとえば、次のように設定します。
+However, in a real production environment, idle connections and indefinitely executing SQL statements have a negative effect on both the database and the application. You can avoid idle connections and indefinitely executing SQL statements by configuring these two session-level variables in your application's connection string. For example, set the following:
 
--   `sessionVariables=wait_timeout=3600` （1時間）
--   `sessionVariables=max_execution_time=300000` （5分）
+-   `sessionVariables=wait_timeout=3600` (1 hour)
+-   `sessionVariables=max_execution_time=300000` (5 minutes)

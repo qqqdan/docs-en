@@ -3,46 +3,49 @@ title: Download TiDB Tools
 summary: Download the most officially maintained versions of TiDB tools.
 ---
 
-# TiDBツールをダウンロードする {#download-tidb-tools}
+# Download TiDB Tools {#download-tidb-tools}
 
-このドキュメントでは、TiDBツールキットをダウンロードする方法について説明します。
+This document describes how to download the TiDB Toolkit.
 
-TiDB Toolkitには、データエクスポートツールDumpling、データインポートツールTiDB Lightning、バックアップと復元ツールBRなどの頻繁に使用されるTiDBツールが含まれています。
+TiDB Toolkit contains frequently used TiDB tools, such as data export tool Dumpling, data import tool TiDB Lightning, and backup and restore tool BR.
 
-> **ヒント：**
+> **Tip:**
 >
-> -   展開環境にインターネットアクセスがある場合は、単一の[TiUPコマンド](/tiup/tiup-component-management.md)を使用してTiDBツールを展開できるため、TiDBツールキットを個別にダウンロードする必要はありません。
-> -   TiDB Toolkitをダウンロードする代わりに、KubernetesにTiDBをデプロイして維持する必要がある場合は、 [TiDB Operatorのオフラインインストール](https://docs.pingcap.com/tidb-in-kubernetes/stable/deploy-tidb-operator#offline-installation)の手順に従ってください。
+> -   If your deployment environment has internet access, you can deploy a TiDB tool using a single [TiUP command](/tiup/tiup-component-management.md), so there is no need to download the TiDB Toolkit separately.
+> -   If you need to deploy and maintain TiDB on Kubernetes, instead of downloading the TiDB Toolkit, follow the steps in [TiDB Operator offline installation](https://docs.pingcap.com/tidb-in-kubernetes/stable/deploy-tidb-operator#offline-installation).
 
-## 環境要件 {#environment-requirements}
+## Environment requirements {#environment-requirements}
 
--   オペレーティングシステム：Linux
--   アーキテクチャ：amd64
+-   Operating system: Linux
+-   Architecture: amd64
 
-## ダウンロードリンク {#download-link}
+## Download link {#download-link}
 
-TiDB Toolkitは、次のリンクからダウンロードできます。
+You can download TiDB Toolkit from the following link:
 
 ```
 https://download.pingcap.org/tidb-community-toolkit-{version}-linux-amd64.tar.gz
 ```
 
-リンクの`{version}`は、TiDBのバージョン番号を示します。たとえば、 `v6.1.0`のダウンロードリンクは`https://download.pingcap.org/tidb-community-toolkit-v6.1.0-linux-amd64.tar.gz`です。
+`{version}` in the link indicates the version number of TiDB. For example, the download link for `v6.1.4` is `https://download.pingcap.org/tidb-community-toolkit-v6.1.4-linux-amd64.tar.gz`.
 
-## TiDBツールキットの説明 {#tidb-toolkit-description}
+> **Note:**
+>
+> If you need to download the [PD Control](/pd-control.md) tool `pd-ctl`, download the TiDB installation package separately from `https://download.pingcap.org/tidb-community-server-{version}-linux-amd64.tar.gz`.
 
-使用するツールに応じて、対応するオフラインパッケージを次のようにインストールできます。
+## TiDB Toolkit description {#tidb-toolkit-description}
 
-| 道具                                                                          | オフラインパッケージ名                                                                                                                      |
-| :-------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------- |
-| [TiUP](/tiup/tiup-overview.md)                                              | `tiup-linux-amd64.tar.gz` <br/>`tiup-{tiup-version}-linux-amd64.tar.gz` <br/>`dm-{tiup-version}-linux-amd64.tar.gz`              |
-| [Dumpling](/dumpling-overview.md)                                           | `dumpling-{version}-linux-amd64.tar.gz`                                                                                          |
-| [TiDB Lightning](/tidb-lightning/tidb-lightning-overview.md)                | `tidb-lightning-ctl` <br/>`tidb-lightning-{version}-linux-amd64.tar.gz`                                                          |
-| [TiDBデータ移行（DM）](/dm/dm-overview.md)                                         | `dm-worker-{version}-linux-amd64.tar.gz` <br/>`dm-master-{version}-linux-amd64.tar.gz` <br/>`dmctl-{version}-linux-amd64.tar.gz` |
-| [TiCDC](/ticdc/ticdc-overview.md)                                           | `cdc-{version}-linux-amd64.tar.gz`                                                                                               |
-| [TiDB Binlog](/tidb-binlog/tidb-binlog-overview.md)                         | `pump-{version}-linux-amd64.tar.gz` <br/>`drainer-{version}-linux-amd64.tar.gz` <br/>`binlogctl` <br/>`reparo`                   |
-| [バックアップと復元（BR）](/br/backup-and-restore-tool.md)                             | `br-{version}-linux-amd64.tar.gz`                                                                                                |
-| [sync-diff-inspector](/sync-diff-inspector/sync-diff-inspector-overview.md) | `sync_diff_inspector`                                                                                                            |
-| [TiSpark](/tispark-overview.md)                                             | `tispark-{tispark-version}-any-any.tar.gz` <br/>`spark-{spark-version}-any-any.tar.gz`                                           |
-| [PD制御](/pd-control.md)                                                      | `pd-recover-{version}-linux-amd64.tar`                                                                                           |
-| [PD回復](/pd-recover.md)                                                      | `etcdctl`                                                                                                                        |
+Depending on which tools you want to use, you can install the corresponding offline packages as follows:
+
+| Tool                                                                        | Offline package name                                                                                                                                            |
+| :-------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [TiUP](/tiup/tiup-overview.md)                                              | `tiup-linux-amd64.tar.gz` <br/>`tiup-{tiup-version}-linux-amd64.tar.gz` <br/>`dm-{tiup-version}-linux-amd64.tar.gz` <br/> `server-{version}-linux-amd64.tar.gz` |
+| [Dumpling](/dumpling-overview.md)                                           | `dumpling-{version}-linux-amd64.tar.gz`                                                                                                                         |
+| [TiDB Lightning](/tidb-lightning/tidb-lightning-overview.md)                | `tidb-lightning-ctl` <br/>`tidb-lightning-{version}-linux-amd64.tar.gz`                                                                                         |
+| [TiDB Data Migration (DM)](/dm/dm-overview.md)                              | `dm-worker-{version}-linux-amd64.tar.gz` <br/>`dm-master-{version}-linux-amd64.tar.gz` <br/>`dmctl-{version}-linux-amd64.tar.gz`                                |
+| [TiCDC](/ticdc/ticdc-overview.md)                                           | `cdc-{version}-linux-amd64.tar.gz`                                                                                                                              |
+| [TiDB Binlog](/tidb-binlog/tidb-binlog-overview.md)                         | `pump-{version}-linux-amd64.tar.gz` <br/>`drainer-{version}-linux-amd64.tar.gz` <br/>`binlogctl` <br/>`reparo`                                                  |
+| [Backup &#x26; Restore (BR)](/br/backup-and-restore-overview.md)            | `br-{version}-linux-amd64.tar.gz`                                                                                                                               |
+| [sync-diff-inspector](/sync-diff-inspector/sync-diff-inspector-overview.md) | `sync_diff_inspector`                                                                                                                                           |
+| [TiSpark](/tispark-overview.md)                                             | `tispark-{tispark-version}-any-any.tar.gz` <br/>`spark-{spark-version}-any-any.tar.gz`                                                                          |
+| [PD Recover](/pd-recover.md)                                                | `pd-recover-{version}-linux-amd64.tar`                                                                                                                          |

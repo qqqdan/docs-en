@@ -3,25 +3,23 @@ title: Stale Read
 summary: Learn how to use Stale Read to accelerate queries under certain conditions.
 ---
 
-# 古い読み取り {#stale-read}
+# Stale Read {#stale-read}
 
-Stale Readは、TiDBがTiDBに保存されているデータの履歴バージョンを読み取るために適用するメカニズムです。このメカニズムを使用すると、特定の時間または指定された時間範囲内で対応する履歴データを読み取ることができるため、ストレージノード間のデータレプリケーションによって発生する遅延を節約できます。 Steal Readを使用している場合、TiDBはデータ読み取り用のレプリカをランダムに選択します。これは、すべてのレプリカがデータ読み取りに使用できることを意味します。
+Stale Read is a mechanism that TiDB applies to read historical versions of data stored in TiDB. Using this mechanism, you can read the corresponding historical data at a specific time or within a specified time range, and thus save the latency caused by data replication between storage nodes. When you are using Steal Read, TiDB randomly selects a replica for data reading, which means that all replicas are available for data reading.
 
-実際には、 [使用シナリオ](/stale-read.md#usage-scenarios-of-stale-read)に基づいてTiDBでStaleReadを有効にすることが適切かどうかを慎重に検討してください。アプリケーションが非リアルタイムデータの読み取りを許容できない場合は、StaleReadを有効にしないでください。
+In practice, consider carefully whether it is appropriate to enable Stale Read in TiDB based on the [usage scenarios](/stale-read.md#usage-scenarios-of-stale-read). Do not enable Stale Read if your application cannot tolerate reading non-real-time data.
 
-TiDBは、ステートメントレベル、トランザクションレベル、およびセッションレベルの3つのレベルのStaleReadを提供します。
+TiDB provides three levels of Stale Read: statement level, transaction level, and session level.
 
-## 序章 {#introduction}
+## Introduction {#introduction}
 
-[書店](/develop/dev-guide-bookshop-schema-design.md)のアプリケーションでは、次のSQLステートメントを使用して、最新の出版された書籍とその価格を照会できます。
-
-{{< copyable "" >}}
+In the [Bookshop](/develop/dev-guide-bookshop-schema-design.md) application, you can query the latest published books and their prices through the following SQL statement:
 
 ```sql
 SELECT id, title, type, price FROM books ORDER BY published_at DESC LIMIT 5;
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 +------------+------------------------------+-----------------------+--------+
@@ -36,24 +34,22 @@ SELECT id, title, type, price FROM books ORDER BY published_at DESC LIMIT 5;
 5 rows in set (0.02 sec)
 ```
 
-現時点（2022-04-20 15:20:00）のリストでは、 *The Story ofDrooliusCaesar*の価格は100.0です。
+In the list at this time (2022-04-20 15:20:00), the price of *The Story of Droolius Caesar* is 100.0.
 
-同時に、売り手はその本が非常に人気があることを発見し、次のSQLステートメントを通じて本の価格を150.0に引き上げました。
-
-{{< copyable "" >}}
+At the same time, the seller found that the book was very popular and raised the price of the book to 150.0 through the following SQL statement:
 
 ```sql
 UPDATE books SET price = 150 WHERE id = 3181093216;
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 Query OK, 1 row affected (0.00 sec)
 Rows matched: 1  Changed: 1  Warnings: 0
 ```
 
-最新の書籍リストを照会すると、この書籍の価格が上昇していることがわかります。
+By querying the latest books list, you can see that the price of this book has increased.
 
 ```
 +------------+------------------------------+-----------------------+--------+
@@ -68,24 +64,22 @@ Rows matched: 1  Changed: 1  Warnings: 0
 5 rows in set (0.01 sec)
 ```
 
-最新のデータを使用する必要がない場合は、Stale Readを使用してクエリを実行できます。これにより、古いデータが返される可能性があり、強一貫性のある読み取り中にデータレプリケーションによって発生する遅延を回避できます。
+If it is not necessary to use the latest data, you can query with Stale Read, which might return outdated data, to avoid the latency caused by data replication during a strongly consistent read.
 
-Bookshopアプリケーションでは、書籍のリアルタイム価格は書籍リストページでは必要なく、書籍の詳細と注文ページでのみ必要であると想定しています。 Stale Readは、アプリケーション全体を改善するために使用できます。
+Assuming that in the Bookshop application, the real-time price of a book is not required on the book lists page but only required on the book details and order pages. Stale Read can be used to improve throughout of the application.
 
-## ステートメントレベル {#statement-level}
+## Statement level {#statement-level}
 
-<SimpleTab>
-<div label="SQL" href="statement-sql">
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
-特定の時間より前の本の価格をクエリするには、上記のクエリステートメントに`AS OF TIMESTAMP <datetime>`句を追加します。
-
-{{< copyable "" >}}
+To query the price of a book before a specific time, add an `AS OF TIMESTAMP <datetime>` clause in the above query statement.
 
 ```sql
 SELECT id, title, type, price FROM books AS OF TIMESTAMP '2022-04-20 15:20:00' ORDER BY published_at DESC LIMIT 5;
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 +------------+------------------------------+-----------------------+--------+
@@ -100,30 +94,28 @@ SELECT id, title, type, price FROM books AS OF TIMESTAMP '2022-04-20 15:20:00' O
 5 rows in set (0.01 sec)
 ```
 
-正確な時刻を指定することに加えて、以下を指定することもできます。
+In addition to specifying an exact time, you can also specify the following:
 
--   `AS OF TIMESTAMP NOW() - INTERVAL 10 SECOND`は、10秒前の最新データを照会します。
--   `AS OF TIMESTAMP TIDB_BOUNDED_STALENESS('2016-10-08 16:45:26', '2016-10-08 16:45:29')`は、 `2016-10-08 16:45:26`から`2016-10-08 16:45:29`までの最新データを照会します。
--   `AS OF TIMESTAMP TIDB_BOUNDED_STALENESS(NOW() -INTERVAL 20 SECOND, NOW())`は20秒以内に最新のデータを照会します。
+-   `AS OF TIMESTAMP NOW() - INTERVAL 10 SECOND` queries the latest data 10 seconds ago.
+-   `AS OF TIMESTAMP TIDB_BOUNDED_STALENESS('2016-10-08 16:45:26', '2016-10-08 16:45:29')` queries the latest data between `2016-10-08 16:45:26` and `2016-10-08 16:45:29`.
+-   `AS OF TIMESTAMP TIDB_BOUNDED_STALENESS(NOW() -INTERVAL 20 SECOND, NOW())` queries the latest data within 20 seconds.
 
-指定されたタイムスタンプまたは間隔は、現在の時刻より早すぎたり遅すぎたりしてはならないことに注意してください。
+Note that the specified timestamp or interval cannot be too early or later than the current time.
 
-期限切れのデータはTiDBで[ガベージコレクション](/garbage-collection-overview.md)ずつリサイクルされ、データはクリアされる前に短期間保持されます。期間は[GCライフタイム（デフォルトは10分）](/system-variables.md#tidb_gc_life_time-new-in-v50)と呼ばれます。 GCが開始すると、現在の時刻から期間を引いたものが**GCセーフポイント**として使用されます。 GC Safe Pointの前にデータを読み取ろうとすると、TiDBは次のエラーを報告します。
+Expired data will be recycled by [Garbage Collection](/garbage-collection-overview.md) in TiDB, and the data will be retained for a short period before being cleared. The period is called [GC Life Time (default 10 minutes)](/system-variables.md#tidb_gc_life_time-new-in-v50). When a GC starts, the current time minus the time period will be used as the **GC Safe Point**. If you try to read the data before GC Safe Point, TiDB will report the following error:
 
 ```
 ERROR 9006 (HY000): GC life time is shorter than transaction duration...
 ```
 
-指定されたタイムスタンプが将来の時刻である場合、TiDBは次のエラーを報告します。
+If the given timestamp is a future time, TiDB will report the following error:
 
 ```
 ERROR 9006 (HY000): cannot set read timestamp to a future time.
 ```
 
 </div>
-<div label="Java">
-
-{{< copyable "" >}}
+<div label="Java" value="java">
 
 ```java
 public class BookDAO {
@@ -193,8 +185,6 @@ public class BookDAO {
 }
 ```
 
-{{< copyable "" >}}
-
 ```java
 List<Book> top5LatestBooks = bookDAO.getTop5LatestBooks();
 
@@ -219,7 +209,7 @@ if (top5LatestBooks.size() > 0) {
 }
 ```
 
-次の結果は、Stale Readによって返される価格が100.00であることを示しています。これは、更新前の値です。
+The following result shows that the price returned by Stale Read is 100.00, which is the value before the update.
 
 ```
 The latest book price (before update): 100.00
@@ -232,30 +222,26 @@ WARN: GC life time is shorter than transaction duration.
 </div>
 </SimpleTab>
 
-## トランザクションレベル {#transaction-level}
+## Transaction level {#transaction-level}
 
-`START TRANSACTION READ ONLY AS OF TIMESTAMP`ステートメントを使用すると、履歴時間に基づいて読み取り専用トランザクションを開始できます。これにより、指定された履歴タイムスタンプから履歴データが読み取られます。
+With the `START TRANSACTION READ ONLY AS OF TIMESTAMP` statement, you can start a read-only transaction based on historical time, which reads historical data from a specified historical timestamp.
 
-<SimpleTab>
-<div label="SQL" href="txn-sql">
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
-例えば：
-
-{{< copyable "" >}}
+For example:
 
 ```sql
 START TRANSACTION READ ONLY AS OF TIMESTAMP NOW() - INTERVAL 5 SECOND;
 ```
 
-この本の最新の価格を照会すると、 *The Story of Droolius Caesar*の価格がまだ100.0であることがわかります。これは、更新前の値です。
-
-{{< copyable "" >}}
+By querying the latest price of the book, you can see that the price of *The Story of Droolius Caesar* is still 100.0, which is the value before the update.
 
 ```sql
 SELECT id, title, type, price FROM books ORDER BY published_at DESC LIMIT 5;
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 +------------+------------------------------+-----------------------+--------+
@@ -270,7 +256,7 @@ SELECT id, title, type, price FROM books ORDER BY published_at DESC LIMIT 5;
 5 rows in set (0.01 sec)
 ```
 
-`COMMIT;`ステートメントのトランザクションがコミットされた後、最新のデータを読み取ることができます。
+After the transaction with the `COMMIT;` statement is committed, you can read the latest data.
 
 ```
 +------------+------------------------------+-----------------------+--------+
@@ -286,11 +272,9 @@ SELECT id, title, type, price FROM books ORDER BY published_at DESC LIMIT 5;
 ```
 
 </div>
-<div label="Java" href="txn-java">
+<div label="Java" value="java">
 
-トランザクションのヘルパークラスを定義できます。これは、ヘルパーメソッドとしてトランザクションレベルでStaleReadを有効にするコマンドをカプセル化します。
-
-{{< copyable "" >}}
+You can define a helper class for transactions, which encapsulates the command to enable Stale Read at the transaction level as a helper method.
 
 ```java
 public static class StaleReadHelper {
@@ -307,9 +291,7 @@ public static class StaleReadHelper {
 }
 ```
 
-次に、 `BookDAO`クラスのトランザクションを介してStaleRead機能を有効にするメソッドを定義します。クエリステートメントに`AS OF TIMESTAMP`を追加する代わりに、メソッドを使用してクエリを実行します。
-
-{{< copyable "" >}}
+Then define a method to enable the Stale Read feature through a transaction in the `BookDAO` class. Use the method to query instead of adding `AS OF TIMESTAMP` to the query statement.
 
 ```java
 public class BookDAO {
@@ -351,8 +333,6 @@ public class BookDAO {
 }
 ```
 
-{{< copyable "" >}}
-
 ```java
 List<Book> top5LatestBooks = bookDAO.getTop5LatestBooks();
 
@@ -375,7 +355,7 @@ if (top5LatestBooks.size() > 0) {
 }
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 The latest book price (before update): 100.00
@@ -387,23 +367,21 @@ The latest book price (after the transaction commit): 150
 </div>
 </SimpleTab>
 
-`SET TRANSACTION READ ONLY AS OF TIMESTAMP`ステートメントを使用すると、開いたトランザクションまたは次のトランザクションを、指定した履歴時間に基づいて読み取り専用トランザクションに設定できます。トランザクションは、提供された履歴時間に基づいて履歴データを読み取ります。
+With the `SET TRANSACTION READ ONLY AS OF TIMESTAMP` statement, you can set the opened transaction or the next transaction to be a read-only transaction based on a specified historical time. The transaction will read historical data based on the provided historical time.
 
-<SimpleTab>
-<div label="SQL" href="next-txn-sql">
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
-たとえば、次の`AS OF TIMESTAMP`のステートメントを使用して、進行中のトランザクションを読み取り専用モードに切り替え、5秒前の履歴データを読み取ることができます。
+For example, you can use the following `AS OF TIMESTAMP` statement to switch the ongoing transactions to the read-only mode and read historical data 5 seconds ago.
 
 ```sql
 SET TRANSACTION READ ONLY AS OF TIMESTAMP NOW() - INTERVAL 5 SECOND;
 ```
 
 </div>
-<div label="Java" href="next-txn-java">
+<div label="Java" value="java">
 
-トランザクションのヘルパークラスを定義できます。これは、ヘルパーメソッドとしてトランザクションレベルでStaleReadを有効にするコマンドをカプセル化します。
-
-{{< copyable "" >}}
+You can define a helper class for transactions, which encapsulates the command to enable Stale Read at the transaction level as a helper method.
 
 ```java
 public static class TxnHelper {
@@ -419,9 +397,7 @@ public static class TxnHelper {
 }
 ```
 
-次に、 `BookDAO`クラスのトランザクションを介してStaleRead機能を有効にするメソッドを定義します。クエリステートメントに`AS OF TIMESTAMP`を追加する代わりに、メソッドを使用してクエリを実行します。
-
-{{< copyable "" >}}
+Then define a method to enable the Stale Read feature through a transaction in the `BookDAO` class. Use the method to query instead of adding `AS OF TIMESTAMP` to the query statement.
 
 ```java
 public class BookDAO {
@@ -468,35 +444,29 @@ public class BookDAO {
 </div>
 </SimpleTab>
 
-## セッションレベル {#session-level}
+## Session level {#session-level}
 
-履歴データの読み取りをサポートするために、TiDBはv5.4以降に新しいシステム変数`tidb_read_staleness`を導入しました。これを使用して、現在のセッションが読み取ることを許可される履歴データの範囲を設定できます。そのデータ型は`int`で、スコープは`SESSION`です。
+To support reading historical data, TiDB has introduced a new system variable `tidb_read_staleness` since v5.4. you can use it to set the range of historical data that the current session is allowed to read. Its data type is `int` and its scope is `SESSION`.
 
-<SimpleTab>
-<div label="SQL">
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
-セッションでStaleReadを有効にします。
-
-{{< copyable "" >}}
+Enable Stale Read in a session:
 
 ```sql
 SET @@tidb_read_staleness="-5";
 ```
 
-たとえば、値が`-5`に設定されていて、TiKVに対応する履歴データがある場合、TiDBは5秒の時間範囲内で可能な限り新しいタイムスタンプを選択します。
+For example, if the value is set to `-5` and TiKV has the corresponding historical data, TiDB selects a timestamp as new as possible within a 5-second time range.
 
-セッションでStaleReadを無効にします。
-
-{{< copyable "" >}}
+Disable Stale Read in the session:
 
 ```sql
 set @@tidb_read_staleness="";
 ```
 
 </div>
-<div label="Java">
-
-{{< copyable "" >}}
+<div label="Java" value="java">
 
 ```java
 public static class StaleReadHelper{
@@ -522,8 +492,8 @@ public static class StaleReadHelper{
 </div>
 </SimpleTab>
 
-## 続きを読む {#read-more}
+## Read more {#read-more}
 
--   [古い読み取りの使用シナリオ](/stale-read.md)
--   [`AS OF TIMESTAMP`句を使用して履歴データを読み取る](/as-of-timestamp.md)
--   [`tidb_read_staleness`システム変数を使用して履歴データを読み取る](/tidb-read-staleness.md)
+-   [Usage Scenarios of Stale Read](/stale-read.md)
+-   [Read Historical Data Using the `AS OF TIMESTAMP` Clause](/as-of-timestamp.md)
+-   [Read Historical Data Using the `tidb_read_staleness` System Variable](/tidb-read-staleness.md)

@@ -3,25 +3,72 @@ title: SQL FAQs
 summary: Learn about the FAQs related to TiDB SQL.
 ---
 
-# SQLに関するFAQ {#sql-faqs}
+# SQL FAQs {#sql-faqs}
 
-このドキュメントは、TiDBでのSQL操作に関連するFAQをまとめたものです。
+This document summarizes the FAQs related to SQL operations in TiDB.
 
-## TiDBと互換性のあるMySQL変数は何ですか？ {#what-are-the-mysql-variables-that-tidb-is-compatible-with}
+## Does TiDB support the secondary key? {#does-tidb-support-the-secondary-key}
 
-[システム変数](/system-variables.md)を参照してください。
+Yes. You can have the [`NOT NULL` constraint](/constraints.md#not-null) on a non-primary key column with a unique [secondary index](/develop/dev-guide-create-secondary-indexes.md). In this case, the column works as a secondary key.
 
-## <code>ORDER BY</code>を省略した場合、結果の順序はMySQLとは異なります。 {#the-order-of-results-is-different-from-mysql-when-code-order-by-code-is-omitted}
+## How does TiDB perform when executing DDL operations on a large table? {#how-does-tidb-perform-when-executing-ddl-operations-on-a-large-table}
 
-バグではありません。レコードのデフォルトの順序は、一貫性を保証することなく、さまざまな状況によって異なります。
+DDL operations of TiDB on large tables are usually not an issue. TiDB supports online DDL operations, and these DDL operations do not block DML operations.
 
-クエリはシングルスレッドで実行されるため、MySQLでの結果の順序は安定しているように見える場合があります。ただし、新しいバージョンにアップグレードすると、クエリプランが変更される可能性があります。結果の順序が必要な場合は、常に`ORDER BY`を使用することをお勧めします。
+For some DDL operations such as adding columns, deleting columns or dropping indexes, TiDB can perform these operations quickly.
 
-参照は[ISO / IEC 9075：1992、データベース言語SQL-1992年7月30日](http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt)にあり、次のように記述されています。
+For some heavy DDL operations such as adding indexes, TiDB needs to backfill data, which takes a longer time (depending on the size of the table) and consumes additional resources. The impact on online traffic is tunable. TiDB can do the backfill with multiple threads, and the resource consumed can be set by the following system variables:
 
-> `<order by clause>`が指定されていない場合、 `<cursor specification>`で指定されたテーブルはTであり、Tの行の順序は実装に依存します。
+-   [`tidb_ddl_reorg_worker_cnt`](/system-variables.md#tidb_ddl_reorg_worker_cnt)
+-   [`tidb_ddl_reorg_priority`](/system-variables.md#tidb_ddl_reorg_priority)
+-   [`tidb_ddl_error_count_limit`](/system-variables.md#tidb_ddl_error_count_limit)
+-   [`tidb_ddl_reorg_batch_size`](/system-variables.md#tidb_ddl_reorg_batch_size)
 
-次の2つのクエリでは、両方の結果が合法であると見なされます。
+## How to choose the right query plan? Do I need to use hints? Or can I use hints? {#how-to-choose-the-right-query-plan-do-i-need-to-use-hints-or-can-i-use-hints}
+
+TiDB includes a cost-based optimizer. In most cases, the optimizer chooses the optimal query plan for you. If the optimizer does not work well, you can still use [optimizer hints](/optimizer-hints.md) to intervene with the optimizer.
+
+In addition, you can also use the [SQL binding](/sql-plan-management.md#sql-binding) to fix the query plan for a particular SQL statement.
+
+## How to prevent the execution of a particular SQL statement? {#how-to-prevent-the-execution-of-a-particular-sql-statement}
+
+You can create [SQL bindings](/sql-plan-management.md#sql-binding) with the [`MAX_EXECUTION_TIME`](/optimizer-hints.md#max_execution_timen) hint to limit the execution time of a particular statement to a small value (for example, 1ms). In this way, the statement is terminated automatically by the threshold.
+
+For example, to prevent the execution of `SELECT * FROM t1, t2 WHERE t1.id = t2.id`, you can use the following SQL binding to limit the execution time of the statement to 1ms:
+
+```sql
+CREATE GLOBAL BINDING for
+    SELECT * FROM t1, t2 WHERE t1.id = t2.id
+USING
+    SELECT /*+ MAX_EXECUTION_TIME(1) */ * FROM t1, t2 WHERE t1.id = t2.id;
+```
+
+> **Note:**
+>
+> The precision of `MAX_EXECUTION_TIME` is roughly 100ms. Before TiDB terminates the SQL statement, the tasks in TiKV might be started. To reduce the TiKV resource consumption in such case, it is recommended to set [`tidb_enable_paging`](/system-variables.md#tidb_enable_paging-new-in-v540) to `ON`.
+
+Dropping this SQL binding will remove the limit.
+
+```sql
+DROP GLOBAL BINDING for
+    SELECT * FROM t1, t2 WHERE t1.id = t2.id;
+```
+
+## What are the MySQL variables that TiDB is compatible with? {#what-are-the-mysql-variables-that-tidb-is-compatible-with}
+
+See [System Variables](/system-variables.md).
+
+## The order of results is different from MySQL when <code>ORDER BY</code> is omitted {#the-order-of-results-is-different-from-mysql-when-code-order-by-code-is-omitted}
+
+It is not a bug. The default order of records depends on various situations without any guarantee of consistency.
+
+The order of results in MySQL might appear stable because queries are executed in a single thread. However, it is common that query plans can change when upgrading to new versions. It is recommended to use `ORDER BY` whenever an order of results is desired.
+
+The reference can be found in [ISO/IEC 9075:1992, Database Language SQL- July 30, 1992](http://www.contrib.andrew.cmu.edu/~shadow/sql/sql1992.txt), which states as follows:
+
+> If an `<order by clause>` is not specified, then the table specified by the `<cursor specification>` is T and the ordering of rows in T is implementation-dependent.
+
+In the following two queries, both results are considered legal:
 
 ```sql
 > select * from t;
@@ -45,7 +92,7 @@ summary: Learn about the FAQs related to TiDB SQL.
 2 rows in set (0.00 sec)
 ```
 
-`ORDER BY`で使用されている列のリストが一意でない場合も、ステートメントは非決定的であると見なされます。次の例では、列`a`の値が重複しています。したがって、決定論的であることが保証されるのは`ORDER BY a, b`だけです。
+If the list of columns used in the `ORDER BY` is non-unique, the statement is also considered non-deterministic. In the following example, the column `a` has duplicate values. Thus, only `ORDER BY a, b` is guaranteed deterministic:
 
 ```sql
 > select * from t order by a;
@@ -59,8 +106,10 @@ summary: Learn about the FAQs related to TiDB SQL.
 3 rows in set (0.00 sec)
 ```
 
+In the following statement, the order of column `a` is guaranteed, but the order of `b` is not guaranteed.
+
 ```sql
-> select * from t order by a; -- the order of column a is guaranteed, but b is not
+> select * from t order by a;
 +------+------+
 | a    | b    |
 +------+------+
@@ -71,35 +120,44 @@ summary: Learn about the FAQs related to TiDB SQL.
 3 rows in set (0.00 sec)
 ```
 
-## TiDBは<code>SELECT FOR UPDATE</code>をサポートしていますか？ {#does-tidb-support-code-select-for-update-code}
+In TiDB, you can also use the system variable [`tidb_enable_ordered_result_mode`](/system-variables.md#tidb_enable_ordered_result_mode) to sort the final output result automatically.
 
-はい。ペシミスティックロック（TiDB v3.0以降のデフォルト）を使用する場合、 `SELECT FOR UPDATE`の実行はMySQLと同様に動作します。
+## Does TiDB support <code>SELECT FOR UPDATE</code>? {#does-tidb-support-code-select-for-update-code}
 
-楽観的ロックを使用する場合、 `SELECT FOR UPDATE`はトランザクションの開始時にデータをロックしませんが、トランザクションがコミットされるときに競合をチェックします。チェックで競合が明らかになった場合、コミットしているトランザクションはロールバックします。
+Yes. When using pessimistic locking (the default since TiDB v3.0.8) the `SELECT FOR UPDATE` execution behaves similar to MySQL.
 
-## TiDBのコーデックは、UTF-8文字列が比較可能であることを保証できますか？キーがUTF-8をサポートする必要がある場合、コーディングの提案はありますか？ {#can-the-codec-of-tidb-guarantee-that-the-utf-8-string-is-memcomparable-is-there-any-coding-suggestion-if-our-key-needs-to-support-utf-8}
+When using optimistic locking, `SELECT FOR UPDATE` does not lock data when the transaction is started, but checks conflicts when the transaction is committed. If the check reveals conflicts, the committing transaction rolls back.
 
-TiDBはデフォルトでUTF-8文字セットを使用し、現在はUTF-8のみをサポートしています。 TiDBの文字列は、memcomparable形式を使用します。
+For details, see [description of the `SELECT` syntax elements](/sql-statements/sql-statement-select.md#description-of-the-syntax-elements).
 
-## トランザクション内のステートメントの最大数はいくつですか？ {#what-is-the-maximum-number-of-statements-in-a-transaction}
+## Can the codec of TiDB guarantee that the UTF-8 string is memcomparable? Is there any coding suggestion if our key needs to support UTF-8? {#can-the-codec-of-tidb-guarantee-that-the-utf-8-string-is-memcomparable-is-there-any-coding-suggestion-if-our-key-needs-to-support-utf-8}
 
-トランザクション内のステートメントの最大数は、デフォルトで5000です。
+TiDB uses the UTF-8 character set by default and currently only supports UTF-8. The string of TiDB uses the memcomparable format.
 
-## 後で挿入されたデータの自動インクリメントIDが、TiDBに以前に挿入されたデータの自動インクリメントIDよりも小さいのはなぜですか？ {#why-does-the-auto-increment-id-of-the-later-inserted-data-is-smaller-than-that-of-the-earlier-inserted-data-in-tidb}
+## What is the maximum number of statements in a transaction? {#what-is-the-maximum-number-of-statements-in-a-transaction}
 
-TiDBの自動インクリメントID機能は、自動的にインクリメンタルで一意であることが保証されているだけであり、順次割り当てられることは保証されていません。現在、TiDBはIDをバッチで割り当てています。データが複数のTiDBサーバーに同時に挿入される場合、割り当てられたIDはシーケンシャルではありません。複数のスレッドが同時に複数の`tidb-server`インスタンスにデータを挿入する場合、後で挿入されるデータの自動インクリメントIDが小さくなる可能性があります。 TiDBでは、整数フィールドに`AUTO_INCREMENT`を指定できますが、1つのテーブルに`AUTO_INCREMENT`フィールドを1つだけ指定できます。詳細については、 [自動インクリメントID](/mysql-compatibility.md#auto-increment-id)を参照してください。
+The maximum number of statements in a transaction is 5000 by default.
 
-## <code>sql_mode</code>でsql_modeを変更するにはどうすればよいですか？ {#how-do-i-modify-the-code-sql-mode-code-in-tidb}
+In the optimistic transaction mode, When transaction retry is enabled, the default upper limit is 5000. You can adjust the limit by using the [`stmt-count-limit`](/tidb-configuration-file.md#stmt-count-limit) parameter.
 
-TiDBは、SESSIONまたはGLOBALベースで[`sql_mode`](/system-variables.md#sql_mode)のシステム変数の変更をサポートします。 [`GLOBAL`](/sql-statements/sql-statement-set-variable.md)のスコープ変数への変更は、クラスタの残りのサーバーに伝播し、再起動後も保持されます。これは、各TiDBサーバーで`sql_mode`の値を変更する必要がないことを意味します。
+## Why does the auto-increment ID of the later inserted data is smaller than that of the earlier inserted data in TiDB? {#why-does-the-auto-increment-id-of-the-later-inserted-data-is-smaller-than-that-of-the-earlier-inserted-data-in-tidb}
 
-## エラー： <code>java.sql.BatchUpdateExecption:statement count 5001 exceeds the transaction limitation</code>ます {#error-code-java-sql-batchupdateexecption-statement-count-5001-exceeds-the-transaction-limitation-code-while-using-sqoop-to-write-data-into-tidb-in-batches}
+The auto-increment ID feature in TiDB is only guaranteed to be automatically incremental and unique but is not guaranteed to be allocated sequentially. Currently, TiDB is allocating IDs in batches. If data is inserted into multiple TiDB servers simultaneously, the allocated IDs are not sequential. When multiple threads concurrently insert data to multiple `tidb-server` instances, the auto-increment ID of the later inserted data might be smaller. TiDB allows specifying `AUTO_INCREMENT` for the integer field, but allows only one `AUTO_INCREMENT` field in a single table. For details, see [Auto-increment ID](/mysql-compatibility.md#auto-increment-id) and [the AUTO_INCREMENT attribute](/auto-increment.md).
 
-Sqoopでは、 `--batch`は各バッチで100個のステートメントをコミットすることを意味しますが、デフォルトでは、各ステートメントには100個のSQLステートメントが含まれています。したがって、100 * 100 = 10000 SQLステートメント。これは、単一のTiDBトランザクションで許可されるステートメントの最大数である5000を超えます。
+## How do I modify the <code>sql_mode</code> in TiDB? {#how-do-i-modify-the-code-sql-mode-code-in-tidb}
 
-2つの解決策：
+TiDB supports modifying the [`sql_mode`](/system-variables.md#sql_mode) system variables on a SESSION or GLOBAL basis.
 
--   次のように`-Dsqoop.export.records.per.statement=10`のオプションを追加します。
+-   Changes to [`GLOBAL`](/sql-statements/sql-statement-set-variable.md) scoped variables propagate to the rest servers of the cluster and persist across restarts. This means that you do not need to change the `sql_mode` value on each TiDB server.
+-   Changes to `SESSION` scoped variables only affect the current client session. After restarting a server, the changes are lost.
+
+## Error: <code>java.sql.BatchUpdateExecption:statement count 5001 exceeds the transaction limitation</code> while using Sqoop to write data into TiDB in batches {#error-code-java-sql-batchupdateexecption-statement-count-5001-exceeds-the-transaction-limitation-code-while-using-sqoop-to-write-data-into-tidb-in-batches}
+
+In Sqoop, `--batch` means committing 100 statements in each batch, but by default each statement contains 100 SQL statements. So, 100 * 100 = 10000 SQL statements, which exceeds 5000, the maximum number of statements allowed in a single TiDB transaction.
+
+Two solutions:
+
+-   Add the `-Dsqoop.export.records.per.statement=10` option as follows:
 
     {{< copyable "" >}}
 
@@ -114,42 +172,42 @@ Sqoopでは、 `--batch`は各バッチで100個のステートメントをコ�
         --batch
     ```
 
--   1つのTiDBトランザクションで制限された数のステートメントを増やすこともできますが、これにより多くのメモリが消費されます。
+-   You can also increase the limited number of statements in a single TiDB transaction, but this will consume more memory. For details, see [Limitations on SQL statements](/tidb-limitations.md#limitations-on-sql-statements).
 
-## TiDBにはOracleのフラッシュバッククエリのような機能がありますか？ DDLをサポートしていますか？ {#does-tidb-have-a-function-like-the-flashback-query-in-oracle-does-it-support-ddl}
+## Does TiDB have a function like the Flashback Query in Oracle? Does it support DDL? {#does-tidb-have-a-function-like-the-flashback-query-in-oracle-does-it-support-ddl}
 
-はい、そうです。また、DDLもサポートしています。詳細については、 [TiDBが履歴バージョンからデータを読み取る方法](/read-historical-data.md)を参照してください。
+Yes, it does. And it supports DDL as well. For details, see [Read Historical Data Using the `AS OF TIMESTAMP` Clause](/as-of-timestamp.md).
 
-## TiDBはデータを削除した直後にスペースを解放しますか？ {#does-tidb-release-space-immediately-after-deleting-data}
+## Does TiDB release space immediately after deleting data? {#does-tidb-release-space-immediately-after-deleting-data}
 
-`DELETE` 、および`TRUNCATE`の操作のいずれも、データをすぐに解放しませ`DROP` 。 `TRUNCATE`および`DROP`の操作では、TiDB GC（ガベージコレクション）時間（デフォルトでは10分）の後、データが削除され、スペースが解放されます。 `DELETE`回の操作では、データは削除されますが、圧縮が実行されるまでスペースはすぐには解放されません。
+None of the `DELETE`, `TRUNCATE` and `DROP` operations release data immediately. For the `TRUNCATE` and `DROP` operations, after the TiDB GC (Garbage Collection) time (10 minutes by default), the data is deleted and the space is released. For the `DELETE` operations, the data is deleted but the space is not immediately released until the compaction is performed.
 
-## データが削除された後、クエリ速度が遅くなるのはなぜですか？ {#why-does-the-query-speed-get-slow-after-data-is-deleted}
+## Why does the query speed get slow after data is deleted? {#why-does-the-query-speed-get-slow-after-data-is-deleted}
 
-大量のデータを削除すると、多くの役に立たないキーが残り、クエリの効率に影響します。現在、この問題を解決することが期待される[リージョンマージ](/best-practices/massive-regions-best-practices.md)つの機能が開発中です。詳細については、 [TiDBベストプラクティスのデータセクションの削除](https://en.pingcap.com/blog/tidb-best-practice/#write)を参照してください。
+Deleting a large amount of data leaves a lot of useless keys, affecting the query efficiency. To solve the problem, you can use the [Region Merge](/best-practices/massive-regions-best-practices.md#method-3-enable-region-merge) feature. For details, see the [deleting data section in TiDB Best Practices](https://en.pingcap.com/blog/tidb-best-practice/#write).
 
-## データを削除した後にストレージスペースを再利用するのが遅い場合はどうすればよいですか？ {#what-should-i-do-if-it-is-slow-to-reclaim-storage-space-after-deleting-data}
+## What should I do if it is slow to reclaim storage space after deleting data? {#what-should-i-do-if-it-is-slow-to-reclaim-storage-space-after-deleting-data}
 
-TiDBはマルチバージョン同時実行制御（MVCC）を使用するため、データを削除してもすぐにスペースが再利用されるわけではありません。ガベージコレクションは、同時トランザクションが以前のバージョンの行を表示できるように遅延されます。これは、 [`tidb_gc_life_time`](/system-variables.md#tidb_gc_life_time-new-in-v50) （デフォルト： `10m0s` ）システム変数を介して構成できます。
+Because TiDB uses multi-version concurrency control (MVCC), when the old data is overwritten with new data, the old data is not replaced but retained along with the new data. Timestamps are used to identify the data version. Deleting data does not immediately reclaim space. Garbage collection is delayed so that concurrent transactions are able to see earlier versions of rows. This can be configured via the [`tidb_gc_life_time`](/system-variables.md#tidb_gc_life_time-new-in-v50) (default: `10m0s`) system variable.
 
-## <code>SHOW PROCESSLIST</code>はシステムプロセスIDを表示しますか？ {#does-code-show-processlist-code-display-the-system-process-id}
+## Does <code>SHOW PROCESSLIST</code> display the system process ID? {#does-code-show-processlist-code-display-the-system-process-id}
 
-TiDB1の表示内容は`SHOW PROCESSLIST`とほぼ同じ`SHOW PROCESSLIST` 。 `show processlist`はシステムプロセスIDを表示しません。表示されるIDは、現在のセッションIDです。 `show processlist`と`show processlist`の違いは次のとおりです。
+The display content of TiDB `SHOW PROCESSLIST` is almost the same as that of MySQL `SHOW PROCESSLIST`. TiDB `SHOW PROCESSLIST` does not display the system process ID. The ID that it displays is the current session ID. The differences between TiDB `SHOW PROCESSLIST` and MySQL `SHOW PROCESSLIST` are as follows:
 
--   TiDBは分散データベースであるため、 `tidb-server`インスタンスはSQLステートメントを解析および実行するためのステートレスエンジンです（詳細については、 [TiDBアーキテクチャ](/tidb-architecture.md)を参照してください）。 `show processlist`は、クラスタで実行されているすべてのセッションのリストではなく、ユーザーがMySQLクライアントからログインする`tidb-server`インスタンスで実行されたセッションリストを表示します。ただし、MySQLはスタンドアロンデータベースであり、その`show processlist`はMySQLで実行されたすべてのSQLステートメントを表示します。
--   TiDBの`State`列は、クエリの実行中に継続的に更新されません。 TiDBは並列クエリをサポートしているため、各ステートメントは一度に複数の*状態*になる可能性があり、したがって単一の値に単純化することは困難です。
+-   As TiDB is a distributed database, the `tidb-server` instance is a stateless engine for parsing and executing the SQL statements (for details, see [TiDB architecture](/tidb-architecture.md)). `SHOW PROCESSLIST` displays the session list executed in the `tidb-server` instance that the user logs in to from the MySQL client, not the list of all the sessions running in the cluster. But MySQL is a standalone database and its `SHOW PROCESSLIST` displays all the SQL statements executed in MySQL.
+-   The `State` column in TiDB is not continually updated during query execution. Because TiDB supports parallel query, each statement might be in multiple *states* at once, and so it is difficult to simplify to a single value.
 
-## SQLコミットの実行優先度を制御または変更するにはどうすればよいですか？ {#how-to-control-or-change-the-execution-priority-of-sql-commits}
+## How to control or change the execution priority of SQL commits? {#how-to-control-or-change-the-execution-priority-of-sql-commits}
 
-[グローバル](/tidb-configuration-file.md#force-priority) [セッションごと](/system-variables.md#tidb_force_priority)または個別のステートメントに基づいて優先度を変更することをサポートしています。優先度には次の意味があります。
+TiDB supports changing the priority on a [global](/system-variables.md#tidb_force_priority) or individual statement basis. Priority has the following meaning:
 
--   `HIGH_PRIORITY` ：このステートメントの優先度は高くなります。つまり、TiDBはこのステートメントを優先し、最初に実行します。
+-   `HIGH_PRIORITY`: this statement has a high priority, that is, TiDB gives priority to this statement and executes it first.
 
--   `LOW_PRIORITY` ：このステートメントの優先度は低くなります。つまり、TiDBは、実行期間中にこのステートメントの優先度を下げます。
+-   `LOW_PRIORITY`: this statement has a low priority, that is, TiDB reduces the priority of this statement during the execution period.
 
-上記の2つのパラメータをTiDBのDMLと組み合わせて使用できます。例えば：
+You can combine the above two parameters with the DML of TiDB to use them. For example:
 
-1.  データベースにSQLステートメントを記述して、優先順位を調整します。
+1.  Adjust the priority by writing SQL statements in the database:
 
     {{< copyable "" >}}
 
@@ -161,86 +219,84 @@ TiDB1の表示内容は`SHOW PROCESSLIST`とほぼ同じ`SHOW PROCESSLIST` 。 `
     replace HIGH_PRIORITY | LOW_PRIORITY into table_name;
     ```
 
-2.  全表スキャンステートメントは、自動的に低い優先度に調整されます。デフォルトでは、 `analyze`の優先度は低くなっています。
+2.  The full table scan statement automatically adjusts itself to a low priority. `analyze` has a low priority by default.
 
-## TiDBでの<code>auto analyze</code>のトリガー戦略は何ですか？ {#what-s-the-trigger-strategy-for-code-auto-analyze-code-in-tidb}
+## What's the trigger strategy for <code>auto analyze</code> in TiDB? {#what-s-the-trigger-strategy-for-code-auto-analyze-code-in-tidb}
 
-トリガー戦略： `auto analyze`は、新しいテーブルの行数が1000に達し、このテーブルに1分以内に書き込み操作がない場合に自動的にトリガーされます。
+Trigger strategy: `auto analyze` is automatically triggered when the number of rows in a new table reaches 1000 and this table has no write operation within one minute.
 
-変更された数または現在の合計行数が`tidb_auto_analyze_ratio`より大きい場合、 `analyze`ステートメントが自動的にトリガーされます。デフォルト値の`tidb_auto_analyze_ratio`は0.5で、この機能がデフォルトで有効になっていることを示します。安全性を確保するために、機能が有効になっている場合の最小値は0.3であり、デフォルト値が0.8の`pseudo-estimate-ratio`より小さくする必要があります。そうでない場合、疑似統計が一定期間使用されます。 `tidb_auto_analyze_ratio`を0.5に設定することをお勧めします。
+When the ratio (the number of modified rows / the current total number of rows) is larger than `tidb_auto_analyze_ratio`, the `analyze` statement is automatically triggered. The default value of `tidb_auto_analyze_ratio` is 0.5, indicating that this feature is enabled by default. To ensure safety, its minimum value is 0.3 when the feature is enabled, and it must be smaller than `pseudo-estimate-ratio` whose default value is 0.8, otherwise pseudo statistics will be used for a period of time. It is recommended to set `tidb_auto_analyze_ratio` to 0.5.
 
-自動分析は、システム変数`tidb_enable_auto_analyze`を使用して無効にすることができます。
+To disable auto analyze, use the system variable `tidb_enable_auto_analyze`.
 
-## ヒントを使用してオプティマイザーの動作をオーバーライドできますか？ {#can-i-use-hints-to-override-the-optimizer-behavior}
+## Can I use optimizer hints to override the optimizer behavior? {#can-i-use-optimizer-hints-to-override-the-optimizer-behavior}
 
-TiDBは、 [ヒント](/optimizer-hints.md)と[SQL計画管理](/sql-plan-management.md)を含む、デフォルトのクエリオプティマイザの動作をオーバーライドする複数の方法をサポートしています。基本的な使用法はMySQLに似ていますが、いくつかのTiDB固有の拡張機能があります。
-
-{{< copyable "" >}}
+TiDB supports multiple ways to override the default query optimizer behavior, including [hints](/optimizer-hints.md) and [SQL Plan Management](/sql-plan-management.md). The basic usage is similar to MySQL, with several TiDB specific extensions:
 
 ```sql
 SELECT column_name FROM table_name USE INDEX（index_name）WHERE where_condition;
 ```
 
-## <code>Information schema is changed</code>というエラーが報告されるのはなぜですか？ {#why-the-code-information-schema-is-changed-code-error-is-reported}
+## Why the <code>Information schema is changed</code> error is reported? {#why-the-code-information-schema-is-changed-code-error-is-reported}
 
-TiDBは、 `schema`回を使用してSQLステートメントを処理し、オンライン非同期DDL変更をサポートします。 DMLステートメントとDDLステートメントが同時に実行される可能性があるため、各ステートメントが同じ`schema`を使用して実行されることを確認する必要があります。したがって、DML操作が進行中のDDL操作と一致すると、 `Information schema is changed`エラーが報告される場合があります。 DML操作中のエラー報告が多すぎるのを防ぐために、いくつかの改善が行われました。
+TiDB handles the SQL statement using the `schema` of the time and supports online asynchronous DDL change. A DML statement and a DDL statement might be executed at the same time and you must ensure that each statement is executed using the same `schema`. Therefore, when the DML operation meets the ongoing DDL operation, the `Information schema is changed` error might be reported. Some improvements have been made to prevent too many error reportings during the DML operation.
 
-現在、このエラー報告にはまだいくつかの理由があります（最初の1つだけがテーブルに関連しています）。
+Now, there are still a few causes for this error reporting:
 
--   DML操作に関係するいくつかのテーブルは、進行中のDDL操作に関係するテーブルと同じです。
--   DML操作は長時間続きます。この期間中に、多くのDDLステートメントが実行されたため、1024を超える`schema`バージョンの変更が発生します。 `tidb_max_delta_schema_count`変数を変更することにより、このデフォルト値を変更できます。
--   DML要求を受け入れるTiDBサーバーは、 `schema information`を長時間ロードできません（TiDBとPDまたはTiKV間の接続障害が原因である可能性があります）。この期間中に、多くのDDLステートメントが実行されたため、100を`schema`バージョン変更が発生しました。
--   TiDBの再起動後、最初のDDL操作が実行される前に、DML操作が実行され、最初のDDL操作が発生します（つまり、最初のDDL操作が実行される前に、DMLに対応するトランザクションが開始されます。最初の`schema`バージョンの後DDLが変更されると、DMLに対応するトランザクションがコミットされます）、このDML操作はこのエラーを報告します。
+-   Cause 1: Some tables involved in the DML operation are the same tables involved in the ongoing DDL operation. To check the ongoing DDL operations, use the `ADMIN SHOW DDL` statement.
+-   Cause 2: The DML operation goes on for a long time. During this period, many DDL statements have been executed, which causes more than 1024 `schema` version changes. You can modify this default value by modifying the `tidb_max_delta_schema_count` variable.
+-   Cause 3: The TiDB server that accepts the DML request is not able to load `schema information` for a long time (possibly caused by the connection failure between TiDB and PD or TiKV). During this period, many DDL statements have been executed, which causes more than 100 `schema` version changes.
+-   Cause 4: After TiDB restarts and before the first DDL operation is executed, the DML operation is executed and then encounters the first DDL operation (which means before the first DDL operation is executed, the transaction corresponding to the DML is started. And after the first `schema` version of the DDL is changed, the transaction corresponding to the DML is committed), this DML operation reports this error.
 
-> **ノート：**
+In the preceding causes, only Cause 1 is related to tables. Cause 1 and Cause 2 do not impact the application, as the related DML operations retry after failure. For cause 3, you need to check the network between TiDB and TiKV/PD.
+
+> **Note:**
 >
-> -   現在、TiDBは`schema`のバージョン変更をすべてキャッシュしているわけではありません。
-> -   DDL操作ごとに、 `schema`のバージョン変更の数は、対応する`schema state`のバージョン変更の数と同じです。
-> -   DDL操作が異なると、 `schema`バージョンの変更の数も異なります。たとえば、 `CREATE TABLE`ステートメントは1つの`schema`バージョン変更を引き起こし、 `ADD COLUMN`ステートメントは4つを引き起こします。
+> -   Currently, TiDB does not cache all the `schema` version changes.
+> -   For each DDL operation, the number of `schema` version changes is the same with the number of corresponding `schema state` version changes.
+> -   Different DDL operations cause different number of `schema` version changes. For example, the `CREATE TABLE` statement causes one `schema` version change while the `ADD COLUMN` statement causes four.
 
-## 「情報スキーマが古くなっています」エラーの原因は何ですか？ {#what-are-the-causes-of-the-information-schema-is-out-of-date-error}
+## What are the causes of the "Information schema is out of date" error? {#what-are-the-causes-of-the-information-schema-is-out-of-date-error}
 
-DMLステートメントを実行するときに、TiDBがDDLリース内の最新のスキーマ（デフォルトでは45秒）のロードに失敗すると、 `Information schema is out of date`エラーが発生する可能性があります。考えられる原因は次のとおりです。
+When executing a DML statement, if TiDB fails to load the latest schema within a DDL lease (45s by default), the `Information schema is out of date` error might occur. Possible causes are:
 
--   このDMLを実行したTiDBインスタンスが強制終了され、このDMLステートメントに対応するトランザクションの実行にDDLリースよりも時間がかかりました。トランザクションがコミットされたときに、エラーが発生しました。
--   このDMLステートメントの実行中に、TiDBがPDまたはTiKVに接続できませんでした。その結果、キープアライブ設定が原因で、TiDBがDDLリース内のスキーマのロードに失敗したか、PDから切断されました。
+-   The TiDB instance that executed this DML was killed, and the transaction execution corresponding to this DML statement took longer than a DDL lease. When the transaction was committed, the error occurred.
+-   TiDB failed to connect to PD or TiKV while executing this DML statement. As a result, TiDB failed to load schema within a DDL lease or disconnected from PD due to the keepalive setting.
 
-## 高い同時実行性でDDLステートメントを実行するとエラーが報告されますか？ {#error-is-reported-when-executing-ddl-statements-under-high-concurrency}
+## Error is reported when executing DDL statements under high concurrency? {#error-is-reported-when-executing-ddl-statements-under-high-concurrency}
 
-高い同時実行性でDDLステートメント（バッチでのテーブルの作成など）を実行すると、同時実行中のキーの競合が原因で、これらのステートメントのごく一部が失敗する可能性があります。
+When you execute DDL statements (such as creating tables in batches) under high concurrency, a very few of these statements might fail because of key conflicts during the concurrent execution.
 
-同時DDLステートメントの数を20未満に保つことをお勧めします。それ以外の場合は、クライアントから失敗したステートメントを再試行する必要があります。
+It is recommended to keep the number of concurrent DDL statements under 20. Otherwise, you need to retry the failed statements from the client.
 
-## SQLの最適化 {#sql-optimization}
+## SQL optimization {#sql-optimization}
 
-### TiDB実行プランの説明 {#tidb-execution-plan-description}
+### TiDB execution plan description {#tidb-execution-plan-description}
 
-[クエリ実行プランを理解する](/explain-overview.md)を参照してください。
+See [Understand the Query Execution Plan](/explain-overview.md).
 
-### 統計収集 {#statistics-collection}
+### Statistics collection {#statistics-collection}
 
-[統計入門](/statistics.md)を参照してください。
+See [Introduction to Statistics](/statistics.md).
 
-### <code>select count(1)</code>を最適化する方法は？ {#how-to-optimize-code-select-count-1-code}
+### How to optimize <code>select count(1)</code>? {#how-to-optimize-code-select-count-1-code}
 
-`count(1)`ステートメントは、テーブル内の行の総数をカウントします。並行性の程度を改善すると、速度を大幅に向上させることができます。並行性を変更するには、 [資料](/system-variables.md#tidb_distsql_scan_concurrency)を参照してください。ただし、CPUとI/Oリソースにも依存します。 TiDBは、すべてのクエリでTiKVにアクセスします。データ量が少ない場合、すべてのMySQLがメモリ内にあり、TiDBはネットワークアクセスを実行する必要があります。
+The `count(1)` statement counts the total number of rows in a table. Improving the degree of concurrency can significantly improve the speed. To modify the concurrency, refer to the [`tidb_distsql_scan_concurrency` document](/system-variables.md#tidb_distsql_scan_concurrency). But it also depends on the CPU and I/O resources. TiDB accesses TiKV in every query. When the amount of data is small, all MySQL is in memory, and TiDB needs to conduct a network access.
 
-推奨事項：
+Recommendations:
 
-1.  ハードウェア構成を改善します。 [ソフトウェアとハードウェアの要件](/hardware-and-software-requirements.md)を参照してください。
-2.  並行性を改善します。デフォルト値は10です。50に改善して試してみることができます。ただし、通常、改善はデフォルト値の2〜4倍です。
-3.  大量のデータの場合は`count`をテストします。
-4.  TiKV構成を最適化します。 [TiKVスレッドのパフォーマンスを調整する](/tune-tikv-thread-performance.md)と[TiKVメモリパフォーマンスの調整](/tune-tikv-memory-performance.md)を参照してください。
-5.  [コプロセッサーキャッシュ](/coprocessor-cache.md)を有効にします。
+-   Improve the hardware configuration. See [Software and Hardware Requirements](/hardware-and-software-requirements.md).
+-   Improve the concurrency. The default value is 10. You can improve it to 50 and have a try. But usually the improvement is 2-4 times of the default value.
+-   Test the `count` in the case of large amount of data.
+-   Optimize the TiKV configuration. See [Tune TiKV Thread Performance](/tune-tikv-thread-performance.md) and [Tune TiKV Memory Performance](/tune-tikv-memory-performance.md).
+-   Enable the [Coprocessor Cache](/coprocessor-cache.md).
 
-### 現在のDDLジョブの進行状況を表示するにはどうすればよいですか？ {#how-to-view-the-progress-of-the-current-ddl-job}
+### How to view the progress of the current DDL job? {#how-to-view-the-progress-of-the-current-ddl-job}
 
-`admin show ddl`を使用して、現在のDDLジョブの進行状況を表示できます。操作は次のとおりです。
-
-{{< copyable "" >}}
+You can use `ADMIN SHOW DDL` to view the progress of the current DDL job. The operation is as follows:
 
 ```sql
-admin show ddl;
+ADMIN SHOW DDL;
 ```
 
 ```
@@ -251,44 +307,52 @@ RUNNING_JOBS: ID:121, Type:add index, State:running, SchemaState:write reorganiz
      SELF_ID: 1a1c4174-0fcd-4ba0-add9-12d08c4077dc
 ```
 
-上記の結果から、 `add index`の操作が現在処理されていることがわかります。また、 `RUNNING_JOBS`列の`RowCount`フィールドから、 `add index`操作で77312行のインデックスが追加されたことを確認できます。
+From the above results, you can get that the `ADD INDEX` operation is currently being processed. You can also get from the `RowCount` field of the `RUNNING_JOBS` column that now the `ADD INDEX` operation has added 77312 rows of indexes.
 
-### DDLジョブを表示する方法は？ {#how-to-view-the-ddl-job}
+### How to view the DDL job? {#how-to-view-the-ddl-job}
 
--   `admin show ddl` ：実行中のDDLジョブを表示します
--   `admin show ddl jobs` ：現在のDDLジョブキュー内のすべての結果（実行中および実行待ちのタスクを含む）と、完了したDDLジョブキュー内の最後の10個の結果を表示します
--   `admin show ddl job queries 'job_id' [, 'job_id'] ...` ： `job_id`に対応するDDLタスクの元のSQLステートメントを表示します。 `job_id`は実行中のDDLジョブのみを検索し、最後の10個はDDL履歴ジョブキューになります。
+-   `ADMIN SHOW DDL`: to view the running DDL job
+-   `ADMIN SHOW DDL JOBS`: to view all the results in the current DDL job queue (including tasks that are running and waiting to run) and the last ten results in the completed DDL job queue
+-   `ADMIN SHOW DDL JOBS QUERIES 'job_id' [, 'job_id'] ...`: to view the original SQL statement of the DDL task corresponding to the `job_id`; the `job_id` only searches the running DDL job and the last ten results in the DDL history job queue.
 
-### TiDBはCBO（コストベースの最適化）をサポートしていますか？はいの場合、どの程度ですか？ {#does-tidb-support-cbo-cost-based-optimization-if-yes-to-what-extent}
+### Does TiDB support CBO (Cost-Based Optimization)? If yes, to what extent? {#does-tidb-support-cbo-cost-based-optimization-if-yes-to-what-extent}
 
-はい。 TiDBはコストベースのオプティマイザを使用します。コストモデルと統計は常に最適化されています。 TiDBは、ハッシュ結合やソートマージ結合などの結合アルゴリズムもサポートしています。
+Yes. TiDB uses the cost-based optimizer. The cost model and statistics are constantly optimized. TiDB also supports join algorithms like hash join and sort-merge join.
 
-### テーブルに対して<code>analyze</code>を実行する必要があるかどうかを判断するにはどうすればよいですか？ {#how-to-determine-whether-i-need-to-execute-code-analyze-code-on-a-table}
+### How to determine whether I need to execute <code>analyze</code> on a table? {#how-to-determine-whether-i-need-to-execute-code-analyze-code-on-a-table}
 
-`show stats_healthy`を使用して`Healthy`フィールドを表示します。通常、フィールド値が60より小さい場合は、テーブルで`analyze`を実行する必要があります。
+View the `Healthy` field using `SHOW STATS_HEALTHY` and generally you need to execute `ANALYZE` on a table when the field value is smaller than 60.
 
-### クエリプランがツリーとして表示される場合のIDルールとは何ですか？このツリーの実行順序は何ですか？ {#what-is-the-id-rule-when-a-query-plan-is-presented-as-a-tree-what-is-the-execution-order-for-this-tree}
+### What is the ID rule when a query plan is presented as a tree? What is the execution order for this tree? {#what-is-the-id-rule-when-a-query-plan-is-presented-as-a-tree-what-is-the-execution-order-for-this-tree}
 
-これらのIDにはルールはありませんが、IDは一意です。 IDが生成されると、カウンターが機能し、1つのプランが生成されるときにカウンターが追加されます。実行順序はIDとは関係ありません。クエリプラン全体がツリーであり、実行プロセスはルートノードから開始され、データは継続的に上位レベルに返されます。クエリプランの詳細については、 [TiDBクエリ実行プランを理解する](/explain-overview.md)を参照してください。
+No rule exists for these IDs but the IDs are unique. When IDs are generated, a counter works and adds one when one plan is generated. The execution order has nothing to do with the ID. The whole query plan is a tree and the execution process starts from the root node and the data is returned to the upper level continuously. For details about the query plan, see [Understanding the TiDB Query Execution Plan](/explain-overview.md).
 
-### TiDBクエリプランでは、 <code>cop</code>タスクは同じルートにあります。それらは同時に実行されますか？ {#in-the-tidb-query-plan-code-cop-code-tasks-are-in-the-same-root-are-they-executed-concurrently}
+### In the TiDB query plan, <code>cop</code> tasks are in the same root. Are they executed concurrently? {#in-the-tidb-query-plan-code-cop-code-tasks-are-in-the-same-root-are-they-executed-concurrently}
 
-現在、TiDBのコンピューティングタスクは、 `cop task`と`root task`の2つの異なるタイプのタスクに属しています。
+Currently the computing tasks of TiDB belong to two different types of tasks: `cop task` and `root task`.
 
-`cop task`は、分散実行のためにKVエンドにプッシュダウンされるコンピューティングタスクです。 `root task`は、TiDB側でのシングルポイント実行の計算タスクです。
+`cop task` is the computing task which is pushed down to the KV end for distributed execution; `root task` is the computing task for single point execution on the TiDB end.
 
-通常、 `root task`の入力データは`cop task`から取得されます。 `root task`がデータを処理する場合、 `cop task`のTiKVが同時にデータを処理し、 `root task`のTiDBがプルされるのを待ちます。したがって、 `cop`個のタスクが同時に実行されたと見なすことができます。しかし、それらのデータにはアップストリームとダウンストリームの関係があります。実行プロセス中、それらはしばらくの間同時に実行されます。たとえば、最初の`cop task`は[100、200]のデータを処理し、次の`cop task`は[1、100]のデータを処理しています。詳細については、 [TiDBクエリプランを理解する](/explain-overview.md)を参照してください。
+Generally the input data of `root task` comes from `cop task`; when `root task` processes data, `cop task` of TiKV can processes data at the same time and waits for the pull of `root task` of TiDB. Therefore, `cop` tasks can be considered as executed concurrently with `root task`; but their data has an upstream and downstream relationship. During the execution process, they are executed concurrently during some time. For example, the first `cop task` is processing the data in [100, 200] and the second `cop task` is processing the data in [1, 100]. For details, see [Understanding the TiDB Query Plan](/explain-overview.md).
 
-## データベースの最適化 {#database-optimization}
+## Database optimization {#database-optimization}
 
-### TiDBオプションの編集 {#edit-tidb-options}
+### Edit TiDB options {#edit-tidb-options}
 
-[TiDBコマンドオプション](/command-line-flags-for-tidb-configuration.md)を参照してください。
+See [The TiDB Command Options](/command-line-flags-for-tidb-configuration.md).
 
-### ホットスポットを分散させる方法は？ {#how-to-scatter-the-hotspots}
+### How to avoid hotspot issues and achieve load balancing? Is hot partition or range an issue in TiDB? {#how-to-avoid-hotspot-issues-and-achieve-load-balancing-is-hot-partition-or-range-an-issue-in-tidb}
 
-TiDBでは、データは管理のためにリージョンに分割されます。一般に、TiDBホットスポットとは、リージョン内の読み取り/書き込みホットスポットを意味します。 TiDBでは、主キー（PK）が整数ではないテーブル、またはPKがないテーブルの場合、リージョンのホットスポットを分散するように`SHARD_ROW_ID_BITS`を構成することで、リージョンを適切に分割できます。詳細については、 `SHARD_ROW_ID_BITS`の紹介を参照して[`SHARD_ROW_ID_BITS`](/shard-row-id-bits.md) 。
+To learn the scenarios that cause hotspots, refer to [common hotpots](/troubleshoot-hot-spot-issues.md#common-hotspots). The following TiDB features are designed to help you solve hotspot issues:
 
-### TiKVのパフォーマンスを調整する {#tune-tikv-performance}
+-   The [`SHARD_ROW_ID_BITS`](/troubleshoot-hot-spot-issues.md#use-shard_row_id_bits-to-process-hotspots) attribute. After setting this attribute, row IDs are scattered and written into multiple Regions, which can alleviate the write hotspot issue.
+-   The [`AUTO_RANDOM`](/troubleshoot-hot-spot-issues.md#handle-auto-increment-primary-key-hotspot-tables-using-auto_random) attribute, which helps resolve hotspots brought by auto-increment primary keys.
+-   [Coprocessor Cache](/coprocessor-cache.md), for read hotspots on small tables.
+-   [Load Base Split](/configure-load-base-split.md), for hotspots caused by unbalanced access between Regions, such as full table scans for small tables.
+-   [Cached tables](/cached-tables.md), for frequently accessed but rarely updated small hotspot tables.
 
-[TiKVスレッドのパフォーマンスを調整する](/tune-tikv-thread-performance.md)と[TiKVメモリパフォーマンスの調整](/tune-tikv-memory-performance.md)を参照してください。
+If you have a performance issue caused by hotspot, refer to [Troubleshoot Hotspot Issues](/troubleshoot-hot-spot-issues.md) to get it resolved.
+
+### Tune TiKV performance {#tune-tikv-performance}
+
+See [Tune TiKV Thread Performance](/tune-tikv-thread-performance.md) and [Tune TiKV Memory Performance](/tune-tikv-memory-performance.md).

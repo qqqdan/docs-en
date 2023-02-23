@@ -3,35 +3,35 @@ title: Cached Tables
 summary: Learn the cached table feature in TiDB, which is used for rarely-updated small hotspot tables to improve read performance.
 ---
 
-# キャッシュされたテーブル {#cached-tables}
+# Cached Tables {#cached-tables}
 
-v6.0.0では、TiDBは、頻繁にアクセスされるがめったに更新されない小さなホットスポットテーブル用のキャッシュテーブル機能を導入しています。この機能を使用すると、テーブル全体のデータがTiDBサーバーのメモリにロードされ、TiDBはTiKVにアクセスせずにメモリからテーブルデータを直接取得するため、読み取りパフォーマンスが向上します。
+In v6.0.0, TiDB introduces the cached table feature for frequently accessed but rarely updated small hotspot tables. When this feature is used, the data of an entire table is loaded into the memory of the TiDB server, and TiDB directly gets the table data from the memory without accessing TiKV, which improves the read performance.
 
-このドキュメントでは、キャッシュされたテーブルの使用シナリオ、例、および他のTiDB機能との互換性の制限について説明します。
+This document describes the usage scenarios of cached tables, the examples, and the compatibility restrictions with other TiDB features.
 
-## 使用シナリオ {#usage-scenarios}
+## Usage scenarios {#usage-scenarios}
 
-キャッシュされたテーブル機能は、次の特性を持つテーブルに適しています。
+The cached table feature is suitable for tables with the following characteristics:
 
--   テーブルのデータ量が少ないです。
--   テーブルは読み取り専用であるか、ほとんど更新されません。
--   テーブルは頻繁にアクセスされるため、読み取りパフォーマンスが向上することが期待されます。
+-   The data volume of the table is small.
+-   The table is read-only or rarely updated.
+-   The table is frequently accessed, and you expect a better read performance.
 
-テーブルのデータ量が少ないがデータに頻繁にアクセスする場合、データはTiKVのリージョンに集中し、ホットスポットリージョンになり、パフォーマンスに影響します。したがって、キャッシュされたテーブルの一般的な使用シナリオは次のとおりです。
+When the data volume of the table is small but the data is frequently accessed, the data is concentrated on a Region in TiKV and makes it a hotspot Region, which affects the performance. Therefore, the typical usage scenarios of cached tables are as follows:
 
--   アプリケーションが構成情報を読み取るConfiguration / コンフィグレーションテーブル。
--   金融セクターの為替レートの表。これらのテーブルは1日に1回だけ更新されますが、リアルタイムでは更新されません。
--   銀行の支店またはネットワーク情報テーブル。ほとんど更新されません。
+-   Configuration tables, from which applications read the configuration information.
+-   The tables of exchange rates in the financial sector. These tables are updated only once a day but not in real-time.
+-   Bank branch or network information tables, which are rarely updated.
 
-例として構成テーブルを取り上げます。アプリケーションが再起動すると、構成情報がすべての接続にロードされるため、読み取りの待ち時間が長くなります。この場合、キャッシュテーブル機能を使用してこの問題を解決できます。
+Take configuration tables as an example. When the application restarts, the configuration information is loaded in all connections, which causes a high read latency. In this case, you can solve this problem by using the cached tables feature.
 
-## 例 {#examples}
+## Examples {#examples}
 
-このセクションでは、キャッシュされたテーブルの使用法を例で説明します。
+This section describes the usage of cached tables by examples.
 
-### 通常のテーブルをキャッシュされたテーブルに設定します {#set-a-normal-table-to-a-cached-table}
+### Set a normal table to a cached table {#set-a-normal-table-to-a-cached-table}
 
-テーブル`users`があると仮定します：
+Suppose that there is a table `users`:
 
 {{< copyable "" >}}
 
@@ -43,7 +43,7 @@ CREATE TABLE users (
 );
 ```
 
-このテーブルをキャッシュテーブルに設定するには、次の`ALTER TABLE`ステートメントを使用します。
+To set this table to a cached table, use the `ALTER TABLE` statement:
 
 {{< copyable "" >}}
 
@@ -55,9 +55,9 @@ ALTER TABLE users CACHE;
 Query OK, 0 rows affected (0.01 sec)
 ```
 
-### キャッシュされたテーブルを確認する {#verify-a-cached-table}
+### Verify a cached table {#verify-a-cached-table}
 
-キャッシュされたテーブルを検証するには、 `SHOW CREATE TABLE`ステートメントを使用します。テーブルがキャッシュされている場合、返される結果には次の`CACHED ON`の属性が含まれます。
+To verify a cached table, use the `SHOW CREATE TABLE` statement. If the table is cached, the returned result contains the `CACHED ON` attribute:
 
 {{< copyable "" >}}
 
@@ -78,7 +78,7 @@ SHOW CREATE TABLE users;
 1 row in set (0.00 sec)
 ```
 
-キャッシュされたテーブルからデータを読み取った後、TiDBはデータをメモリにロードします。 `trace`ステートメントを使用して、データがメモリにロードされているかどうかを確認できます。キャッシュがロードされていない場合、返される結果には`regionRequest.SendReqCtx`属性が含まれます。これは、TiDBがTiKVからデータを読み取ることを示します。
+After reading data from a cached table, TiDB loads the data in memory. You can use the `trace` statement to check whether the data is loaded into memory. When the cache is not loaded, the returned result contains the `regionRequest.SendReqCtx` attribute, which indicates that TiDB reads data from TiKV.
 
 {{< copyable "" >}}
 
@@ -106,7 +106,7 @@ TRACE SELECT * FROM users;
 12 rows in set (0.01 sec)
 ```
 
-`trace`を再度実行すると、返される結果には`regionRequest.SendReqCtx`属性が含まれなくなります。これは、TiDBがTiKVからデータを読み取るのではなく、代わりにメモリからデータを読み取ることを示します。
+After executing `trace` again, the returned result no longer contains the `regionRequest.SendReqCtx` attribute, which indicates that TiDB no longer reads data from TiKV but reads data from the memory instead.
 
 {{< copyable "" >}}
 
@@ -125,7 +125,7 @@ TRACE SELECT * FROM users;
 7 rows in set (0.00 sec)
 ```
 
-キャッシュされたテーブルの読み取りには`UnionScan`演算子が使用されるため、キャッシュされたテーブルの実行プランで`UnionScan`を`explain`まで確認できます。
+Note that the `UnionScan` operator is used to read the cached tables, so you can see `UnionScan` in the execution plan of the cached tables through `explain`:
 
 {{< copyable "" >}}
 
@@ -140,9 +140,9 @@ TRACE SELECT * FROM users;
 3 rows in set (0.00 sec)
 ```
 
-### キャッシュされたテーブルにデータを書き込む {#write-data-to-a-cached-table}
+### Write data to a cached table {#write-data-to-a-cached-table}
 
-キャッシュされたテーブルはデータ書き込みをサポートします。たとえば、 `users`のテーブルにレコードを挿入できます。
+Cached tables support data writes. For example, you can insert a record into the `users` table:
 
 {{< copyable "" >}}
 
@@ -169,23 +169,21 @@ SELECT * FROM users;
 1 row in set (0.00 sec)
 ```
 
-> **ノート：**
+> **Note:**
 >
-> キャッシュされたテーブルにデータを挿入すると、第2レベルの書き込みレイテンシが発生する可能性があります。レイテンシーは、グローバル環境変数[`tidb_table_cache_lease`](/system-variables.md#tidb_table_cache_lease-new-in-v600)によって制御されます。アプリケーションに基づいてレイテンシが許容できるかどうかを確認することで、キャッシュテーブル機能を使用するかどうかを決定できます。たとえば、読み取り専用のシナリオでは、値を`tidb_table_cache_lease`に増やすことができます。
->
-> {{< copyable "" >}}
+> When you insert data to a cached table, second-level write latency might occur. The latency is controlled by the global environment variable [`tidb_table_cache_lease`](/system-variables.md#tidb_table_cache_lease-new-in-v600). You can decide whether to use the cached table feature by checking whether the latency is acceptable based on your application. For example, in a read-only scenario, you can increase the value of `tidb_table_cache_lease`:
 >
 > ```sql
 > set @@global.tidb_table_cache_lease = 10;
 > ```
 >
-> キャッシュされたテーブルの機能は、キャッシュごとにリースを設定する必要がある複雑なメカニズムで実装されているため、キャッシュされたテーブルの書き込みレイテンシは高くなります。複数のTiDBインスタンスがある場合、1つのインスタンスは、他のインスタンスがデータをキャッシュしているかどうかを認識しません。インスタンスがテーブルデータを直接変更する場合、他のインスタンスは古いキャッシュデータを読み取ります。正確性を確保するために、キャッシュテーブルの実装では、リースメカニズムを使用して、リースの期限が切れる前にデータが変更されないようにします。そのため、書き込みレイテンシが高くなります。
+> The write latency of cached tables is high, because the cached table feature is implemented with a complex mechanism that requires a lease to be set for each cache. When there are multiple TiDB instances, one instance does not know whether the other instances have cached data. If an instance modifies the table data directly, the other instances read the old cache data. To ensure correctness, the cached table implementation uses a lease mechanism to ensure that the data is not modified before the lease expires. That is why the write latency is high.
 
-### キャッシュされたテーブルを通常のテーブルに戻します {#revert-a-cached-table-to-a-normal-table}
+### Revert a cached table to a normal table {#revert-a-cached-table-to-a-normal-table}
 
-> **ノート：**
+> **Note:**
 >
-> キャッシュされたテーブルでのDDLステートメントの実行は失敗します。キャッシュされたテーブルでDDLステートメントを実行する前に、まずキャッシュ属性を削除し、キャッシュされたテーブルを通常のテーブルに戻す必要があります。
+> Executing DDL statements on a cached table will fail. Before executing DDL statements on a cached table, you need to remove the cache attribute first and set the cached table back to a normal table.
 
 {{< copyable "" >}}
 
@@ -207,46 +205,46 @@ mysql> ALTER TABLE users ADD INDEX k_id(id);
 ERROR 8242 (HY000): 'Alter Table' is unsupported on cache tables.
 ```
 
-キャッシュされたテーブルを通常のテーブルに戻すには、 `ALTER TABLE t NOCACHE`を使用します。
+To revert a cached table to a normal table, use `ALTER TABLE t NOCACHE`:
 
 {{< copyable "" >}}
 
 ```sql
-ALTER TABLE users NOCACHE
+ALTER TABLE users NOCACHE;
 ```
 
 ```sql
 Query OK, 0 rows affected (0.00 sec)
 ```
 
-## キャッシュされたテーブルのサイズ制限 {#size-limit-of-cached-tables}
+## Size limit of cached tables {#size-limit-of-cached-tables}
 
-TiDBはテーブル全体のデータをメモリにロードし、キャッシュされたデータは変更後に無効になり、再ロードする必要があるため、キャッシュされたテーブルは小さなテーブルのシナリオにのみ適しています。
+Cached tables are only suitable for scenarios with small tables, because TiDB loads the data of an entire table into memory, and the cached data becomes invalid after modification and needs to be reloaded.
 
-現在、キャッシュされたテーブルのサイズ制限は、TiDBでは64MBです。テーブルデータが64MBを超える場合、 `ALTER TABLE t CACHE`の実行は失敗します。
+Currently, the size limit of a cached table is 64 MB in TiDB. If the table data exceeds 64 MB, executing `ALTER TABLE t CACHE` will fail.
 
-## 他のTiDB機能との互換性の制限 {#compatibility-restrictions-with-other-tidb-features}
+## Compatibility restrictions with other TiDB features {#compatibility-restrictions-with-other-tidb-features}
 
-キャッシュされたテーブルは、次の機能をサポートしてい**ません**。
+Cached tables **DO NOT** support the following features:
 
--   パーティション表での`ALTER TABLE t ADD PARTITION`操作の実行はサポートされていません。
--   一時テーブルでの`ALTER TABLE t CACHE`操作の実行はサポートされていません。
--   ビューで`ALTER TABLE t CACHE`操作を実行することはサポートされていません。
--   StaleReadはサポートされていません。
--   キャッシュされたテーブルでの直接DDL操作はサポートされていません。 DDL操作を実行する前に、まず`ALTER TABLE t NOCACHE`を使用して、キャッシュされたテーブルを通常のテーブルに戻す必要があります。
+-   Performing the `ALTER TABLE t ADD PARTITION` operation on partitioned tables is not supported.
+-   Performing the `ALTER TABLE t CACHE` operation on temporary tables is not supported.
+-   Performing the `ALTER TABLE t CACHE` operation on views is not supported.
+-   Stale Read is not supported.
+-   Direct DDL operations on a cached table are not supported. You need to set the cached table back to a normal table first by using `ALTER TABLE t NOCACHE` before performing DDL operations.
 
-キャッシュされたテーブルは、次のシナリオでは使用でき**ません**。
+Cached tables **CANNOT** be used in the following scenarios:
 
--   履歴データを読み取るようにシステム変数`tidb_snapshot`を設定します。
--   変更中は、データが再ロードされるまで、キャッシュされたデータは無効になります。
+-   Setting the system variable `tidb_snapshot` to read historical data.
+-   During modification, the cached data becomes invalid until the data is reloaded.
 
-## TiDB移行ツールとの互換性 {#compatibility-with-tidb-migration-tools}
+## Compatibility with TiDB migration tools {#compatibility-with-tidb-migration-tools}
 
-キャッシュされたテーブルは、MySQL構文のTiDB拡張です。 TiDBのみが`ALTER TABLE ... CACHE`のステートメントを認識できます。 TiDB移行ツールは、バックアップと復元（BR）、TiCDC、Dumplingなどのキャッシュテーブルをサポートしてい**ません**。これらのツールは、キャッシュされたテーブルを通常のテーブルとして扱います。
+The cached table is a TiDB extension to MySQL syntax. Only TiDB can recognize the `ALTER TABLE ... CACHE` statement. TiDB migration tools **DO NOT** support cached tables, including Backup &#x26; Restore (BR), TiCDC, and Dumpling. These tools treat cached tables as normal tables.
 
-つまり、キャッシュされたテーブルをバックアップして復元すると、通常のテーブルになります。ダウンストリームクラスタが別のTiDBクラスタであり、キャッシュテーブル機能を引き続き使用する場合は、ダウンストリームテーブルで`ALTER TABLE ... CACHE`を実行することにより、ダウンストリームクラスタでキャッシュテーブルを手動で有効にできます。
+That is to say, when a cached table is backed up and restored, it becomes a normal table. If the downstream cluster is a different TiDB cluster and you want to continue using the cached table feature, you can manually enable cached tables on the downstream cluster by executing `ALTER TABLE ... CACHE` on the downstream table.
 
-## も参照してください {#see-also}
+## See also {#see-also}
 
--   [他の机](/sql-statements/sql-statement-alter-table.md)
--   [システム変数](/system-variables.md)
+-   [ALTER TABLE](/sql-statements/sql-statement-alter-table.md)
+-   [System Variables](/system-variables.md)

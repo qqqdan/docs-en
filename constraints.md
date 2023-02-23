@@ -3,15 +3,15 @@ title: Constraints
 summary: Learn how SQL Constraints apply to TiDB.
 ---
 
-# 制約 {#constraints}
+# Constraints {#constraints}
 
-TiDBは、MySQLとほぼ同じ制約をサポートしています。
+TiDB supports almost the same constraint as MySQL.
 
-## NULLではありません {#not-null}
+## NOT NULL {#not-null}
 
-TiDBでサポートされているNOTNULL制約は、MySQLでサポートされているものと同じです。
+NOT NULL constraints supported by TiDB are the same as those supported by MySQL.
 
-例えば：
+For example:
 
 {{< copyable "" >}}
 
@@ -53,15 +53,15 @@ INSERT INTO users (id,age,last_login) VALUES (NULL,123,NULL);
 Query OK, 1 row affected (0.03 sec)
 ```
 
--   `AUTO_INCREMENT`列に`NULL`を割り当てることができるため、最初の`INSERT`ステートメントは成功します。 TiDBはシーケンス番号を自動的に生成します。
--   `age`列が`NOT NULL`として定義されているため、2番目の`INSERT`ステートメントは失敗します。
--   `last_login`列が`NOT NULL`として明示的に定義されていないため、3番目の`INSERT`ステートメントは成功します。デフォルトではNULL値が許可されています。
+-   The first `INSERT` statement succeeds because it is possible to assign `NULL` to the `AUTO_INCREMENT` column. TiDB generates sequence numbers automatically.
+-   The second `INSERT` statement fails because the `age` column is defined as `NOT NULL`.
+-   The third `INSERT` statement succeeds because the `last_login` column is not explicitly defined as `NOT NULL`. NULL values ​​are allowed by default.
 
-## 小切手 {#check}
+## CHECK {#check}
 
-TiDBは解析しますが、 `CHECK`の制約を無視します。これはMySQL5.7と互換性のある動作です。
+TiDB parses but ignores `CHECK` constraints. This is MySQL 5.7 compatible behavior.
 
-例えば：
+For example:
 
 {{< copyable "" >}}
 
@@ -77,11 +77,11 @@ INSERT INTO users (username) VALUES ('a');
 SELECT * FROM users;
 ```
 
-## ユニークキー {#unique-key}
+## UNIQUE KEY {#unique-key}
 
-トランザクションモードと`tidb_constraint_check_in_place`の値に応じて、TiDBは`UNIQUE`の制約をチェックする場合があります[怠惰に](/transaction-overview.md#lazy-check-of-constraints) 。これは、ネットワークアクセスをバッチ処理することでパフォーマンスを向上させるのに役立ちます。
+Depending on the transaction mode and the value of `tidb_constraint_check_in_place`, TiDB might check `UNIQUE` constraints [lazily](/transaction-overview.md#lazy-check-of-constraints). This helps improve performance by batching network access.
 
-例えば：
+For example:
 
 {{< copyable "" >}}
 
@@ -95,7 +95,7 @@ CREATE TABLE users (
 INSERT INTO users (username) VALUES ('dave'), ('sarah'), ('bill');
 ```
 
-悲観的ロックのデフォルトでは：
+With the default of pessimistic locking:
 
 {{< copyable "" >}}
 
@@ -108,7 +108,7 @@ INSERT INTO users (username) VALUES ('jane'), ('chris'), ('bill');
 ERROR 1062 (23000): Duplicate entry 'bill' for key 'username'
 ```
 
-楽観的ロックと`tidb_constraint_check_in_place=0` ：
+With optimistic locking and `tidb_constraint_check_in_place=0`:
 
 {{< copyable "" >}}
 
@@ -145,11 +145,11 @@ COMMIT;
 ERROR 1062 (23000): Duplicate entry 'bill' for key 'username'
 ```
 
-楽観的な例では、トランザクションがコミットされるまで一意のチェックが遅延されました。値`bill`がすでに存在していたため、これにより重複キーエラーが発生しました。
+In the optimistic example, the unique check was delayed until the transaction is committed. This resulted in a duplicate key error, because the value `bill` was already present.
 
-`tidb_constraint_check_in_place`を`1`に設定すると、この動作を無効にできます。悲観的トランザクションモードでは、ステートメントの実行時に制約が常にチェックされるため、この変数設定は悲観的トランザクションには影響しません。 `tidb_constraint_check_in_place=1`の場合、ステートメントの実行時に一意の制約がチェックされます。
+You can disable this behavior by setting `tidb_constraint_check_in_place` to `1`. This variable setting does not take effect on pessimistic transactions, because in the pessimistic transaction mode the constraints are always checked when the statement is executed. When `tidb_constraint_check_in_place=1`, the unique constraint is checked when the statement is executed.
 
-例えば：
+For example:
 
 ```sql
 DROP TABLE IF EXISTS users;
@@ -192,13 +192,13 @@ ERROR 1062 (23000): Duplicate entry 'bill' for key 'username'
 ..
 ```
 
-最初の`INSERT`のステートメントにより、重複キーエラーが発生しました。これにより、追加のネットワーク通信オーバーヘッドが発生し、挿入操作のスループットが低下する可能性があります。
+The first `INSERT` statement caused a duplicate key error. This causes additional network communication overhead and may reduce the throughput of insert operations.
 
-## 主キー {#primary-key}
+## PRIMARY KEY {#primary-key}
 
-MySQLと同様に、主キー制約には一意の制約が含まれます。つまり、主キー制約を作成することは、一意の制約を持つことと同じです。さらに、TiDBの他の主キー制約もMySQLの制約と同様です。
+Like MySQL, primary key constraints contain unique constraints, that is, creating a primary key constraint is equivalent to having a unique constraint. In addition, other primary key constraints of TiDB are also similar to those of MySQL.
 
-例えば：
+For example:
 
 {{< copyable "" >}}
 
@@ -240,11 +240,11 @@ CREATE TABLE t4 (a INT NOT NULL, b INT NOT NULL, PRIMARY KEY (a,b));
 Query OK, 0 rows affected (0.10 sec)
 ```
 
--   列`a`が主キーとして定義されており、NULL値を許可していないため、表`t2`を作成できませんでした。
--   テーブルには主キーが1つしかないため、テーブル`t3`を作成できませんでした。
--   表`t4`は正常に作成されました。これは、主キーが1つしかない場合でも、TiDBは複数の列を複合主キーとして定義することをサポートしているためです。
+-   Table `t2` failed to be created, because column `a` is defined as the primary key and does not allow NULL values.
+-   Table `t3` failed to be created, because a table can only have one primary key.
+-   Table `t4` was created successfully, because even though there can be only one primary key, TiDB supports defining multiple columns as the composite primary key.
 
-上記のルールに加えて、TiDBは現在、 `NONCLUSTERED`タイプの主キーの追加と削除のみをサポートしています。例えば：
+In addition to the rules above, TiDB currently only supports adding and deleting the primary keys of the `NONCLUSTERED` type. For example:
 
 {{< copyable "" >}}
 
@@ -268,17 +268,17 @@ ALTER TABLE t5 DROP PRIMARY KEY;
 Query OK, 0 rows affected (0.10 sec)
 ```
 
-`CLUSTERED`タイプの主キーの詳細については、 [クラスター化されたインデックス](/clustered-indexes.md)を参照してください。
+For more details about the primary key of the `CLUSTERED` type, refer to [clustered index](/clustered-indexes.md).
 
-## 外部キー {#foreign-key}
+## FOREIGN KEY {#foreign-key}
 
-> **ノート：**
+> **Note:**
 >
-> TiDBは、外部キー制約のサポートを制限しています。
+> TiDB has limited support for foreign key constraints.
 
-TiDBは、DDLコマンドでの`FOREIGN KEY`の制約の作成をサポートしています。
+TiDB supports creating `FOREIGN KEY` constraints in DDL commands.
 
-例えば：
+For example:
 
 ```sql
 CREATE TABLE users (
@@ -311,7 +311,7 @@ FROM information_schema.key_column_usage WHERE table_name IN ('users', 'orders')
 3 rows in set (0.00 sec)
 ```
 
-TiDBは、 `ALTER TABLE`コマンドを介した`DROP FOREIGN KEY`および`ADD FOREIGN KEY`の構文もサポートしています。
+TiDB also supports the syntax to `DROP FOREIGN KEY` and `ADD FOREIGN KEY` via the `ALTER TABLE` command.
 
 {{< copyable "" >}}
 
@@ -320,11 +320,11 @@ ALTER TABLE orders DROP FOREIGN KEY fk_user_id;
 ALTER TABLE orders ADD FOREIGN KEY fk_user_id (user_id) REFERENCES users(id);
 ```
 
-### ノート {#notes}
+### Notes {#notes}
 
--   TiDBは外部キーをサポートして、他のデータベースからTiDBにデータを移行するときにこの構文によって引き起こされるエラーを回避します。
+-   TiDB supports foreign keys to avoid errors caused by this syntax when you migrate data from other databases to TiDB.
 
-    ただし、TiDBはDMLステートメントの外部キーに対して制約チェックを実行しません。たとえば、usersテーブルにid = 123のレコードがない場合でも、次のトランザクションを正常に送信できます。
+    However, TiDB does not perform constraint checking on foreign keys in DML statements. For example, even if there is no record with id=123 in the users table, the following transactions can be submitted successfully.
 
     ```sql
     START TRANSACTION;

@@ -3,153 +3,153 @@ title: Error Codes and Troubleshooting
 summary: Learn about the error codes and solutions in TiDB.
 ---
 
-# エラーコードとトラブルシューティング {#error-codes-and-troubleshooting}
+# Error Codes and Troubleshooting {#error-codes-and-troubleshooting}
 
-このドキュメントでは、TiDBの使用中に発生する問題について説明し、解決策を提供します。
+This document describes the problems encountered during the use of TiDB and provides the solutions.
 
-## エラーコード {#error-codes}
+## Error codes {#error-codes}
 
-TiDBはMySQLのエラーコードと互換性があり、ほとんどの場合、MySQLと同じエラーコードを返します。 MySQLのエラーコードのリストについては、 [MySQL5.7エラーメッセージリファレンス](https://dev.mysql.com/doc/mysql-errors/5.7/en/)を参照してください。さらに、TiDBには次の固有のエラーコードがあります。
+TiDB is compatible with the error codes in MySQL, and in most cases returns the same error code as MySQL. For a list of error codes for MySQL, see [MySQL 5.7 Error Message Reference](https://dev.mysql.com/doc/mysql-errors/5.7/en/). In addition, TiDB has the following unique error codes:
 
-> **ノート：**
+> **Note:**
 >
-> 一部のエラーコードは内部エラーを表します。通常、TiDBはエラーをユーザーに返すのではなく処理するため、一部のエラーコードはここにリストされていません。
+> Some error codes stand for internal errors. Normally, TiDB handles the error rather than return it to the user, so some error codes are not listed here.
 >
-> ここにリストされていないエラーコードが発生した場合は、 [PingCAPに連絡する](mailto:info@pingcap.com)をサポートしてください。
+> If you encounter an error code that is not listed here, [get support](/support.md) from PingCAP or the community.
 
--   エラー番号：8001
+-   Error Number: 8001
 
-    リクエストで使用されたメモリが、TiDBメモリ使用量のしきい値制限を超えています。
+    The memory used by the request exceeds the threshold limit for the TiDB memory usage.
 
-    システム変数[`tidb_mem_quota_query`](/system-variables.md#tidb_mem_quota_query)を構成して、単一のSQLステートメントのメモリ制限を増やします。
+    Increase the memory limit for a single SQL statement by configuring the system variable [`tidb_mem_quota_query`](/system-variables.md#tidb_mem_quota_query).
 
--   エラー番号：8002
+-   Error Number: 8002
 
-    一貫性を保証するために、コミットの競合が発生した場合、 `SELECT FOR UPDATE`ステートメントのトランザクションを再試行することはできません。 TiDBはトランザクションをロールバックし、このエラーを返します。
+    To guarantee consistency, a transaction with the `SELECT FOR UPDATE` statement cannot be retried when it encounters a commit conflict. TiDB rolls back the transaction and returns this error.
 
-    アプリケーションは、トランザクション全体を安全に再試行できます。
+    The application can safely retry the whole transaction.
 
--   エラー番号：8003
+-   Error Number: 8003
 
-    `ADMIN CHECK TABLE`コマンドの実行時に行のデータがインデックスと一致しない場合、TiDBはこのエラーを返します。このエラーは、テーブルのデータ破損を確認するときによく見られます。
+    If the data in a row is not consistent with the index when executing the [`ADMIN CHECK TABLE`](/sql-statements/sql-statement-admin-check-table-index.md) command, TiDB returns this error. This error is commonly seen when you check the data corruption in the table.
 
-    あなたはサポートのために[PingCAPに連絡する](mailto:info@pingcap.com)することができます。
+    You can [get support](/support.md) from PingCAP or the community.
 
--   エラー番号：8004
+-   Error Number: 8004
 
-    1つのトランザクションが大きすぎます。
+    A single transaction is too large.
 
-    原因と解決策については、 [エラーメッセージ`transaction too large`ます](/faq/migration-tidb-faq.md#the-error-message-transaction-too-large-is-displayed)を参照してください。
+    See [the error message `transaction too large`](/faq/migration-tidb-faq.md#the-error-message-transaction-too-large-is-displayed) for the cause and solution.
 
--   エラー番号：8005
+-   Error Number: 8005
 
-    TiDBのトランザクションで、書き込みの競合が発生します。
+    The complete error message: `ERROR 8005 (HY000): Write Conflict, txnStartTS is stale`
 
-    原因と解決策については、 [トラブルシューティングセクション](/faq/tidb-faq.md#troubleshoot)を参照してください。
+    Transactions in TiDB encounter write conflicts. To handle this error, check whether `tidb_disable_txn_auto_retry` is set to `on`. If so, set it to `off`; if it is already `off`, increase the value of `tidb_retry_limit` until the error no longer occurs.
 
--   エラー番号：8018
+-   Error Number: 8018
 
-    プラグインをリロードするときに、プラグインが以前にロードされていない場合、このエラーが返されます。
+    When you reload a plugin, if the plugin has not been loaded before, this error is returned.
 
-    プラグインの初期ロードを実行できます。
+    You can execute an initial load of the plugin.
 
--   エラー番号：8019
+-   Error Number: 8019
 
-    再ロードされるプラグインのバージョンは、以前のバージョンとは異なります。したがって、プラグインをリロードすることはできず、このエラーが返されます。
+    The version of the plugin that is being reloaded is different from the previous version. Therefore, the plugin cannot be reloaded, and this error is returned.
 
-    プラグインのバージョンが前のものと同じであることを確認することで、プラグインをリロードできます。
+    You can reload the plugin by ensuring that the plugin version is the same as the previous one.
 
--   エラー番号：8020
+-   Error Number: 8020
 
-    テーブルがロックされているときにテーブルに対して書き込み操作を実行すると、このエラーが返されます。
+    When the table is locked, if you perform a write operation on the table, this error is returned.
 
-    テーブルのロックを解除して、書き込み操作を再試行してください。
+    Unlock the table and retry the write operation.
 
--   エラー番号：8021
+-   Error Number: 8021
 
-    TiKVから読み取るキーが存在しない場合、このエラーが返されます。このエラーは内部で使用され、外部の結果は空の読み取りになります。
+    When the key to be read from TiKV does not exist, this error is returned. This error is used internally, and the external result is an empty read.
 
--   エラー番号：8022
+-   Error Number: 8022
 
-    トランザクションのコミットは失敗し、ロールバックされました。
+    The transaction commit fails and has been rolled back.
 
-    アプリケーションは、トランザクション全体を安全に再試行できます。
+    The application can safely retry the whole transaction.
 
--   エラー番号：8023
+-   Error Number: 8023
 
-    トランザクションキャッシュの書き込み時に空の値を設定すると、このエラーが返されます。このエラーは内部で使用および処理され、アプリケーションには返されません。
+    If you set an empty value when writing the transaction cache, this error is returned. This error is used and dealt with internally, and is not returned to the application.
 
--   エラー番号：8024
+-   Error Number: 8024
 
-    無効なトランザクション。 TiDBが、実行中のトランザクションのトランザクションID（Start Timestamp）が取得されていないことを検出した場合、つまりこのトランザクションが無効である場合、このエラーが返されます。
+    Invalid transactions. If TiDB finds that no transaction ID (Start Timestamp) is obtained for the transaction that is being executed, which means this transaction is invalid, this error is returned.
 
-    通常、このエラーは発生しません。このエラーが発生した場合は、 [PingCAPに連絡する](mailto:info@pingcap.com)をサポートしてください。
+    Usually this error does not occur. If you encounter this error, [get support](/support.md) from PingCAP or the community.
 
--   エラー番号：8025
+-   Error Number: 8025
 
-    書き込まれている単一のKey-Valueペアが大きすぎます。 TiDBでサポートされている最大の単一のKey-Valueペアは、デフォルトで6MBです。
+    The single Key-Value pair being written is too large. The largest single Key-Value pair supported in TiDB is 6 MB by default.
 
-    ペアがこの制限を超える場合は、制限を緩和するために[`txn-entry-size-limit`](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50)構成値を適切に調整する必要があります。
+    If a pair exceeds this limit, you need to properly adjust the [`txn-entry-size-limit`](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50) configuration value to relax the limit.
 
--   エラー番号：8026
+-   Error Number: 8026
 
-    使用しているインターフェース機能は実装されていません。このエラーは内部でのみ使用され、アプリケーションには返されません。
+    The interface function being used has not been implemented. This error is only used internally, and is not returned to the application.
 
--   エラー番号：8027
+-   Error Number: 8027
 
-    テーブルスキーマのバージョンが古くなっています。 TiDBは、スキーマの変更をオンラインで適用します。 TiDBサーバーのテーブルスキーマバージョンがシステム全体のバージョンよりも古い場合、SQLステートメントを実行するとこのエラーが返されます。
+    The table schema version is outdated. TiDB applies schema changes online. When the table schema version of the TiDB server is earlier than that of the entire system, this error is returned if you execute a SQL statement.
 
-    このエラーが発生した場合は、TiDBサーバーとPDリーダー間のネットワークを確認してください。
+    When this error occurs, check the network between the TiDB server and the PD Leader.
 
--   エラー番号：8028
+-   Error Number: 8028
 
-    TiDBは、MySQLではメタデータロックと呼ばれ、他のデータベースではインテンションロックと呼ばれる可能性のあるテーブルロックをサポートしていません。
+    TiDB does not support table lock, which is called metadata lock in MySQL and might be called intention lock in other databases.
 
-    トランザクションが実行されると、トランザクションはテーブルスキーマの変更を認識できません。したがって、トランザクションをコミットするときに、TiDBはトランザクションに関連するテーブルスキーマをチェックします。実行中に関連するテーブルスキーマが変更された場合、トランザクションコミットは失敗し、このエラーが返されます。
+    When a transaction is executed, the transaction cannot recognize the table schema changes. Therefore, when committing a transaction, TiDB checks the table schema related the transaction. If the related table schema has changed during the execution, the transaction commit will fail and this error is returned.
 
-    アプリケーションは、トランザクション全体を安全に再試行できます。
+    The application can safely retry the whole transaction.
 
--   エラー番号：8029
+-   Error Number: 8029
 
-    このエラーは、データベース内の数値変換でエラーが発生した場合に発生します。このエラーは内部でのみ使用され、外部アプリケーションの特定のタイプのエラーに変換されます。
+    This error occurs when numeric conversion within the database encounters an error. This error is only used internally and is converted to a specific type of error for external applications.
 
--   エラー番号：8030
+-   Error Number: 8030
 
-    符号なし正の整数が符号付き整数に変換された後、最大値を超えて負の整数として表示されます。このエラーは主にアラートメッセージで発生します。
+    After an unsigned positive integer is converted to a signed integer, it exceeds the maximum value and displays as a negative integer. This error mostly occurs in the alert message.
 
--   エラー番号：8031
+-   Error Number: 8031
 
-    符号なし整数に変換される場合、負の整数は正の整数に変換されます。このエラーは主にアラートメッセージで発生します。
+    When being converted to an unsigned integer, a negative integer is converted to a positive integer. This error mostly occurs in the alert message.
 
--   エラー番号：8032
+-   Error Number: 8032
 
-    無効な`year`形式が使用されています。 `year`は、1、2、または4桁のみを受け入れます。
+    Invalid `year` format is used. `year` only accepts 1, 2 or 4 digits.
 
--   エラー番号：8033
+-   Error Number: 8033
 
-    無効な`year`の値が使用されています。 `year`の有効な範囲は（1901、2155）です。
+    Invalid `year` value is used. The valid range of `year` is (1901, 2155).
 
--   エラー番号：8037
+-   Error Number: 8037
 
-    `week`関数で無効な`mode`形式が使用されています。 `mode`は[0、7]内の1桁である必要があります。
+    Invalid `mode` format is used in the `week` function. `mode` must be 1 digit within [0, 7].
 
--   エラー番号：8038
+-   Error Number: 8038
 
-    フィールドはデフォルト値を取得できません。このエラーは通常、内部で使用され、外部アプリケーションの特定のタイプのエラーに変換されます。
+    The field fails to obtain the default value. This error is usually used internally, and is converted to a specific type of error for external applications.
 
--   エラー番号：8040
+-   Error Number: 8040
 
-    サポートされていない操作が実行されます。たとえば、ビューまたはシーケンスに対してテーブルロック操作を実行します。
+    Unsupported operations are performed. For example, you perform a table locking operation on a view or a sequence.
 
--   エラー番号：8047
+-   Error Number: 8047
 
-    システム変数の値はサポートされていません。このエラーは通常、ユーザーがデータベースでサポートされていない変数値を設定したときにアラーム情報で発生します。
+    The value of the system variable is not supported. This error usually occurs in the alarm information when the user sets a variable value that is not supported in the database.
 
--   エラー番号：8048
+-   Error Number: 8048
 
-    サポートされていないデータベース分離レベルが設定されています。
+    An unsupported database isolation level is set.
 
-    サードパーティのツールまたはフレームワークを使用しているためにコードを変更できない場合は、 [`tidb_skip_isolation_level_check`](/system-variables.md#tidb_skip_isolation_level_check)を使用してこのチェックをバイパスすることを検討してください。
+    If you cannot modify the codes because you are using a third-party tool or framework, consider using [`tidb_skip_isolation_level_check`](/system-variables.md#tidb_skip_isolation_level_check) to bypass this check.
 
     {{< copyable "" >}}
 
@@ -157,332 +157,396 @@ TiDBはMySQLのエラーコードと互換性があり、ほとんどの場合�
     set @@tidb_skip_isolation_level_check = 1;
     ```
 
--   エラー番号：8050
+-   Error Number: 8050
 
-    サポートされていない特権タイプが設定されています。
+    An unsupported privilege type is set.
 
-    解決策については[TiDB操作に必要な権限](/privilege-management.md#privileges-required-for-tidb-operations)を参照してください。
+    See [Privileges required for TiDB operations](/privilege-management.md#privileges-required-for-tidb-operations) for the solution.
 
--   エラー番号：8051
+-   Error Number: 8051
 
-    TiDBがクライアントから送信されたExec引数リストを解析するときに、不明なデータ型が検出されました。
+    Unknown data type is encountered when TiDB parses the Exec argument list sent by the client.
 
-    このエラーが発生した場合は、クライアントを確認してください。クライアントが正常な場合、サポートの場合は[PingCAPに連絡する](mailto:info@pingcap.com) 。
+    If you encounter this error, check the client. If the client is normal, [get support](/support.md) from PingCAP or the community.
 
--   エラー番号：8052
+-   Error Number: 8052
 
-    クライアントからのデータパケットのシリアル番号が正しくありません。
+    The serial number of the data packet from the client is incorrect.
 
-    このエラーが発生した場合は、クライアントを確認してください。クライアントが正常な場合、サポートの場合は[PingCAPに連絡する](mailto:info@pingcap.com) 。
+    If you encounter this error, check the client. If the client is normal, [get support](/support.md) from PingCAP or the community.
 
--   エラー番号：8055
+-   Error Number: 8055
 
-    現在のスナップショットは古すぎます。データはガベージコレクションされた可能性があります。この問題を回避するには、値を[`tidb_gc_life_time`](/system-variables.md#tidb_gc_life_time-new-in-v50)に増やすことができます。 TiDBは、長時間実行されるトランザクション用にデータを自動的に予約します。通常、このエラーは発生しません。
+    The current snapshot is too old. The data may have been garbage collected. You can increase the value of [`tidb_gc_life_time`](/system-variables.md#tidb_gc_life_time-new-in-v50) to avoid this problem. TiDB automatically reserves data for long-running transactions. Usually this error does not occur.
 
-    [ガベージコレクションの概要](/garbage-collection-overview.md)と[ガベージコレクションの構成](/garbage-collection-configuration.md)を参照してください。
+    See [garbage collection overview](/garbage-collection-overview.md) and [garbage collection configuration](/garbage-collection-configuration.md).
 
--   エラー番号：8059
+-   Error Number: 8059
 
-    自動ランダムIDが使い果たされ、割り当てることができません。現在、このようなエラーから回復する方法はありません。自動ランダム機能を使用して割り当ての最大数を取得する場合は、bigintを使用することをお勧めします。また、自動ランダム列に手動で値を割り当てることは避けてください。
+    The auto-random ID is exhausted and cannot be allocated. There is no way to recover from such errors currently. It is recommended to use bigint when using the auto random feature to obtain the maximum number of assignment. And try to avoid manually assigning values to the auto random column.
 
-    参考のために[自動ランダム](/auto-random.md)を参照してください。
+    See [auto random](/auto-random.md) for reference.
 
--   エラー番号：8060
+-   Error Number: 8060
 
-    自動インクリメントオフセットが無効です。 `auto_increment_increment`と`auto_increment_offset`の値を確認してください。
+    Invalid auto-incrementing offset. Check the values of `auto_increment_increment` and `auto_increment_offset`.
 
--   エラー番号：8061
+-   Error Number: 8061
 
-    サポートされていないSQLヒント。
+    Unsupported SQL Hint.
 
-    SQLヒントを確認および変更するには、 [オプティマイザーのヒント](/optimizer-hints.md)を参照してください。
+    See [Optimizer Hints](/optimizer-hints.md) to check and modify the SQL Hint.
 
--   エラー番号：8062
+-   Error Number: 8062
 
-    SQLヒントで無効なトークンが使用されています。 SQLヒントの予約語と競合します。
+    An invalid token is used in SQL Hint. It conflicts with reserved words in SQL Hint.
 
-    SQLヒントを確認および変更するには、 [オプティマイザーのヒント](/optimizer-hints.md)を参照してください。
+    See [Optimizer Hints](/optimizer-hints.md) to check and modify the SQL Hint.
 
--   エラー番号：8063
+-   Error Number: 8063
 
-    SQLヒントで設定されている制限付きメモリ使用量がシステムの上限を超えています。 SQLヒントの設定は無視されます。
+    The limited memory usage set in SQL Hint exceeds the upper limit of the system. The setting in SQL Hint is ignored.
 
-    SQLヒントを確認および変更するには、 [オプティマイザーのヒント](/optimizer-hints.md)を参照してください。
+    See [Optimizer Hints](/optimizer-hints.md) to check and modify the SQL Hint.
 
--   エラー番号：8064
+-   Error Number: 8064
 
-    SQLヒントの解析に失敗します。
+    It fails to parse SQL Hint.
 
-    SQLヒントを確認および変更するには、 [オプティマイザーのヒント](/optimizer-hints.md)を参照してください。
+    See [Optimizer Hints](/optimizer-hints.md) to check and modify the SQL Hint.
 
--   エラー番号：8065
+-   Error Number: 8065
 
-    SQLヒントで無効な整数が使用されています。
+    An invalid integer is used in SQL Hint.
 
-    SQLヒントを確認および変更するには、 [オプティマイザーのヒント](/optimizer-hints.md)を参照してください。
+    See [Optimizer Hints](/optimizer-hints.md) to check and modify the SQL Hint.
 
--   エラー番号：8066
+-   Error Number: 8066
 
-    `JSON_OBJECTAGG`関数の2番目のパラメーターが無効です。
+    The second parameter in the `JSON_OBJECTAGG` function is invalid.
 
--   エラー番号：8101
+-   Error Number: 8101
 
-    プラグインIDの形式が正しくありません。
+    The format of plugin ID is incorrect.
 
-    正しい形式は`[name]-[version]`であり、 `name`と`version`では`-`は許可されていません。
+    The correct format is `[name]-[version]`, and no `-` is allowed in `name` and `version`.
 
--   エラー番号：8102
+-   Error Number: 8102
 
-    プラグイン定義情報を読み取ることができません。
+    Unable to read the plugin definition information.
 
-    プラグインに関連する構成を確認してください。
+    Check the configuration related to the plugin.
 
--   エラー番号：8103
+-   Error Number: 8103
 
-    プラグイン名が正しくありません。
+    The plugin name is incorrect.
 
-    プラグインの構成を確認してください。
+    Check the configuration of the plugin.
 
--   エラー番号：8104
+-   Error Number: 8104
 
-    プラグインのバージョンが一致しません。
+    The plugin version does not match.
 
-    プラグインの構成を確認してください。
+    Check the configuration of the plugin.
 
--   エラー番号：8105
+-   Error Number: 8105
 
-    プラグインが繰り返しロードされます。
+    The plugin is repeatedly loaded.
 
--   エラー番号：8106
+-   Error Number: 8106
 
-    プラグインは、名前がプラグイン名で始まらないシステム変数を定義します。
+    The plugin defines a system variable whose name does not begin with the plugin name.
 
-    プラグインの開発者に連絡して変更してください。
+    Contact the developer of the plugin to modify, or [get support](/support.md) from PingCAP or the community.
 
--   エラー番号：8107
+-   Error Number: 8107
 
-    ロードされたプラグインがバージョンを指定していないか、指定されたバージョンが低すぎます。
+    The loaded plugin does not specify a version, or the specified version is too low.
 
-    プラグインの構成を確認してください。
+    Check the configuration of the plugin.
 
--   エラー番号：8108
+-   Error Number: 8108
 
-    サポートされていない実行プランタイプ。このエラーは内部エラーです。
+    Unsupported execution plan type. This error is an internal error.
 
-    このエラーが発生した場合は、 [PingCAPに連絡する](mailto:info@pingcap.com)をサポートしてください。
+    If you encounter this error, [get support](/support.md) from PingCAP or the community.
 
--   エラー番号：8109
+-   Error Number: 8109
 
-    インデックスの分析時に、指定されたインデックスが見つかりません。
+    The specified index cannot be found when the index is analyzed.
 
--   エラー番号：8110
+-   Error Number: 8110
 
-    デカルト積演算は実行できません。
+    The Cartesian product operation cannot be executed.
 
-    構成の`cross-join`を`true`に設定します。
+    Set `cross-join` in the configuration to `true`.
 
--   エラー番号：8111
+-   Error Number: 8111
 
-    `EXECUTE`ステートメントを実行すると、対応する`Prepare`ステートメントが見つかりません。
+    When executing the `EXECUTE` statement, the corresponding `Prepare` statement cannot be found.
 
--   エラー番号：8112
+-   Error Number: 8112
 
-    `EXECUTE`ステートメントのパラメーターの数が`Prepare`ステートメントと一致していません。
+    The number of parameters in the `EXECUTE` statement is not consistent with the `Prepare` statement.
 
--   エラー番号：8113
+-   Error Number: 8113
 
-    `EXECUTE`ステートメントに関連するテーブルスキーマは、 `Prepare`ステートメントの実行後に変更されました。
+    The table schema related in the `EXECUTE` statement has changed after the `Prepare` statement is executed.
 
--   エラー番号：8115
+-   Error Number: 8115
 
-    複数行のステートメントを準備することはサポートされていません。
+    It is not supported to prepare multiple lines of statements.
 
--   エラー番号：8116
+-   Error Number: 8116
 
-    DDLステートメントの準備はサポートされていません。
+    It is not supported to prepare DDL statements.
 
--   エラー番号：8120
+-   Error Number: 8120
 
-    トランザクションの`start tso`を取得できません。
+    The `start tso` of transactions cannot be obtained.
 
-    PDサーバーの状態/モニター/ログおよびTiDBサーバーとPDサーバー間のネットワークを確認してください。
+    Check the state/monitor/log of the PD server and the network between the TiDB server and the PD server.
 
--   エラー番号：8121
+-   Error Number: 8121
 
-    特権チェックは失敗します。
+    Privilege check fails.
 
-    データベースの特権構成を確認してください。
+    Check the privilege configuration of the database.
 
--   エラー番号：8122
+-   Error Number: 8122
 
-    指定されたワイルドカードを指定すると、対応するテーブル名が見つかりません。
+    No corresponding table name is found, given the specified wild cards.
 
--   エラー番号：8123
+-   Error Number: 8123
 
-    集計関数を使用したSQLクエリは、 `only_full_group_by`モードに違反する非集計列を返します。
+    An SQL query with aggregate functions returns non-aggregated columns, which violates the `only_full_group_by` mode.
 
-    SQLステートメントを変更するか、 `only_full_group_by`モードを無効にします。
+    Modify the SQL statement or disable the `only_full_group_by` mode.
 
--   エラー番号：8129
+-   Error Number: 8129
 
-    TiDBは、キー長が65536以上のJSONオブジェクトをまだサポートしていません。
+    TiDB does not yet support JSON objects with the key length >= 65536.
 
--   エラー番号：8138
+-   Error Number: 8130
 
-    トランザクションは誤った行値を書き込もうとします。詳細については、 [データとインデックス間の不整合のトラブルシューティング](/troubleshoot-data-inconsistency-errors.md#error-8138)を参照してください。
+    The complete error message: `ERROR 8130 (HY000): client has multi-statement capability disabled`
 
--   エラー番号：8139
+    This error might occur after you upgrade from an earlier version of TiDB. To reduce the impact of SQL injection attacks, TiDB now prevents multiple queries from being executed in the same `COM_QUERY` call by default.
 
-    トランザクションは、ハンドルがインデックスのハンドルと一致しない行を書き込もうとします。詳細については、 [データとインデックス間の不整合のトラブルシューティング](/troubleshoot-data-inconsistency-errors.md#error-8139)を参照してください。
+    The system variable [`tidb_multi_statement_mode`](/system-variables.md#tidb_multi_statement_mode-new-in-v4011) can be used to control this behavior.
 
--   エラー番号：8140
+-   Error Number: 8138
 
-    トランザクションは、データがインデックスデータと矛盾する行を書き込もうとします。詳細については、 [データとインデックス間の不整合のトラブルシューティング](/troubleshoot-data-inconsistency-errors.md#error-8140)を参照してください。
+    The transaction attempts to write an incorrect row value. For more information, see [Troubleshoot Inconsistency Between Data and Indexes](/troubleshoot-data-inconsistency-errors.md#error-8138).
 
--   エラー番号：8141
+-   Error Number: 8139
 
-    トランザクションがコミットされているとき、キーの存在アサーションは失敗します。詳細については、 [データとインデックス間の不整合のトラブルシューティング](/troubleshoot-data-inconsistency-errors.md#error-8141)を参照してください。
+    The transaction attempts to write a row whose handle is inconsistent with that in the index. For more information, see [Troubleshoot Inconsistency Between Data and Indexes](/troubleshoot-data-inconsistency-errors.md#error-8139).
 
--   エラー番号：8143
+-   Error Number: 8140
 
-    非トランザクションDMLステートメントの実行中に、バッチが失敗すると、ステートメントは停止します。詳細については、 [非トランザクションDMLステートメント](/non-transactional-dml.md)を参照してください。
+    The transaction attempts to write a row whose data is inconsistent with the index data. For more information, see [Troubleshoot Inconsistency Between Data and Indexes](/troubleshoot-data-inconsistency-errors.md#error-8140).
 
--   エラー番号：8200
+-   Error Number: 8141
 
-    DDL構文はまだサポートされていません。
+    When a transaction is being committed, the existence assertion of a key fails. For more information,see [Troubleshoot Inconsistency Between Data and Indexes](/troubleshoot-data-inconsistency-errors.md#error-8141).
 
-    参考のために[MySQLDDLの互換性](/mysql-compatibility.md#ddl)を参照してください。
+-   Error Number: 8143
 
--   エラー番号：8214
+    During the execution of a non-transactional DML statement, if a batch fails, the statement is stopped. For more information, see [Non-transactional DML statements](/non-transactional-dml.md).
 
-    DDL操作は`admin cancel`操作で終了します。
+-   Error Number: 8200
 
--   エラー番号：8215
+    The DDL syntax is not yet supported.
 
-    `ADMIN REPAIR TABLE`は失敗します。
+    See [compatibility of MySQL DDL](/mysql-compatibility.md#ddl) for reference.
 
-    このエラーが発生した場合は、 [PingCAPに連絡する](mailto:info@pingcap.com)をサポートしてください。
+-   Error Number: 8214
 
--   エラー番号：8216
+    The DDL operation is terminated by the `admin cancel` operation.
 
-    自動ランダム列の使用法が正しくありません。
+-   Error Number: 8215
 
-    変更するには[自動ランダム](/auto-random.md)を参照してください。
+    [`ADMIN REPAIR TABLE`](/sql-statements/sql-statement-admin.md#admin-repair-statement) fails.
 
--   エラー番号：8223
+    If you encounter this error, [get support](/support.md) from PingCAP or the community.
 
-    このエラーは、データがインデックスと一致していないことを検出したときに発生します。
+-   Error Number: 8216
 
-    このエラーが発生した場合は、 [PingCAPに連絡する](mailto:info@pingcap.com)をサポートしてください。
+    The usage of automatic random columns is incorrect.
 
--   エラー番号：8224
+    See [auto random](/auto-random.md) to modify.
 
-    DDLジョブが見つかりません。
+-   Error Number: 8223
 
-    `restore`操作で指定したジョブIDが存在するか確認してください。
+    This error occurs when detecting that the data is not consistent with the index.
 
--   エラー番号：8225
+    If you encounter this error, [get support](/support.md) from PingCAP or the community.
 
-    DDL操作は完了しており、キャンセルできません。
+-   Error Number: 8224
 
--   エラー番号：8226
+    The DDL job cannot be found.
 
-    DDL操作はほぼ完了しており、キャンセルできません。
+    Check whether the job id specified by the `restore` operation exists.
 
--   エラー番号：8227
+-   Error Number: 8225
 
-    シーケンスを作成するときに、サポートされていないオプションが使用されます。
+    The DDL operation is completed and cannot be canceled.
 
-    サポートされているオプションのリストを見つけるには、 [シーケンスドキュメント](/sql-statements/sql-statement-create-sequence.md#parameters)を参照してください。
+-   Error Number: 8226
 
--   エラー番号：8228
+    The DDL operation is almost completed and cannot be canceled.
 
-    シーケンスで`setval`を使用すると、サポートされていないタイプが指定されます。
+-   Error Number: 8227
 
-    関数の例を見つけるには、 [シーケンスドキュメント](/sql-statements/sql-statement-create-sequence.md#examples)を参照してください。
+    Unsupported options are used when creating Sequence.
 
--   エラー番号：8229
+    See [Sequence documentation](/sql-statements/sql-statement-create-sequence.md#parameters) to find the list of the supported options.
 
-    トランザクションが存続時間を超えています。
+-   Error Number: 8228
 
-    現在のトランザクションをコミットまたはロールバックして、新しいトランザクションを開始します。
+    Unsupported types are specified when using `setval` on Sequence.
 
--   エラー番号：8230
+    See [Sequence documentation](/sql-statements/sql-statement-create-sequence.md#examples) to find the example of the function.
 
-    TiDBは現在、新しく追加された列のデフォルト値としてのシーケンスの使用をサポートしておらず、使用するとこのエラーを報告します。
+-   Error Number: 8229
 
--   エラー番号：9001
+    The transaction exceeds the survival time.
 
-    PD要求がタイムアウトしました。
+    Commit or roll back the current transaction, and start a new transaction.
 
-    PDサーバーの状態/モニター/ログおよびTiDBサーバーとPDサーバー間のネットワークを確認してください。
+-   Error Number: 8230
 
--   エラー番号：9002
+    TiDB currently does not support using Sequence as the default value on newly added columns, and reports this error if you use it.
 
-    TiKVリクエストがタイムアウトしました。
+-   Error Number: 9001
 
-    TiKVサーバーの状態/モニター/ログ、およびTiDBサーバーとTiKVサーバー間のネットワークを確認します。
+    The complete error message: `ERROR 9001 (HY000): PD Server Timeout`
 
--   エラー番号：9003
+    The PD request timed out.
 
-    TiKVサーバーはビジーであり、これは通常、ワークロードが高すぎる場合に発生します。
+    Check the status, monitoring data and log of the PD server, and the network between the TiDB server and the PD server.
 
-    TiKVサーバーの状態/モニター/ログを確認してください。
+-   Error Number: 9002
 
--   エラー番号：9004
+    The complete error message: `ERROR 9002 (HY000): TiKV Server Timeout`
 
-    このエラーは、データベースに多数のトランザクションの競合が存在する場合に発生します。
+    The TiKV request timed out.
 
-    アプリケーションのコードを確認してください。
+    Check the status, monitoring data and log of the TiKV server, and the network between the TiDB server and the TiKV server.
 
--   エラー番号：9005
+-   Error Number: 9003
 
-    レプリカの数が不足しているなど、特定のRaftグループが利用できません。このエラーは通常、TiKVサーバーがビジーであるか、TiKVノードがダウンしているときに発生します。
+    The complete error message: `ERROR 9003 (HY000): TiKV Server is Busy`
 
-    TiKVサーバーの状態/モニター/ログを確認してください。
+    The TiKV server is busy and this usually occurs when the workload is too high.
 
--   エラー番号：9006
+    Check the status, monitoring data, and log of the TiKV server.
 
-    GCライフタイムの間隔が短すぎるため、長いトランザクションで読み取る必要のあるデータがクリアされる可能性があります。
+-   Error Number: 9004
 
-    GCライフタイムの間隔を延長します。
+    The complete error message: `ERROR 9004 (HY000): Resolve Lock Timeout`
 
--   エラー番号：9500
+    A lock resolving timeout. This error occurs when a large number of transactional conflicts exist in the database.
 
-    1つのトランザクションが大きすぎます。
+    Check the application code to see whether lock contention exists in the database.
 
-    解決策については[エラーメッセージ`transaction too large`ます](/faq/migration-tidb-faq.md#the-error-message-transaction-too-large-is-displayed)を参照してください。
+-   Error Number: 9005
 
--   エラー番号：9007
+    The complete error message: `ERROR 9005 (HY000): Region is unavailable`
 
-    TiKVのトランザクションでは、書き込みの競合が発生します。
+    The accessed Region or a certain Raft Group is not available, with possible reasons such as insufficient replicas. This error usually occurs when the TiKV server is busy or the TiKV node is down.
 
-    原因と解決策については、 [トラブルシューティングセクション](/faq/tidb-faq.md#troubleshoot)を参照してください。
+    Check the status, monitoring data and log of the TiKV server.
 
--   エラー番号：9008
+-   Error Number: 9006
 
-    同時に送信されるリクエストが多すぎます。数が制限を超えています。
+    The complete error message: `ERROR 9006 (HY000): GC life time is shorter than transaction duration`
 
-    `tidb_store_limit`を増やすか、 `0`に設定して、リクエストのトラフィックの制限を削除します。
+    The interval of `GC Life Time` is too short. The data that should have been read by long transactions might be deleted. You can adjust [`tidb_gc_life_time`](/system-variables.md#tidb_gc_life_time-new-in-v50) using the following command:
 
--   エラー番号：9010
+    ```sql
+    SET GLOBAL tidb_gc_life_time = '30m';
+    ```
 
-    TiKVはこのいかだログを処理できません。
+    > **Note:**
+    >
+    > "30m" means only cleaning up the data generated 30 minutes ago, which might consume some extra storage space.
 
-    TiKVサーバーの状態/モニター/ログを確認してください。
+-   Error Number: 9500
 
--   エラー番号：9012
+    A single transaction is too large.
 
-    TiFlashリクエストがタイムアウトしました。
+    See [the error message `transaction too large`](/faq/migration-tidb-faq.md#the-error-message-transaction-too-large-is-displayed) for the solution.
 
-    TiFlashサーバーの状態/モニター/ログおよびTiDBサーバーとTiFlashサーバー間のネットワークを確認してください。
+-   Error Number: 9007
 
--   エラー番号：9013
+    The complete error message: `ERROR 9007 (HY000): Write Conflict`
 
-    TiFlashサーバーはビジーであり、これは通常、ワークロードが高すぎる場合に発生します。
+    Transactions in TiKV encounter write conflicts.
 
-    TiFlashサーバーの状態/モニター/ログを確認してください。
+    Check whether `tidb_disable_txn_auto_retry` is set to `on`. If so, set it to `off`; if it is already `off`, increase the value of `tidb_retry_limit` until the error no longer occurs.
 
-## トラブルシューティング {#troubleshooting}
+-   Error Number: 9008
 
-[トラブルシューティング](/troubleshoot-tidb-cluster.md)および[FAQ](/faq/tidb-faq.md)のドキュメントを参照してください。
+    Too many requests are sent to TiKV at the same time. The number exceeds limit.
+
+    Increase `tidb_store_limit` or set it to `0` to remove the limit on the traffic of requests.
+
+-   Error Number: 9010
+
+    TiKV cannot process this raft log.
+
+    Check the state/monitor/log of the TiKV server.
+
+-   Error Number: 9012
+
+    The TiFlash request timed out.
+
+    Check the state/monitor/log of the TiFlash server and the network between the TiDB server and TiFlash server.
+
+-   Error Number: 9013
+
+    The TiFlash server is busy and this usually occurs when the workload is too high.
+
+    Check the state/monitor/log of the TiFlash server.
+
+### MySQL native error messages {#mysql-native-error-messages}
+
+-   Error Number: 2013 (HY000)
+
+    The complete error message: `ERROR 2013 (HY000): Lost connection to MySQL server during query`
+
+    You can handle this error as follows:
+
+    -   Check whether panic is in the log.
+    -   Check whether OOM exists in dmesg using `dmesg -T | grep -i oom`.
+    -   A long time of no access might also lead to this error. It is usually caused by TCP timeout. If TCP is not used for a long time, the operating system kills it.
+
+-   Error Number: 1105 (HY000)
+
+    The complete error message: `ERROR 1105 (HY000): other error: unknown error Wire Error(InvalidEnumValue(4004))`
+
+    This error usually occurs when the version of TiDB does not match with that of TiKV. To avoid version mismatch, upgrade all components when you upgrade the version.
+
+-   Error Number: 1148 (42000)
+
+    The complete error message: `ERROR 1148 (42000): the used command is not allowed with this TiDB version`
+
+    When you execute the `LOAD DATA LOCAL` statement but the MySQL client does not allow executing this statement (the value of the `local_infile` option is 0), this error occurs.
+
+    The solution is to use the `--local-infile=1` option when you start the MySQL client. For example, run the command `mysql --local-infile=1 -u root -h 127.0.0.1 -P 4000`. The default value of `local-infile` varies in different versions of the MySQL client. Therefore, you need to configure it in specific MySQL clients.
+
+-   Error Number: 9001 (HY000)
+
+    The complete error message: `ERROR 9001 (HY000): PD server timeout start timestamp may fall behind safe point`
+
+    This error occurs when TiDB fails to access PD. A worker in the TiDB background continuously queries the safepoint from PD and reports this error if it fails to query within 100s. Generally, it is because the disk on PD is slow and busy or the network failed between TiDB and PD. For the details of common errors, see [Error Number and Fault Diagnosis](/error-codes.md).
+
+-   TiDB log error message: EOF error
+
+    When the client or proxy disconnects from TiDB, TiDB does not immediately notice the disconnection. Instead, TiDB notices the disconnection only when it begins to return data to the connection. At this time, the log prints an EOF error.
+
+## Troubleshooting {#troubleshooting}
+
+See the [troubleshooting](/troubleshoot-tidb-cluster.md) and [FAQ](/faq/tidb-faq.md) documents.

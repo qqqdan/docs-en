@@ -3,33 +3,33 @@ title: Migrate from Databases that Use GH-ost/PT-osc
 summary: This document introduces the `online-ddl/online-ddl-scheme` feature of DM.
 ---
 
-# GH-ost/PT-oscを使用するデータベースからの移行 {#migrate-from-databases-that-use-gh-ost-pt-osc}
+# Migrate from Databases that Use GH-ost/PT-osc {#migrate-from-databases-that-use-gh-ost-pt-osc}
 
-本番シナリオでは、DDL実行中のテーブルロックにより、データベースからの読み取りまたはデータベースへの書き込みがある程度ブロックされる可能性があります。したがって、オンラインDDLツールは、読み取りと書き込みへの影響を最小限に抑えるためにDDLを実行するためによく使用されます。一般的なDDLツールは[幽霊](https://github.com/github/gh-ost)と[pt-osc](https://www.percona.com/doc/percona-toolkit/3.0/pt-online-schema-change.html)です。
+In production scenarios, table locking during DDL execution can block the reads from or writes to the database to a certain extent. Therefore, online DDL tools are often used to execute DDLs to minimize the impact on reads and writes. Common DDL tools are [gh-ost](https://github.com/github/gh-ost) and [pt-osc](https://www.percona.com/doc/percona-toolkit/3.0/pt-online-schema-change.html).
 
-DMを使用してMySQLからTiDBにデータを移行する場合、online-ddlをエンベールして、DMとgh-ostまたはpt-oscのコラボレーションを可能にすることができます。 online-ddlを有効にする方法と、このオプションを有効にした後のワークフローの詳細については、 [gh-ostまたはpt-oscを使用した連続レプリケーション](/migrate-with-pt-ghost.md)を参照してください。このドキュメントでは、DMツールとオンラインDDLツールのコラボレーションの詳細に焦点を当てています。
+When using DM to migrate data from MySQL to TiDB, you can enbale online-ddl to allow collaboration of DM and gh-ost or pt-osc. For details about how to enable online-ddl and the workflow after enabling this option, see [Continuous Replication with gh-ost or pt-osc](/migrate-with-pt-ghost.md). This document focuses on the collaboration details of DM and online DDL tools.
 
-## オンラインDDLツールを使用したDMの作業の詳細 {#working-details-for-dm-with-online-ddl-tools}
+## Working details for DM with online DDL tools {#working-details-for-dm-with-online-ddl-tools}
 
-このセクションでは、online-schema-changeを実装する際のオンラインDDLツール[幽霊](https://github.com/github/gh-ost)および[pt-osc](https://www.percona.com/doc/percona-toolkit/3.0/pt-online-schema-change.html)を使用したDMの動作の詳細について説明します。
+This section describes the working details for DM with the online DDL tools [gh-ost](https://github.com/github/gh-ost) and [pt-osc](https://www.percona.com/doc/percona-toolkit/3.0/pt-online-schema-change.html) when implementing online-schema-change.
 
-### online-schema-change：gh-ost {#online-schema-change-gh-ost}
+### online-schema-change: gh-ost {#online-schema-change-gh-ost}
 
-gh-ostがonline-schema-changeを実装すると、次の3種類のテーブルが作成されます。
+When gh-ost implements online-schema-change, 3 types of tables are created:
 
--   gho：DDLを適用するために使用されます。データが完全に複製され、ghoテーブルがoriginテーブルと一致している場合、originテーブルは名前変更によって置き換えられます。
--   ghc：online-schema-changeに関連する情報を格納するために使用されます。
--   del：オリジンテーブルの名前を変更して作成されます。
+-   gho: used to apply DDLs. When the data is fully replicated and the gho table is consistent with the origin table, the origin table is replaced by renaming.
+-   ghc: used to store information that is related to online-schema-change.
+-   del: created by renaming the origin table.
 
-移行の過程で、DMは上記のテーブルを3つのカテゴリに分類します。
+In the process of migration, DM divides the above tables into 3 categories:
 
--   ghostTable： `_*_gho`
--   `_*_del` ： `_*_ghc`
--   realTable：online-ddlを実行するオリジンテーブル。
+-   ghostTable: `_*_gho`
+-   trashTable: `_*_ghc`, `_*_del`
+-   realTable: the origin table that executes online-ddl.
 
-gh-ostで主に使用されるSQLステートメントとそれに対応するDMの操作は次のとおりです。
+The SQL statements mostly used by gh-ost and the corresponding operation of DM are as follows:
 
-1.  `_ghc`のテーブルを作成します。
+1.  Create the `_ghc` table:
 
     ```sql
     Create /* gh-ost */ table `test`.`_test4_ghc` (
@@ -42,33 +42,33 @@ gh-ostで主に使用されるSQLステートメントとそれに対応するDM
                     ) auto_increment=256 ;
     ```
 
-    DMは`_test4_ghc`のテーブルを作成しません。
+    DM does not create the `_test4_ghc` table.
 
-2.  `_gho`のテーブルを作成します。
+2.  Create the `_gho` table:
 
     ```sql
     Create /* gh-ost */ table `test`.`_test4_gho` like `test`.`test4` ;
     ```
 
-    DMは`_test4_gho`のテーブルを作成しません。 DMは、 `ghost_schema` 、および`ghost_table` of `server_id` `dm_worker` 、ダウンストリームの`dm_meta.{task_name}_onlineddl`レコードを削除し、メモリ内の関連情報をクリアします。
+    DM does not create the `_test4_gho` table. DM deletes the `dm_meta.{task_name}_onlineddl` record in the downstream according to `ghost_schema`, `ghost_table`, and the `server_id` of `dm_worker`, and clears the related information in memory.
 
     ```
     DELETE FROM dm_meta.{task_name}_onlineddl WHERE id = {server_id} and ghost_schema = {ghost_schema} and ghost_table = {ghost_table};
     ```
 
-3.  `_gho`のテーブルで実行する必要のあるDDLを適用します。
+3.  Apply the DDL that needs to be executed in the `_gho` table:
 
     ```sql
     Alter /* gh-ost */ table `test`.`_test4_gho` add column cl1 varchar(20) not null ;
     ```
 
-    DMは`_test4_gho`のDDL操作を実行しません。このDDLを`dm_meta.{task_name}_onlineddl`とメモリに記録します。
+    DM does not perform the DDL operation of `_test4_gho`. It records this DDL in `dm_meta.{task_name}_onlineddl` and memory.
 
     ```sql
     REPLACE INTO dm_meta.{task_name}_onlineddl (id, ghost_schema , ghost_table , ddls) VALUES (......);
     ```
 
-4.  `_ghc`のテーブルにデータを書き込み、元のテーブルのデータを`_gho`のテーブルに複製します。
+4.  Write data to the `_ghc` table, and replicate the origin table data to the `_gho` table:
 
     ```sql
     INSERT /* gh-ost */ INTO `test`.`_test4_ghc` VALUES (......);
@@ -78,28 +78,28 @@ gh-ostで主に使用されるSQLステートメントとそれに対応するDM
       )   ;
     ```
 
-    DMは、 **realtable**用ではないDMLステートメントを実行しません。
+    DM does not execute DML statements that are not for **realtable**.
 
-5.  移行が完了すると、元のテーブルと`_gho`のテーブルの両方の名前が変更され、オンラインDDL操作が完了します。
+5.  After the migration is completed, both the origin table and `_gho` table are renamed, and the online DDL operation is completed:
 
     ```sql
     Rename /* gh-ost */ table `test`.`test4` to `test`.`_test4_del`, `test`.`_test4_gho` to `test`.`test4`;
     ```
 
-    DMは、次の2つの操作を実行します。
+    DM performs the following two operations:
 
-    -   DMは、上記の`rename`つの操作を2つのSQLステートメントに分割します。
+    -   DM splits the above `rename` operation into two SQL statements.
 
         ```sql
         rename test.test4 to test._test4_del;
         rename test._test4_gho to test.test4;
         ```
 
-    -   DMは`rename to _test4_del`を実行しません。 `rename ghost_table to origin table`を実行する場合、DMは次の手順を実行します。
+    -   DM does not execute `rename to _test4_del`. When executing `rename ghost_table to origin table`, DM takes the following steps:
 
-        -   手順3でメモリに記録されたDDLを読み取ります
-        -   `ghost_table`と`ghost_schema`を`origin_table`とそれに対応するスキーマに置き換えます
-        -   置き換えられたDDLを実行します
+        -   Read the DDL recorded in memory in Step 3
+        -   Replace `ghost_table` and `ghost_schema` with `origin_table` and its corresponding schema
+        -   Execute the DDL that has been replaced
 
         ```sql
         alter table test._test4_gho add column cl1 varchar(20) not null;
@@ -107,52 +107,52 @@ gh-ostで主に使用されるSQLステートメントとそれに対応するDM
         alter table test.test4 add column cl1 varchar(20) not null;
         ```
 
-> **ノート：**
+> **Note:**
 >
-> gh-ostの特定のSQLステートメントは、実行で使用されるパラメーターによって異なります。このドキュメントには、主要なSQLステートメントのみが記載されています。詳細については、 [gh-ostドキュメント](https://github.com/github/gh-ost#gh-ost)を参照してください。
+> The specific SQL statements of gh-ost vary with the parameters used in the execution. This document only lists the major SQL statements. For more details, refer to the [gh-ost documentation](https://github.com/github/gh-ost#gh-ost).
 
-## online-schema-change：pt {#online-schema-change-pt}
+## online-schema-change: pt {#online-schema-change-pt}
 
-pt-oscがonline-schema-changeを実装すると、次の2種類のテーブルが作成されます。
+When pt-osc implements online-schema-change, 2 types of tables are created:
 
--   `new` ：DDLを適用するために使用されます。データが完全に複製され、 `new`のテーブルが元のテーブルと一致している場合、元のテーブルは名前の変更によって置き換えられます。
--   `old` ：オリジンテーブルの名前を変更して作成されます。
--   `pt_osc_*_upd`種類のトリガー`pt_osc_*_del` `pt_osc_*_ins` 。 pt_oscのプロセスでは、オリジンテーブルによって生成された新しいデータがトリガーによって`new`に複製されます。
+-   `new`: used to apply DDL. When the data is fully replicated and the `new` table is consistent with the origin table, the origin table is replaced by renaming.
+-   `old`: created by renaming the origin table.
+-   3 kinds of Trigger: `pt_osc_*_ins`, `pt_osc_*_upd`, `pt_osc_*_del`. In the process of pt_osc, the new data generated by the origin table is replicated to `new` by the Trigger.
 
-移行の過程で、DMは上記のテーブルを3つのカテゴリに分類します。
+In the process of migration, DM divides the above tables into 3 categories:
 
--   ghostTable： `_*_new`
--   trashTable： `_*_old`
--   realTable：online-ddlを実行するオリジンテーブル。
+-   ghostTable: `_*_new`
+-   trashTable: `_*_old`
+-   realTable: the origin table that executes online-ddl.
 
-pt-oscで主に使用されるSQLステートメントとそれに対応するDMの操作は次のとおりです。
+The SQL statements mostly used by pt-osc and the corresponding operation of DM are as follows:
 
-1.  `_new`のテーブルを作成します。
+1.  Create the `_new` table:
 
     ```sql
     CREATE TABLE `test`.`_test4_new` ( id int(11) NOT NULL AUTO_INCREMENT,
-    date date DEFAULT NULL, account_id bigint(20) DEFAULT NULL, conversion_price decimal(20,3) DEFAULT NULL,  ocpc_matched_conversions bigint(20) DEFAULT NULL, ad_cost decimal(20,3) DEFAULT NULL,cl2 varchar(20) COLLATE utf8mb4_bin NOT NULL,cl1 varchar(20) COLLATE utf8mb4_bin NOT NULL,PRIMARY KEY (id) ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ;
+    date date DEFAULT NULL, account_id bigint(20) DEFAULT NULL, conversion_price decimal(20,3) DEFAULT NULL, ocpc_matched_conversions bigint(20) DEFAULT NULL, ad_cost decimal(20,3) DEFAULT NULL,cl2 varchar(20) COLLATE utf8mb4_bin NOT NULL,cl1 varchar(20) COLLATE utf8mb4_bin NOT NULL,PRIMARY KEY (id) ) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_bin ;
     ```
 
-    DMは`_test4_new`のテーブルを作成しません。 DMは、 `ghost_schema` 、および`ghost_table` of `server_id` `dm_worker` 、ダウンストリームの`dm_meta.{task_name}_onlineddl`レコードを削除し、メモリ内の関連情報をクリアします。
+    DM does not create the `_test4_new` table. DM deletes the `dm_meta.{task_name}_onlineddl` record in the downstream according to `ghost_schema`, `ghost_table`, and the `server_id` of `dm_worker`, and clears the related information in memory.
 
     ```sql
     DELETE FROM dm_meta.{task_name}_onlineddl WHERE id = {server_id} and ghost_schema = {ghost_schema} and ghost_table = {ghost_table};
     ```
 
-2.  `_new`のテーブルでDDLを実行します。
+2.  Execute DDL in the `_new` table:
 
     ```sql
     ALTER TABLE `test`.`_test4_new` add column c3 int;
     ```
 
-    DMは`_test4_new`のDDL操作を実行しません。代わりに、このDDLを`dm_meta.{task_name}_onlineddl`とメモリに記録します。
+    DM does not perform the DDL operation of `_test4_new`. Instead, it records this DDL in `dm_meta.{task_name}_onlineddl` and memory.
 
     ```sql
     REPLACE INTO dm_meta.{task_name}_onlineddl (id, ghost_schema , ghost_table , ddls) VALUES (......);
     ```
 
-3.  データ移行に使用される3つのトリガーを作成します。
+3.  Create 3 Triggers used for data migration:
 
     ```sql
     CREATE TRIGGER `pt_osc_test_test4_del` AFTER DELETE ON `test`.`test4` ...... ;
@@ -160,36 +160,36 @@ pt-oscで主に使用されるSQLステートメントとそれに対応するDM
     CREATE TRIGGER `pt_osc_test_test4_ins` AFTER INSERT ON `test`.`test4` ...... ;
     ```
 
-    DMは、TiDBでサポートされていないトリガー操作を実行しません。
+    DM does not execute Trigger operations that are not supported in TiDB.
 
-4.  元のテーブルデータを`_new`のテーブルに複製します。
+4.  Replicate the origin table data to the `_new` table:
 
     ```sql
     INSERT LOW_PRIORITY IGNORE INTO `test`.`_test4_new` (`id`, `date`, `account_id`, `conversion_price`, `ocpc_matched_conversions`, `ad_cost`, `cl2`, `cl1`) SELECT `id`, `date`, `account_id`, `conversion_price`, `ocpc_matched_conversions`, `ad_cost`, `cl2`, `cl1` FROM `test`.`test4` LOCK IN SHARE MODE /*pt-online-schema-change 3227 copy table*/
     ```
 
-    DMは、 **realtable**用ではないDMLステートメントを実行しません。
+    DM does not execute the DML statements that are not for **realtable**.
 
-5.  データ移行が完了すると、元のテーブルと`_new`のテーブルの名前が変更され、オンラインDDL操作が完了します。
+5.  After the data migration is completed, the origin table and `_new` table are renamed, and the online DDL operation is completed:
 
     ```sql
     RENAME TABLE `test`.`test4` TO `test`.`_test4_old`, `test`.`_test4_new` TO `test`.`test4`
     ```
 
-    DMは、次の2つの操作を実行します。
+    DM performs the following two operations:
 
-    -   DMは、上記の`rename`つの操作を2つのSQLステートメントに分割します。
+    -   DM splits the above `rename` operation into two SQL statements:
 
         ```sql
          rename test.test4 to test._test4_old;
          rename test._test4_new to test.test4;
         ```
 
-    -   DMは`rename to _test4_old`を実行しません。 `rename ghost_table to origin table`を実行する場合、DMは次の手順を実行します。
+    -   DM does not execute `rename to _test4_old`. When executing `rename ghost_table to origin table`, DM takes the following steps:
 
-        -   手順2でメモリに記録されたDDLを読み取ります
-        -   `ghost_table`と`ghost_schema`を`origin_table`とそれに対応するスキーマに置き換えます
-        -   置き換えられたDDLを実行します
+        -   Read the DDL recorded in memory in Step 2
+        -   Replace `ghost_table` and `ghost_schema` with `origin_table` and its corresponding schema
+        -   Execute the DDL that has been replaced
 
         ```sql
         ALTER TABLE `test`.`_test4_new` add column c3 int;
@@ -197,7 +197,7 @@ pt-oscで主に使用されるSQLステートメントとそれに対応するDM
         ALTER TABLE `test`.`test4` add column c3 int;
         ```
 
-6.  オンラインDDL操作の`_old`のテーブルと3つのトリガーを削除します。
+6.  Delete the `_old` table and 3 Triggers of the online DDL operation:
 
     ```sql
     DROP TABLE IF EXISTS `test`.`_test4_old`;
@@ -206,21 +206,21 @@ pt-oscで主に使用されるSQLステートメントとそれに対応するDM
     DROP TRIGGER IF EXISTS `pt_osc_test_test4_ins` AFTER INSERT ON `test`.`test4` ...... ;
     ```
 
-    DMは`_test4_old`とトリガーを削除しません。
+    DM does not delete `_test4_old` and Triggers.
 
-> **ノート：**
+> **Note:**
 >
-> pt-oscの特定のSQLステートメントは、実行で使用されるパラメーターによって異なります。このドキュメントには、主要なSQLステートメントのみが記載されています。詳細については、 [pt-oscドキュメント](https://www.percona.com/doc/percona-toolkit/2.2/pt-online-schema-change.html)を参照してください。
+> The specific SQL statements of pt-osc vary with the parameters used in the execution. This document only lists the major SQL statements. For more details, refer to the [pt-osc documentation](https://www.percona.com/doc/percona-toolkit/2.2/pt-online-schema-change.html).
 
-## その他のオンラインスキーマ変更ツール {#other-online-schema-change-tools}
+## Other online schema change tools {#other-online-schema-change-tools}
 
-場合によっては、オンラインスキーマ変更ツールのデフォルトの動作を変更する必要があります。たとえば、 `ghost table`と`trash table`にカスタマイズされた名前を使用できます。他の場合には、gh-ostまたはpt-oscの代わりに、同じ動作原理と変更プロセスで他のツールを使用することをお勧めします。
+In some cases, you might need to change the default behavior of your online schema change tool. For example, you might use customized names for `ghost table` and `trash table`. In other cases, you might want to use other tools instead of gh-ost or pt-osc, with the same working principles and change processes.
 
-このようなカスタマイズされたニーズを実現するには、 `ghost table`と`trash table`の名前に一致する正規表現を作成する必要があります。
+To achieve such customized needs, you need to write regular expressions to match the names of the `ghost table` and `trash table`.
 
-v2.0.7以降、DMは変更されたオンラインスキーマ変更ツールを実験的にサポートします。 DMタスク構成で`online-ddl=true`を設定し、 `shadow-table-rules`と`trash-table-rules`を構成することにより、変更された一時テーブルを正規表現と一致させることができます。
+Starting from v2.0.7, DM experimentally supports the modified online schema change tools. By setting `online-ddl=true` in the DM task configuration and configuring `shadow-table-rules` and `trash-table-rules`, you can match the modified temporary tables with regular expressions.
 
-たとえば、 `ghost table`の名前が`_{origin_table}_pcnew`で`trash table`の名前が`_{origin_table}_pcold`のカスタマイズされたpt-oscを使用する場合、カスタムルールを次のように設定できます。
+For example, if you use a customized pt-osc with the name of `ghost table` being `_{origin_table}_pcnew` and the name of `trash table` being `_{origin_table}_pcold`, you can set the custom rules as follows:
 
 ```yaml
 online-ddl: true

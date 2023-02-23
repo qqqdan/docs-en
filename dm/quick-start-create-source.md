@@ -1,23 +1,23 @@
 ---
-title: Create a Data Source
+title: Create a Data Source for TiDB Data Migration
 summary: Learn how to create a data source for Data Migration (DM).
 ---
 
-# データソースを作成する {#create-a-data-source}
+# Create a Data Source for TiDB Data Migration {#create-a-data-source-for-tidb-data-migration}
 
-> **ノート：**
+> **Note:**
 >
-> データソースを作成する前に、 [TiUPを使用してDMクラスターをデプロイする](/dm/deploy-a-dm-cluster-using-tiup.md)を行う必要があります。
+> Before creating a data source, you need to [Deploy a DM Cluster Using TiUP](/dm/deploy-a-dm-cluster-using-tiup.md).
 
-このドキュメントでは、TiDBデータ移行（DM）のデータ移行タスク用のデータソースを作成する方法について説明します。
+The document describes how to create a data source for the data migration task of TiDB Data Migration (DM).
 
-データソースには、アップストリーム移行タスクにアクセスするための情報が含まれています。データ移行タスクでは、アクセスの構成情報を取得するために対応するデータソースを参照する必要があるため、データ移行タスクを作成する前に、タスクのデータソースを作成する必要があります。特定のデータソース管理コマンドについては、 [データソース構成の管理](/dm/dm-manage-source.md)を参照してください。
+A data source contains the information for accessing the upstream migration task. Because a data migration task requires referring its corresponding data source to obtain the configuration information of access, you need to create the data source of a task before creating a data migration task. For specific data source management commands, refer to [Manage Data Source Configurations](/dm/dm-manage-source.md).
 
-## ステップ1：データソースを構成する {#step-1-configure-the-data-source}
+## Step 1: Configure the data source {#step-1-configure-the-data-source}
 
-1.  （オプション）データソースのパスワードを暗号化する
+1.  (optional) Encrypt the data source password
 
-    DM構成ファイルでは、dmctlで暗号化されたパスワードを使用することをお勧めします。以下の例に従って、データソースの暗号化されたパスワードを取得できます。このパスワードは、後で構成ファイルを書き込むために使用できます。
+    In DM configuration files, it is recommended to use the password encrypted with dmctl. You can follow the example below to obtain the encrypted password of the data source, which can be used to write the configuration file later.
 
     {{< copyable "" >}}
 
@@ -29,9 +29,9 @@ summary: Learn how to create a data source for Data Migration (DM).
     MKxn0Qo3m3XOyjCnhEMtsUCm83EhGQDZ/T4=
     ```
 
-2.  データソースの構成ファイルを書き込みます
+2.  Write the configuration file of the data source
 
-    データソースごとに、それを作成するための個別の構成ファイルが必要です。以下の例に従って、IDが「mysql-01」であるデータソースを作成できます。最初に構成ファイルを作成します`./source-mysql-01.yaml` ：
+    For each data source, you need an individual configuration file to create it. You can follow the example below to create a data source whose ID is "mysql-01". First create the configuration file `./source-mysql-01.yaml`:
 
     ```yaml
     source-id: "mysql-01"    # The ID of the data source, you can refer this source-id in the task configuration and dmctl command to associate the corresponding data source.
@@ -47,9 +47,9 @@ summary: Learn how to create a data source for Data Migration (DM).
         ssl-key: "/path/to/key.pem"
     ```
 
-## ステップ2：データソースを作成する {#step-2-create-a-data-source}
+## Step 2: Create a data source {#step-2-create-a-data-source}
 
-次のコマンドを使用して、データソースを作成できます。
+You can use the following command to create a data source:
 
 {{< copyable "" >}}
 
@@ -57,9 +57,9 @@ summary: Learn how to create a data source for Data Migration (DM).
 tiup dmctl --master-addr <master-addr> operate-source create ./source-mysql-01.yaml
 ```
 
-その他の構成パラメーターについては、 [アップストリームデータベースConfiguration / コンフィグレーションファイル](/dm/dm-source-configuration-file.md)を参照してください。
+For other configuration parameters, refer to [Upstream Database Configuration File](/dm/dm-source-configuration-file.md).
 
-返される結果は次のとおりです。
+The returned results are as follows:
 
 {{< copyable "" >}}
 
@@ -78,11 +78,11 @@ tiup dmctl --master-addr <master-addr> operate-source create ./source-mysql-01.y
 }
 ```
 
-## ステップ3：作成したデータソースをクエリする {#step-3-query-the-data-source-you-created}
+## Step 3: Query the data source you created {#step-3-query-the-data-source-you-created}
 
-データソースを作成したら、次のコマンドを使用してデータソースをクエリできます。
+After creating a data source, you can use the following command to query the data source:
 
--   データソースの`source-id`を知っている場合は、 `dmctl config source <source-id>`コマンドを使用して、データソースの構成を直接確認できます。
+-   If you konw the `source-id` of the data source, you can use the `dmctl config source <source-id>` command to directly check the configuration of the data source:
 
     {{< copyable "" >}}
 
@@ -105,7 +105,7 @@ tiup dmctl --master-addr <master-addr> operate-source create ./source-mysql-01.y
     }
     ```
 
--   `source-id`がわからない場合は、 `dmctl operate-source show`コマンドを使用して、対応するデータソースを見つけることができるソースデータベースリストを確認できます。
+-   If you do not know the `source-id`, you can use the `dmctl operate-source show` command to check the source database list, from which you can find the corresponding data source.
 
     {{< copyable "" >}}
 

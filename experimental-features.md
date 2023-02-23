@@ -3,67 +3,59 @@ title: TiDB Experimental Features
 summary: Learn the experimental features of TiDB.
 ---
 
-# TiDBの実験的特徴 {#tidb-experimental-features}
+# TiDB Experimental Features {#tidb-experimental-features}
 
-このドキュメントでは、さまざまなバージョンのTiDBの実験的機能を紹介します。これらの機能を実稼働環境で使用することはお勧めし**ません**。
+This document introduces the experimental features of TiDB in different versions. It is **NOT** recommended to use these features in the production environment.
 
-## パフォーマンス {#performance}
+## Performance {#performance}
 
--   [`PREDICATE COLUMNS`の統計収集をサポート](/statistics.md#collect-statistics-on-some-columns) （v5.4で導入）
--   [統計の同期ロードをサポート](/statistics.md#load-statistics) 。 （v5.4で導入）
--   [統計を収集するためのメモリクォータを制御する](/statistics.md#the-memory-quota-for-collecting-statistics) 。 （v6.1.0で導入）
+-   [Support collecting statistics for `PREDICATE COLUMNS`](/statistics.md#collect-statistics-on-some-columns) (Introduced in v5.4)
+-   [Support synchronously loading statistics](/statistics.md#load-statistics). (Introduced in v5.4)
+-   [Control the memory quota for collecting statistics](/statistics.md#the-memory-quota-for-collecting-statistics). (Introduced in v6.1.0)
+-   [Extended statistics](/extended-statistics.md). (Introduced in v5.0.0)
+-   [Randomly sample about 10000 rows of data to quickly build statistics](/system-variables.md#tidb_enable_fast_analyze) (Introduced in v3.0)
 
-## 安定 {#stability}
+## Stability {#stability}
 
--   TiFlashは、データの圧縮または並べ替えによってI / Oリソースの使用を制限し、バックグラウンドタスクとフロントエンドデータの読み取りおよび書き込みの間のI / Oリソースの競合を軽減します（v5.0で導入）
--   オプティマイザーによるインデックスの選択の安定性を向上させます（v5.0で導入）
-    -   複数列の順序依存関係情報を収集して、統計機能を拡張します。
-    -   `CMSKetch`とヒストグラムから`TopN`の値を削除し、各テーブルインデックスのヒストグラムバケットのNDV情報を追加するなど、統計モジュールをリファクタリングします。
--   TiKVが限られたリソースでデプロイされている場合、TiKVのフォアグラウンドが処理する読み取りおよび書き込み要求が多すぎると、バックグラウンドで使用されるCPUリソースがそのような要求の処理に使用され、TiKVのパフォーマンスの安定性に影響します。この状況を回避するには、 [クォータリミッター](/tikv-configuration-file.md#quota)を使用して、フォアグラウンドで使用されるCPUリソースを制限します。 （v6.0で導入）
+-   Improve the stability of the optimizer's choice of indexes: extend the statistics feature by collecting the multi-column order dependency information (Introduced in v5.0).
+-   When TiKV is deployed with limited resources, if the foreground of TiKV processes too many read and write requests, the CPU resources used by the background are occupied to help process such requests, which affects the performance stability of TiKV. To avoid this situation, you can use the [Quota Limiter](/tikv-configuration-file.md#quota) to limit the CPU resources to be used by the foreground. (Introduced in v6.0)
 
-## スケジューリング {#scheduling}
+## Scheduling {#scheduling}
 
--   カスケード配置ルール機能。これは、PDがさまざまなタイプのデータに対応するスケジュールを生成するようにガイドするレプリカルールシステムです。さまざまなスケジューリングルールを組み合わせることで、レプリカの数、保存場所、ホストタイプ、Raft選挙に参加するかどうか、Raftリーダーとして機能するかどうかなど、任意の連続データ範囲の属性を細かく制御できます。詳細については、 [カスケード配置ルール](/configure-placement-rules.md)を参照してください。 （v4.0で導入）
--   エラスティックスケジューリング機能。これにより、TiDBクラスタがリアルタイムワークロードに基づいてKubernetesで動的にスケールアウトおよびスケールインできるようになり、アプリケーションのピーク時のストレスが効果的に軽減され、オーバーヘッドが節約されます。詳細については、 [TidbCluster自動スケーリングを有効にする](https://docs.pingcap.com/tidb-in-kubernetes/stable/enable-tidb-cluster-auto-scaling)を参照してください。 （v4.0で導入）
+Elastic scheduling feature. It enables the TiDB cluster to dynamically scale out and in on Kubernetes based on real-time workloads, which effectively reduces the stress during your application's peak hours and saves overheads. See [Enable TidbCluster Auto-scaling](https://docs.pingcap.com/tidb-in-kubernetes/stable/enable-tidb-cluster-auto-scaling) for details. (Introduced in v4.0)
 
 ## SQL {#sql}
 
--   式インデックス機能。式インデックスは、関数ベースのインデックスとも呼ばれます。インデックスを作成する場合、インデックスフィールドは特定の列である必要はありませんが、1つ以上の列から計算された式にすることができます。この機能は、計算ベースのテーブルにすばやくアクセスするのに役立ちます。詳細については、 [式インデックス](/sql-statements/sql-statement-create-index.md)を参照してください。 （v4.0で導入）
--   [生成された列](/generated-columns.md) （v2.1で導入）
--   [ユーザー定義変数](/user-defined-variables.md) （v2.1で導入）
--   [JSONデータ型](/data-type-json.md)および[JSON関数](/functions-and-operators/json-functions.md) （v2.1で導入）
--   [意見](/information-schema/information-schema-views.md) （v2.1で導入）
--   [`ALTER TABLE ... COMPACT`](/sql-statements/sql-statement-alter-table-compact.md) （v6.1.0で導入）
+-   The expression index feature. The expression index is also called the function-based index. When you create an index, the index fields do not have to be a specific column but can be an expression calculated from one or more columns. This feature is useful for quickly accessing the calculation-based tables. See [Expression index](/sql-statements/sql-statement-create-index.md) for details. (Introduced in v4.0)
+-   [Generated Columns](/generated-columns.md) (Introduced in v2.1)
+-   [User-Defined Variables](/user-defined-variables.md) (Introduced in v2.1)
+-   [JSON data type](/data-type-json.md) and [JSON functions](/functions-and-operators/json-functions.md) (Introduced in v2.1)
+-   [Cascades Planner](/system-variables.md#tidb_enable_cascades_planner): a cascades framework-based top-down query optimizer (Introduced in v3.0)
+-   [Table Lock](/tidb-configuration-file.md) (Introduced in v4.0.0)
+-   [`ALTER TABLE ... COMPACT`](/sql-statements/sql-statement-alter-table-compact.md) (Introduced in v6.1.0)
+-   [Using `ALTER TABLE` to modify multiple columns or indexes](/system-variables.md#tidb_enable_change_multi_schema) (Introduced in v5.0.0)
 
-## Configuration / コンフィグレーション管理 {#configuration-management}
+## Storage {#storage}
 
--   [設定を表示](/sql-statements/sql-statement-show-config.md) （v4.0で導入）
+-   [Disable Titan](/storage-engine/titan-configuration.md#disable-titan-experimental) (Introduced in v4.0)
+-   [Titan Level Merge](/storage-engine/titan-configuration.md#level-merge-experimental) (Introduced in v4.0)
+-   Divide Regions are divided into buckets. [Buckets are used as the unit of concurrent query](/tune-region-performance.md#use-bucket-to-increase-concurrency) to improve the scan concurrency. (Introduced in v6.1.0)
+-   TiKV introduces [API V2](/tikv-configuration-file.md#api-version-new-in-v610). (Introduced in v6.1.0)
 
-## データ共有とサブスクリプション {#data-sharing-and-subscription}
+## Backup and restoration {#backup-and-restoration}
 
--   [TiCDCをKafkaConnect（Confluent Platform）と統合する](/ticdc/integrate-confluent-using-ticdc.md) （v5.0で導入）
+-   [Back up and restore RawKV](/br/rawkv-backup-and-restore.md) (Introduced in v3.1)
 
-## 保管所 {#storage}
+## Data migration {#data-migration}
 
--   [タイタンを無効にする](/storage-engine/titan-configuration.md#disable-titan-experimental) （v4.0で導入）
--   [タイタンレベルマージ](/storage-engine/titan-configuration.md#level-merge-experimental) （v4.0で導入）
--   TiFlashは、ストレージエンジンの新しいデータを複数のハードドライブに分散して、I/O圧力を共有することをサポートしています。 （v4.0で導入）
--   分割領域はバケットに分割されます。 [バケットは同時クエリの単位として使用されます](/tune-region-performance.md#use-bucket-to-increase-concurrency)スキャンの同時実行性を向上させます。 （v6.1.0で導入）
--   TiKVは[API V2](/tikv-configuration-file.md#api-version-new-in-v610)を導入します。 （v6.1.0で導入）
+-   [Use WebUI](/dm/dm-webui-guide.md) to manage migration tasks in DM. (Introduced in v6.0)
 
-## バックアップと復元 {#backup-and-restoration}
+## Garbage collection {#garbage-collection}
 
--   [RawKVをバックアップする](/br/use-br-command-line-tool.md#back-up-raw-kv-experimental-feature) （v3.1で導入）
+-   [Green GC](/system-variables.md#tidb_gc_scan_lock_mode-new-in-v50) (Introduced in v5.0)
 
-## データ移行 {#data-migration}
+## Diagnostics {#diagnostics}
 
--   DMで移行タスクを管理する場合は[WebUIを使用する](/dm/dm-webui-guide.md) 。 （v6.0で導入）
-
-## ガベージコレクション {#garbage-collection}
-
--   [グリーンGC](/system-variables.md#tidb_gc_scan_lock_mode-new-in-v50) （v5.0で導入）
-
-## 診断 {#diagnostics}
-
--   [SQL診断](/information-schema/information-schema-sql-diagnostics.md) （v4.0で導入）
--   [クラスター診断](/dashboard/dashboard-diagnostics-access.md) （v4.0で導入）
+-   [SQL diagnostics](/information-schema/information-schema-sql-diagnostics.md) (Introduced in v4.0)
+-   [Cluster diagnostics](/dashboard/dashboard-diagnostics-access.md) (Introduced in v4.0)
+-   [TiKV-FastTune dashboard](/grafana-tikv-dashboard.md#tikv-fasttune-dashboard) (Introduced in v4.0)

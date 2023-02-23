@@ -1,146 +1,146 @@
 ---
-title: Command-line Flags
+title: TiDB Data Migration Command-line Flags
 summary: Learn about the command-line flags in DM.
 ---
 
-# コマンドラインフラグ {#command-line-flags}
+# TiDB Data Migration Command-line Flags {#tidb-data-migration-command-line-flags}
 
-このドキュメントでは、DMのコマンドラインフラグを紹介します。
+This document introduces DM's command-line flags.
 
-## DMマスター {#dm-master}
+## DM-master {#dm-master}
 
 ### <code>--advertise-addr</code> {#code-advertise-addr-code}
 
--   クライアントリクエストの受信に使用されるDMマスターの外部アドレス
--   デフォルト値は`"{master-addr}"`です
--   オプションのフラグ。 `"domain-name:port"`の形式にすることができます
+-   The external address of DM-master used to receive client requests
+-   The default value is `"{master-addr}"`
+-   Optional flag. It can be in the form of `"domain-name:port"`
 
 ### <code>--advertise-peer-urls</code> {#code-advertise-peer-urls-code}
 
--   DMマスターノード間の通信用の外部アドレス
--   デフォルト値は`"{peer-urls}"`です
--   オプションのフラグ。 `"http(s)://domain-name:port"`の形式にすることができます
+-   The external address for communication between DM-master nodes
+-   The default value is `"{peer-urls}"`
+-   Optional flag. It can be in the form of `"http(s)://domain-name:port"`
 
 ### <code>--config</code> {#code-config-code}
 
--   DMマスターの構成ファイルパス
--   デフォルト値は`""`です
--   オプションのフラグ
+-   The configuration file path of DM-master
+-   The default value is `""`
+-   Optional flag
 
 ### <code>--data-dir</code> {#code-data-dir-code}
 
--   DMマスターのデータを保存するために使用されるディレクトリ
--   デフォルト値は`"default.{name}"`です
--   オプションのフラグ
+-   The directory used to store data of DM-master
+-   The default value is `"default.{name}"`
+-   Optional flag
 
 ### <code>--initial-cluster</code> {#code-initial-cluster-code}
 
--   DMマスタークラスタのブートストラップに使用される`"{node name}={external address}"`のリスト
--   デフォルト値は`"{name}={advertise-peer-urls}"`です
--   `join`フラグが指定されていない場合は、このフラグを指定する必要があります。 3ノードクラスタの構成例は`"dm-master-1=http://172.16.15.11:8291,dm-master-2=http://172.16.15.12:8291,dm-master-3=http://172.16.15.13:8291"`です。
+-   The `"{node name}={external address}"` list used to bootstrap DM-master cluster
+-   The default value is `"{name}={advertise-peer-urls}"`
+-   This flag needs to be specified if the `join` flag is not specified. A configuration example of a 3-node cluster is `"dm-master-1=http://172.16.15.11:8291,dm-master-2=http://172.16.15.12:8291,dm-master-3=http://172.16.15.13:8291"`
 
 ### <code>--join</code> {#code-join-code}
 
--   DMマスターノードがこのクラスタに参加するときの既存のクラスターの`advertise-addr`のリスト
--   デフォルト値は`""`です
--   `initial-cluster`フラグが指定されていない場合は、このフラグを指定する必要があります。新しいノードが2つのノードを持つクラスタに参加するとします。構成例は`"172.16.15.11:8261,172.16.15.12:8261"`です。
+-   The existing cluster's `advertise-addr` list when a DM-master node joins this cluster
+-   The default value is `""`
+-   This flag needs to be specified if the `initial-cluster` flag is not specified. Suppose a new node joins a cluster that has 2 nodes, a configuration example is `"172.16.15.11:8261,172.16.15.12:8261"`
 
 ### <code>--log-file</code> {#code-log-file-code}
 
--   ログの出力ファイル名
--   デフォルト値は`""`です
--   オプションのフラグ
+-   The output file name of the log
+-   The default value is `""`
+-   Optional flag
 
 ### <code>-L</code> {#code-l-code}
 
--   ログレベル
--   デフォルト値は`"info"`です
--   オプションのフラグ
+-   The log level
+-   The default value is `"info"`
+-   Optional flag
 
 ### <code>--master-addr</code> {#code-master-addr-code}
 
--   DMマスターがクライアントの要求をリッスンするアドレス
--   デフォルト値は`""`です
--   必須フラグ
+-   The address on which DM-master listens to the client's requests
+-   The default value is `""`
+-   Required flag
 
 ### <code>--name</code> {#code-name-code}
 
--   DMマスターノードの名前
--   デフォルト値は`"dm-master-{hostname}"`です
--   必須フラグ
+-   The name of a DM-master node
+-   The default value is `"dm-master-{hostname}"`
+-   Required flag
 
 ### <code>--peer-urls</code> {#code-peer-urls-code}
 
--   DMマスターノード間の通信のリスニングアドレス
--   デフォルト値は`"http://127.0.0.1:8291"`です
--   必須フラグ
+-   The listening address for communications between DM-master nodes
+-   The default value is `"http://127.0.0.1:8291"`
+-   Required flag
 
-## DMワーカー {#dm-worker}
+## DM-worker {#dm-worker}
 
 ### <code>--advertise-addr</code> {#code-advertise-addr-code}
 
--   クライアントリクエストの受信に使用されるDMワーカーの外部アドレス
--   デフォルト値は`"{worker-addr}"`です
--   オプションのフラグ。 `"domain-name:port"`の形式にすることができます
+-   The external address of DM-worker used to receive client requests
+-   The default value is `"{worker-addr}"`
+-   Optional flag. It can be in the form of `"domain-name:port"`
 
 ### <code>--config</code> {#code-config-code}
 
--   DM-workerの構成ファイルパス
--   デフォルト値は`""`です
--   オプションのフラグ
+-   The configuration file path of DM-worker
+-   The default value is `""`
+-   Optional flag
 
 ### <code>--join</code> {#code-join-code}
 
--   DMワーカーがこのクラスタに登録するときのクラスタのDMマスターノードの`{advertise-addr}`のリスト
--   デフォルト値は`""`です
--   必要なフラグ。 3ノード（DMマスターノード）クラスタの構成例は`"172.16.15.11:8261,172.16.15.12:8261,172.16.15.13:8261"`です。
+-   The `{advertise-addr}` list of DM-master nodes in a cluster when a DM-worker registers to this cluster
+-   The default value is `""`
+-   Required flag. A configuration example of 3-node (DM-master node) cluster is `"172.16.15.11:8261,172.16.15.12:8261,172.16.15.13:8261"`
 
 ### <code>--log-file</code> {#code-log-file-code}
 
--   ログの出力ファイル名
--   デフォルト値は`""`です
--   オプションのフラグ
+-   The output file name of the log
+-   The default value is `""`
+-   Optional flag
 
 ### <code>-L</code> {#code-l-code}
 
--   ログレベル
--   デフォルト値は`"info"`です
--   オプションのフラグ
+-   The log level
+-   The default value is `"info"`
+-   Optional flag
 
 ### <code>--name</code> {#code-name-code}
 
--   DMワーカーノードの名前
--   デフォルト値は`"{advertise-addr}"`です
--   必須フラグ
+-   The name of a DM-worker node
+-   The default value is `"{advertise-addr}"`
+-   Required flag
 
 ### <code>--worker-addr</code> {#code-worker-addr-code}
 
--   DM-workerがクライアントの要求をリッスンするアドレス
--   デフォルト値は`""`です
--   必須フラグ
+-   The address on which DM-worker listens to the client's requests
+-   The default value is `""`
+-   Required flag
 
 ## dmctl {#dmctl}
 
 ### <code>--config</code> {#code-config-code}
 
--   dmctlの構成ファイルパス
--   デフォルト値は`""`です
--   オプションのフラグ
+-   The configuration file path of dmctl
+-   The default value is `""`
+-   Optional flag
 
 ### <code>--master-addr</code> {#code-master-addr-code}
 
--   dmctlによって接続されるクラスタのDMマスターノードの`{advertise-addr}`つ
--   デフォルト値は`""`です
--   dmctlがDM-masterと対話するときに必要なフラグです。
+-   The `{advertise-addr}` of any DM-master node in the cluster to be connected by dmctl
+-   The default value is `""`
+-   It is a required flag when dmctl interacts with DM-master
 
 ### <code>--encrypt</code> {#code-encrypt-code}
 
--   平文データベースのパスワードを暗号文に暗号化します
--   デフォルト値は`""`です
--   このフラグが指定されている場合、DMマスターと対話せずにプレーンテキストを暗号化するためにのみ使用されます
+-   Encrypts the plaintext database password into ciphertext
+-   The default value is `""`
+-   When this flag is specified, it is only used to encrypt the plaintext without interacting with the DM-master
 
 ### <code>--decrypt</code> {#code-decrypt-code}
 
--   dmctlで暗号化された暗号文を平文に復号化します
--   デフォルト値は`""`です
--   このフラグが指定されている場合、DMマスターと対話せずに暗号文を復号化するためにのみ使用されます
+-   Decrypts ciphertext encrypted with dmctl into plaintext
+-   The default value is `""`
+-   When this flag is specified, it is only used to decrypt the ciphertext without interacting with the DM-master

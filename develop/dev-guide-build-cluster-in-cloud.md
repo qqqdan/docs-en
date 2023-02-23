@@ -1,59 +1,78 @@
 ---
-title: Build a TiDB Cluster in TiDB Cloud (DevTier)
-summary: Learn how to build a TiDB cluster in TiDB Cloud (Developer Tier) and connect to a TiDB Cloud cluster.
+title: Build a TiDB Cluster in TiDB Cloud (Serverless Tier)
+summary: Learn how to build a TiDB cluster in TiDB Cloud (Serverless Tier) and connect to a TiDB Cloud cluster.
 ---
 
 <!-- markdownlint-disable MD029 -->
 
-# TiDB CloudでTiDBクラスタを構築する（DevTier） {#build-a-tidb-cluster-in-tidb-cloud-devtier}
+# Build a TiDB Cluster in TiDB Cloud (Serverless Tier) {#build-a-tidb-cluster-in-tidb-cloud-serverless-tier}
 
-このドキュメントでは、TiDBの使用を開始する最も簡単な方法について説明します。 [TiDB Cloud](https://en.pingcap.com/tidb-cloud)を使用して、無料のTiDBクラスタを作成し、それに接続して、サンプルアプリケーションを実行します。
+<CustomContent platform="tidb">
 
-ローカルマシンでTiDBを実行する必要がある場合は、 [TiDBをローカルで起動する](/quick-start-with-tidb.md)を参照してください。
+This document walks you through the quickest way to get started with TiDB. You will use [TiDB Cloud](https://en.pingcap.com/tidb-cloud) to create a Serverless Tier cluster, connect to it, and run a sample application on it.
 
-## 手順1.無料のクラスタを作成する {#step-1-create-a-free-cluster}
+If you need to run TiDB on your local machine, see [Starting TiDB Locally](/quick-start-with-tidb.md).
 
-1.  TiDB Cloudアカウントをお持ちでない場合は、 [TiDB Cloud](https://tidbcloud.com/free-trial)をクリックしてアカウントにサインアップしてください。
+</CustomContent>
 
-2.  TiDB Cloudアカウントで[ログイン](https://tidbcloud.com/) 。
+<CustomContent platform="tidb-cloud">
 
-3.  1年間無料で開発者層クラスタを作成するには、 [プランページ](https://tidbcloud.com/console/plans)で**開発者層**プランを選択するか、 [クラスターの作成（開発層）](https://tidbcloud.com/console/create-cluster?tier=dev)をクリックします。
+This document walks you through the quickest way to get started with TiDB Cloud. You will create a TiDB cluster, connect to it, and run a sample application on it.
 
-4.  [**クラスターの作成（開発者層）]**ページで、クラスタ名、パスワード、クラウドプロバイダー（現時点では、AWSのみが開発者層で利用可能）、およびリージョン（近くのリージョンが推奨されます）を設定します。次に、[<strong>作成</strong>]をクリックしてクラスタを作成します。
+</CustomContent>
 
-5.  TiDB Cloudクラスタは約5〜15分で作成されます。作成の進行状況は[アクティブクラスター](https://tidbcloud.com/console/clusters)で確認できます。
+## Step 1. Create a Serverless Tier cluster {#step-1-create-a-serverless-tier-cluster}
 
-6.  クラスタを作成した後、[**アクティブクラスター**]ページで、新しく作成したクラスタの名前をクリックして、クラスタのコントロールパネルに移動します。
+1.  If you do not have a TiDB Cloud account, click [here](https://tidbcloud.com/free-trial) to sign up for an account.
 
-    ![active clusters](/media/develop/IMG_20220331-232643794.png)
+2.  [Log in](https://tidbcloud.com/) to your TiDB Cloud account.
 
-7.  [**接続**]をクリックして、トラフィックフィルター（TiDB接続で許可されているクライアントIPのリスト）を作成します。
+    The [**Clusters**](https://tidbcloud.com/console/clusters) list page is displayed by default.
 
-    ![connect](/media/develop/IMG_20220331-232726165.png)
+3.  For new sign-up users, TiDB Cloud creates a default Serverless Tier cluster `Cluster0` for you automatically. You can either use this default cluster for the subsequent steps or create a new Serverless Tier cluster on your own.
 
-8.  ポップアップウィンドウで、[**現在のIPアドレスを追加**]をクリックして現在のIPアドレスを入力し、[<strong>フィルター</strong>の作成]をクリックしてトラフィックフィルターを作成します。
+    To create a new Serverless Tier cluster on your own, take the following operations:
 
-9.  文字列をコピーして、後で使用するためにSQLクライアントに接続します。
+    1.  Click **Create Cluster**.
+    2.  On the **Create Cluster** page, <strong>Serverless Tier</strong> is selected by default. Update the default cluster name if necessary, select a target region of your cluster, and then click <strong>Create</strong>. Your Serverless Tier cluster will be created in approximately 30 seconds.
 
-    ![SQL string](/media/develop/IMG_20220331-232800929.png)
+4.  Click the target cluster name to go to its overview page, and then click **Connect** in the upper-right corner. A connection dialog box is displayed.
 
-## ステップ2.クラスタに接続する {#step-2-connect-to-a-cluster}
+5.  In the dialog, select your preferred connection method and operating system to get the corresponding connection string. This document uses MySQL client as an example.
 
-1.  MySQLクライアントがインストールされていない場合は、オペレーティングシステムを選択し、以下の手順に従ってインストールします。
+6.  Click **Create password** to generate a random password. The generated password will not show again, so save your password in a secure location. If you do not set a root password, you cannot connect to the cluster.
+
+<CustomContent platform="tidb">
+
+> **Note:**
+>
+> For [Serverless Tier clusters](https://docs.pingcap.com/tidbcloud/select-cluster-tier#serverless-tier), when you connect to your cluster, you must include the prefix for your cluster in the user name and wrap the name with quotation marks. For more information, see [User name prefix](https://docs.pingcap.com/tidbcloud/select-cluster-tier#user-name-prefix).
+
+</CustomContent>
+
+<CustomContent platform="tidb-cloud">
+
+> **Note:**
+>
+> For [Serverless Tier clusters](/tidb-cloud/select-cluster-tier.md#serverless-tier-beta), when you connect to your cluster, you must include the prefix for your cluster in the user name and wrap the name with quotation marks. For more information, see [User name prefix](/tidb-cloud/select-cluster-tier.md#user-name-prefix).
+
+</CustomContent>
+
+## Step 2. Connect to a cluster {#step-2-connect-to-a-cluster}
+
+1.  If the MySQL client is not installed, select your operating system and follow the steps below to install it.
 
 <SimpleTab>
 
 <div label="macOS">
 
-[自作](https://brew.sh/index)がない場合はインストールし、次のコマンドを実行してMySQLクライアントをインストールします。
-
-{{< copyable "" >}}
+For macOS, install [Homebrew](https://brew.sh/index) if you do not have it, and then run the following command to install the MySQL client:
 
 ```shell
 brew install mysql-client
 ```
 
-出力は次のとおりです。
+The output is as follows:
 
 ```
 mysql-client is keg-only, which means it was not symlinked into /opt/homebrew,
@@ -67,24 +86,20 @@ For compilers to find mysql-client you may need to set:
   export CPPFLAGS="-I/opt/homebrew/opt/mysql-client/include"
 ```
 
-MySQLクライアントをPATHに追加するには、上記の出力で次のコマンドを見つけ（出力がドキュメントの上記の出力と矛盾する場合は、代わりに出力で対応するコマンドを使用します）、実行します。
-
-{{< copyable "" >}}
+To add the MySQL client to your PATH, locate the following command in the above output (if your output is inconsistent with the above output in the document, use the corresponding command in your output instead) and run it:
 
 ```shell
 echo 'export PATH="/opt/homebrew/opt/mysql-client/bin:$PATH"' >> ~/.zshrc
 ```
 
-次に、 `source`コマンドでグローバル環境変数を宣言し、MySQLクライアントが正常にインストールされていることを確認します。
-
-{{< copyable "" >}}
+Then, declare the global environment variable by the `source` command and verify that the MySQL client is installed successfully:
 
 ```shell
 source ~/.zshrc
 mysql --version
 ```
 
-期待される出力の例：
+An example of the expected output:
 
 ```
 mysql  Ver 8.0.28 for macos12.0 on arm64 (Homebrew)
@@ -94,23 +109,19 @@ mysql  Ver 8.0.28 for macos12.0 on arm64 (Homebrew)
 
 <div label="Linux">
 
-例としてCentOS7を取り上げます。
-
-{{< copyable "" >}}
+For Linux, the following takes CentOS 7 as an example:
 
 ```shell
 yum install mysql
 ```
 
-次に、MySQLクライアントが正常にインストールされていることを確認します。
-
-{{< copyable "" >}}
+Then, verify that the MySQL client is installed successfully:
 
 ```shell
 mysql --version
 ```
 
-期待される出力の例：
+An example of the expected output:
 
 ```
 mysql  Ver 15.1 Distrib 5.5.68-MariaDB, for Linux (x86_64) using readline 5.1
@@ -120,74 +131,50 @@ mysql  Ver 15.1 Distrib 5.5.68-MariaDB, for Linux (x86_64) using readline 5.1
 
 </SimpleTab>
 
-2.  [ステップ1](#step-1-create-a-free-cluster)で取得した接続文字列を実行します。
+2.  Run the connection string obtained in [Step 1](#step-1-create-a-serverless-tier-cluster).
 
-{{< copyable "" >}}
+    {{< copyable "" >}}
 
-```shell
-mysql --connect-timeout 15 -u root -h <host> -P 4000 -p
+    ```shell
+    mysql --connect-timeout 15 -u '<prefix>.root' -h <host> -P 4000 -D test --ssl-mode=VERIFY_IDENTITY --ssl-ca=/etc/ssl/cert.pem -p
+    ```
+
+<CustomContent platform="tidb">
+
+> **Note:**
+>
+> -   When you connect to a Serverless Tier cluster, you must [use the TLS connection](https://docs.pingcap.com/tidbcloud/secure-connections-to-serverless-tier-clusters).
+> -   If you encounter problems when connecting to a Serverless Tier cluster, you can read [Secure Connections to Serverless Tier Clusters](https://docs.pingcap.com/tidbcloud/secure-connections-to-serverless-tier-clusters) for more information.
+
+</CustomContent>
+
+<CustomContent platform="tidb-cloud">
+
+> **Note:**
+>
+> -   When you connect to a Serverless Tier cluster, you must [use the TLS connection](/tidb-cloud/secure-connections-to-serverless-tier-clusters.md).
+> -   If you encounter problems when connecting to a Serverless Tier cluster, you can read [Secure Connections to Serverless Tier Clusters](/tidb-cloud/secure-connections-to-serverless-tier-clusters.md) for more information.
+
+</CustomContent>
+
+3.  Fill in the password to sign in.
+
+## Step 3. Execute a SQL statement {#step-3-execute-a-sql-statement}
+
+Let's try to execute your first SQL statement on TiDB Cloud.
+
+```sql
+SELECT 'Hello TiDB Cloud!';
 ```
 
-3.  サインインするにはパスワードを入力してください。
+Expected output:
 
-## ステップ3.サンプルアプリケーションを実行します {#step-3-run-the-sample-application}
-
-1.  `tidb-example-java`のプロジェクトのクローンを作成します。
-
-{{< copyable "" >}}
-
-```shell
-git clone https://github.com/pingcap-inc/tidb-example-java.git
+```sql
++-------------------+
+| Hello TiDB Cloud! |
++-------------------+
+| Hello TiDB Cloud! |
++-------------------+
 ```
 
-2.  接続パラメータを変更します。
-
-<SimpleTab>
-
-<div label="Local default cluster">
-
-変更は必要ありません。
-
-</div>
-
-<div label="Non-local default cluster, TiDB Cloud, or other remote cluster">
-
-`plain-java-jdbc/src/main/java/com/pingcap/JDBCExample.java`で、ホスト、ポート、ユーザー、およびパスワードのパラメーターを変更します。
-
-{{< copyable "" >}}
-
-```java
-mysqlDataSource.setServerName("localhost");
-mysqlDataSource.setPortNumber(4000);
-mysqlDataSource.setDatabaseName("test");
-mysqlDataSource.setUser("root");
-mysqlDataSource.setPassword("");
-```
-
-設定したパスワードが`123456`で、 TiDB Cloudから取得した接続文字列が次のとおりであるとします。
-
-{{< copyable "" >}}
-
-```shell
-mysql --connect-timeout 15 -u root -h tidb.e049234d.d40d1f8b.us-east-1.prod.aws.tidbcloud.com -P 4000 -p
-```
-
-この場合、次のようにパラメータを変更できます。
-
-{{< copyable "" >}}
-
-```java
-mysqlDataSource.setServerName("tidb.e049234d.d40d1f8b.us-east-1.prod.aws.tidbcloud.com");
-mysqlDataSource.setPortNumber(4000);
-mysqlDataSource.setDatabaseName("test");
-mysqlDataSource.setUser("root");
-mysqlDataSource.setPassword("123456");
-```
-
-</div>
-
-</SimpleTab>
-
-3.  `make plain-java-jdbc`を実行します。
-
-これが[期待される出力](https://github.com/pingcap-inc/tidb-example-java/blob/main/Expected-Output.md#plain-java-jdbc)の例です。
+If your actual output is similar to the expected output, congratulations, you have successfully execute a SQL statement on TiDB Cloud.

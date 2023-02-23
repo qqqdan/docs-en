@@ -3,52 +3,52 @@ title: Highly Concurrent Write Best Practices
 summary: Learn best practices for highly-concurrent write-intensive workloads in TiDB.
 ---
 
-# 非常に同時の書き込みのベストプラクティス {#highly-concurrent-write-best-practices}
+# Highly Concurrent Write Best Practices {#highly-concurrent-write-best-practices}
 
-このドキュメントでは、アプリケーション開発を容易にするのに役立つ、TiDBで書き込みが非常に多いワークロードを処理するためのベストプラクティスについて説明します。
+This document describes best practices for handling highly-concurrent write-heavy workloads in TiDB, which can help to facilitate your application development.
 
-## ターゲットオーディエンス {#target-audience}
+## Target audience {#target-audience}
 
-このドキュメントは、TiDBの基本を理解していることを前提としています。まず、TiDBの基礎を説明する次の3つのブログ記事と[TiDBのベストプラクティス](https://en.pingcap.com/blog/tidb-best-practice/)を読むことをお勧めします。
+This document assumes that you have a basic understanding of TiDB. It is recommended that you first read the following three blog articles that explain TiDB fundamentals, and [TiDB Best Practices](https://en.pingcap.com/blog/tidb-best-practice/):
 
--   [データストレージ](https://en.pingcap.com/blog/tidb-internal-data-storage/)
--   [コンピューティング](https://en.pingcap.com/blog/tidb-internal-computing/)
--   [スケジューリング](https://en.pingcap.com/blog/tidb-internal-scheduling/)
+-   [Data Storage](https://en.pingcap.com/blog/tidb-internal-data-storage/)
+-   [Computing](https://en.pingcap.com/blog/tidb-internal-computing/)
+-   [Scheduling](https://en.pingcap.com/blog/tidb-internal-scheduling/)
 
-## 非常に同時の書き込み集約型シナリオ {#highly-concurrent-write-intensive-scenario}
+## Highly-concurrent write-intensive scenario {#highly-concurrent-write-intensive-scenario}
 
-高度な同時書き込みシナリオは、クリア、決済などのアプリケーションでバッチタスクを実行するときによく発生します。このシナリオには、次の機能があります。
+The highly concurrent write scenario often occurs when you perform batch tasks in applications, such as clearing and settlement. This scenario has the following features:
 
--   膨大な量のデータ
--   履歴データを短時間でデータベースにインポートする必要性
--   短時間でデータベースから大量のデータを読み取る必要性
+-   A huge volume of data
+-   The need to import historical data into database in a short time
+-   The need to read a huge volume of data from database in a short time
 
-これらの機能は、TiDBに次の課題をもたらします。
+These features pose these challenges to TiDB:
 
--   書き込みまたは読み取りの容量は、線形にスケーラブルである必要があります。
--   データベースのパフォーマンスは安定しており、大量のデータが同時に書き込まれるため、データベースのパフォーマンスが低下することはありません。
+-   The write or read capacity must be linearly scalable.
+-   Database performance is stable and does not decrease as a huge volume of data is written concurrently.
 
-分散データベースの場合、すべてのノードの容量を最大限に活用し、単一のノードがボトルネックにならないようにすることが重要です。
+For a distributed database, it is important to make full use of the capacity of all nodes and to prevent a single node from becoming the bottleneck.
 
-## TiDBのデータ配信の原則 {#data-distribution-principles-in-tidb}
+## Data distribution principles in TiDB {#data-distribution-principles-in-tidb}
 
-上記の課題に対処するには、TiDBのデータセグメンテーションとスケジューリングの原則から始める必要があります。詳細については、 [スケジューリング](https://en.pingcap.com/blog/tidb-internal-scheduling/)を参照してください。
+To address the above challenges, it is necessary to start with the data segmentation and scheduling principle of TiDB. Refer to [Scheduling](https://en.pingcap.com/blog/tidb-internal-scheduling/) for more details.
 
-TiDBは、データをリージョンに分割します。各リージョンは、デフォルトでサイズ制限が96Mのデータの範囲を表します。各リージョンには複数のレプリカがあり、レプリカの各グループはラフトグループと呼ばれます。ラフトグループでは、リージョンリーダーがデータ範囲内で読み取りおよび書き込みタスク（TiDBは[フォロワー-読む](/follower-read.md)をサポート）を実行します。リージョンリーダーは、配置ドライバー（PD）コンポーネントによって、読み取りと書き込みの圧力を均等に分散するために、さまざまな物理ノードに自動的にスケジュールされます。
+TiDB splits data into Regions, each representing a range of data with a size limit of 96M by default. Each Region has multiple replicas, and each group of replicas is called a Raft Group. In a Raft Group, the Region Leader executes the read and write tasks (TiDB supports [Follower-Read](/follower-read.md)) within the data range. The Region Leader is automatically scheduled by the Placement Driver (PD) component to different physical nodes evenly to distribute the read and write pressure.
 
 ![TiDB Data Overview](/media/best-practices/tidb-data-overview.png)
 
-理論的には、アプリケーションに書き込みホットスポットがない場合、TiDBは、そのアーキテクチャのおかげで、読み取りおよび書き込み容量を線形にスケーリングできるだけでなく、分散リソースを最大限に活用することもできます。この観点から、TiDBは、同時実行性が高く、書き込みが集中するシナリオに特に適しています。
+In theory, if an application has no write hotspot, TiDB, by the virtue of its architecture, can not only linearly scale its read and write capacities, but also make full use of the distributed resources. From this point of view, TiDB is especially suitable for the high-concurrent and write-intensive scenario.
 
-ただし、実際の状況は理論上の仮定とは異なることがよくあります。
+However, the actual situation often differs from the theoretical assumption.
 
-> **ノート：**
+> **Note:**
 >
-> アプリケーションに書き込みホットスポットがないということは、書き込みシナリオに`AUTO_INCREMENT`の主キーまたは単調に増加するインデックスがないことを意味します。
+> No write hotspot in an application means the write scenario does not have any `AUTO_INCREMENT` primary key or monotonically increasing index.
 
-## ホットスポットケース {#hotspot-case}
+## Hotspot case {#hotspot-case}
 
-次のケースは、ホットスポットがどのように生成されるかを説明しています。以下の表を例として取り上げます。
+The following case explains how a hotspot is generated. Take the table below as an example:
 
 {{< copyable "" >}}
 
@@ -61,7 +61,7 @@ CREATE TABLE IF NOT EXISTS TEST_HOTSPOT(
 )
 ```
 
-このテーブルは構造が単純です。主キーとしての`id`に加えて、副次インデックスは存在しません。次のステートメントを実行して、このテーブルにデータを書き込みます。 `id`は乱数として離散的に生成されます。
+This table is simple in structure. In addition to `id` as the primary key, no secondary index exists. Execute the following statement to write data into this table. `id` is discretely generated as a random number.
 
 {{< copyable "" >}}
 
@@ -87,53 +87,53 @@ FROM
   ) a;
 ```
 
-負荷は、上記のステートメントを短時間で集中的に実行することから発生します。
+The load comes from executing the above statement intensively in a short time.
 
-理論的には、上記の操作はTiDBのベストプラクティスに準拠しているようであり、アプリケーションでホットスポットは発生しません。 TiDBの分散容量は、適切なマシンで十分に使用できます。それが本当にベストプラクティスに沿っているかどうかを検証するために、次のように説明される実験的環境でテストが実行されます。
+In theory, the above operation seems to comply with the TiDB best practices, and no hotspot is caused in the application. The distributed capacity of TiDB can be fully used with adequate machines. To verify whether it is truly in line with the best practices, a test is conducted in the experimental environment, which is described as follows:
 
-クラスタトポロジでは、2つのTiDBノード、3つのPDノード、および6つのTiKVノードが展開されます。このテストはベンチマークではなく原理を明確にするためのものであるため、QPSのパフォーマンスは無視してください。
+For the cluster topology, 2 TiDB nodes, 3 PD nodes and 6 TiKV nodes are deployed. Ignore the QPS performance, because this test is to clarify the principle rather than for benchmark.
 
 ![QPS1](/media/best-practices/QPS1.png)
 
-クライアントは短時間で「集中的な」書き込み要求を開始します。これは、TiDBが受信する3KQPSです。理論的には、負荷圧力は6つのTiKVノードに均等に分散される必要があります。ただし、各TiKVノードのCPU使用率から、負荷分散は不均一です。 `tikv-3`ノードは書き込みホットスポットです。
+The client starts "intensive" write requests in a short time, which is 3K QPS received by TiDB. In theory, the load pressure should be evenly distributed to 6 TiKV nodes. However, from the CPU usage of each TiKV node, the load distribution is uneven. The `tikv-3` node is the write hotspot.
 
 ![QPS2](/media/best-practices/QPS2.png)
 
 ![QPS3](/media/best-practices/QPS3.png)
 
-[ラフトストアCPU](/grafana-tikv-dashboard.md)は`raftstore`スレッドのCPU使用率であり、通常は書き込み負荷を表します。このシナリオでは、 `tikv-3`がこのラフトグループのリーダーです。 `tikv-0`と`tikv-1`はフォロワーです。他のノードの負荷はほとんど空です。
+[Raft store CPU](/grafana-tikv-dashboard.md) is the CPU usage rate for the `raftstore` thread, usually representing the write load. In this scenario, `tikv-3` is the Leader of this Raft Group; `tikv-0` and `tikv-1` are the followers. The loads of other nodes are almost empty.
 
-PDの監視メトリックは、ホットスポットが発生したことも確認します。
+The monitoring metrics of PD also confirms that hotspot has been caused.
 
 ![QPS4](/media/best-practices/QPS4.png)
 
-## ホットスポットの原因 {#hotspot-causes}
+## Hotspot causes {#hotspot-causes}
 
-上記のテストでは、操作はベストプラクティスで期待される理想的なパフォーマンスに達していません。これは、新しく作成された各テーブルのデータを次のデータ範囲でTiDBに格納するために、デフォルトで1つのリージョンのみが分割されるためです。
+In the above test, the operation does not reach the ideal performance expected in the best practices. This is because only one Region is split by default to store the data of each newly created table in TiDB, with the following data range:
 
 ```
 [CommonPrefix + TableID, CommonPrefix + TableID + 1)
 ```
 
-短期間で、大量のデータが同じリージョンに継続的に書き込まれます。
+In a short period of time, a huge volume of data is continuously written to the same Region.
 
 ![TiKV Region Split](/media/best-practices/tikv-Region-split.png)
 
-上の図は、リージョン分割プロセスを示しています。データは継続的にTiKVに書き込まれるため、TiKVはリージョンを複数のリージョンに分割します。リーダー選挙は、分割されるリージョンリーダーが配置されている元のストアで開始されるため、新しく分割された2つのリージョンのリーダーが同じストアに残っている可能性があります。この分割プロセスは、新しく分割されたリージョン2とリージョン3でも発生する可能性があります。このように、書き込み圧力はTiKVノード1に集中します。
+The above diagram illustrates the Region splitting process. As data is continuously written into TiKV, TiKV splits a Region into multiple Regions. Because the leader election is started on the original store where the Region Leader to be split is located, the leaders of the two newly split Regions might be still on the same store. This splitting process might also happen on the newly split Region 2 and Region 3. In this way, write pressure is concentrated on TiKV-Node 1.
 
-連続書き込みプロセス中に、ノード1でホットスポットが発生していることを検出した後、PDは集中したリーダーを他のノードに均等に分散します。 TiKVノードの数がリージョンレプリカの数よりも多い場合、TiKVはこれらのリージョンをアイドル状態のノードに移行しようとします。書き込みプロセス中のこれら2つの操作は、PDの監視メトリックにも反映されます。
+During the continuous write process, after finding that hotspot is caused on Node 1, PD evenly distributes the concentrated Leaders to other nodes. If the number of TiKV nodes is more than the number of Region replicas, TiKV will try to migrate these Regions to idle nodes. These two operations during the write process are also reflected in the PD's monitoring metrics:
 
 ![QPS5](/media/best-practices/QPS5.png)
 
-継続的な書き込みの期間の後、PDは、圧力が均等に分散される状態にTiKVクラスタ全体を自動的にスケジュールします。その時までに、クラスタ全体の容量を完全に使用することができます。
+After a period of continuous writes, PD automatically schedules the entire TiKV cluster to a state where pressure is evenly distributed. By that time, the capacity of the whole cluster can be fully used.
 
-ほとんどの場合、ホットスポットを発生させる上記のプロセスは正常です。これは、データベースのリージョンウォーミングアップフェーズです。ただし、書き込みが集中するシナリオでは、このフェーズを回避する必要があります。
+In most cases, the above process of causing a hotspot is normal, which is the Region warm-up phase of database. However, you need to avoid this phase in highly-concurrent write-intensive scenarios.
 
-## ホットスポットソリューション {#hotspot-solution}
+## Hotspot solution {#hotspot-solution}
 
-理論的に期待される理想的なパフォーマンスを実現するには、リージョンを目的の数のリージョンに直接分割し、クラスタの他のノードに事前にこれらのリージョンをスケジュールすることで、ウォームアップフェーズをスキップできます。
+To achieve the ideal performance expected in theory, you can skip the warm-up phase by directly splitting a Region into the desired number of Regions and scheduling these Regions in advance to other nodes in the cluster.
 
-v3.0.x、v2.1.13以降のバージョンでは、TiDBは[スプリットリージョン](/sql-statements/sql-statement-split-region.md)と呼ばれる新機能をサポートします。この新機能は、次の新しい構文を提供します。
+In v3.0.x, v2.1.13 and later versions, TiDB supports a new feature called [Split Region](/sql-statements/sql-statement-split-region.md). This new feature provides the following new syntaxes:
 
 {{< copyable "" >}}
 
@@ -147,19 +147,19 @@ SPLIT TABLE table_name [INDEX index_name] BETWEEN (lower_value) AND (upper_value
 SPLIT TABLE table_name [INDEX index_name] BY (value_list) [, (value_list)]
 ```
 
-ただし、TiDBはこの事前分割操作を自動的に実行しません。その理由は、TiDBでのデータ分散に関連しています。
+However, TiDB does not automatically perform this pre-split operation. The reason is related to the data distribution in TiDB.
 
 ![Table Region Range](/media/best-practices/table-Region-range.png)
 
-上の図から、行のキーのエンコード規則によれば、 `rowID`が唯一の可変部分です。 TiDBでは、 `rowID`は`Int64`の整数です。ただし、リージョン分割も実際の状況に基づいている必要があるため、 `Int64`の整数範囲を目的の範囲数に均等に分割してから、これらの範囲を異なるノードに分散する必要がない場合があります。
+From the diagram above, according to the encoding rule of a row's key, the `rowID` is the only variable part. In TiDB, `rowID` is an `Int64` integer. However, you might not need to evenly split the `Int64` integer range to the desired number of ranges and then to distribute these ranges to different nodes, because Region split must also be based on the actual situation.
 
-`rowID`の書き込みが完全に離散的である場合、上記の方法ではホットスポットは発生しません。行IDまたはインデックスの範囲またはプレフィックスが固定されている場合（たとえば、データを`[2000w, 5000w)`の範囲に個別に挿入する場合）、ホットスポットも発生しません。ただし、上記の方法を使用してリージョンを分割した場合、データは最初から同じリージョンに書き込まれる可能性があります。
+If the write of `rowID` is completely discrete, the above method will not cause hotspots. If the row ID or index has a fixed range or prefix (for example, discretely insert data into the range of `[2000w, 5000w)`), no hotspot will be caused either. However, if you split a Region using the above method, data might still be written to the same Region at the beginning.
 
-TiDBは一般的な使用のためのデータベースであり、データの分散については想定していません。そのため、テーブルのデータを格納するために最初に1つのリージョンのみを使用し、実際のデータが挿入された後、データ分布に従ってリージョンを自動的に分割します。
+TiDB is a database for general usage and does not make assumptions about the data distribution. So it uses only one Region at the beginning to store the data of a table and automatically splits the Region according to the data distribution after real data is inserted.
 
-この状況とホットスポットの問題を回避する必要があることを考えると、TiDBは、書き込みが非常に多いシナリオのパフォーマンスを最適化するための`Split Region`の構文を提供します。上記のケースに基づいて、 `Split Region`の構文を使用してリージョンを分散し、負荷分散を観察します。
+Given this situation and the need to avoid the hotspot problem, TiDB offers the `Split Region` syntax to optimize performance for the highly-concurrent write-heavy scenario. Based on the above case, now scatter Regions using the `Split Region` syntax and observe the load distribution.
 
-テストで書き込まれるデータは正の範囲内で完全に離散的であるため、次のステートメントを使用して、テーブルを`minInt64`から`maxInt64`の範囲内の128の領域に事前に分割できます。
+Because the data to be written in the test is entirely discrete within the positive range, you can use the following statement to pre-split the table into 128 Regions within the range of `minInt64` and `maxInt64`:
 
 {{< copyable "" >}}
 
@@ -167,9 +167,9 @@ TiDBは一般的な使用のためのデータベースであり、データの�
 SPLIT TABLE TEST_HOTSPOT BETWEEN (0) AND (9223372036854775807) REGIONS 128;
 ```
 
-事前分割操作の後、 `SHOW TABLE test_hotspot REGIONS;`ステートメントを実行して、領域散乱のステータスを確認します。 `SCATTERING`列の値がすべて`0`の場合、スケジューリングは成功しています。
+After the pre-split operation, execute the `SHOW TABLE test_hotspot REGIONS;` statement to check the status of Region scattering. If the values of the `SCATTERING` column are all `0`, the scheduling is successful.
 
-次のSQLステートメントを使用して、リージョンリーダーの分布を確認することもできます。 `table_name`を実際のテーブル名に置き換える必要があります。
+You can also check the Region leader distribution using the following SQL statement. You need to replace `table_name` with the actual table name.
 
 {{< copyable "" >}}
 
@@ -189,7 +189,7 @@ ORDER BY
     PEER_COUNT DESC;
 ```
 
-次に、書き込みロードを再度操作します。
+Then operate the write load again:
 
 ![QPS6](/media/best-practices/QPS6.png)
 
@@ -197,25 +197,25 @@ ORDER BY
 
 ![QPS8](/media/best-practices/QPS8.png)
 
-明らかなホットスポットの問題が解決されたことがわかります。
+You can see that the apparent hotspot problem has been resolved now.
 
-この場合、テーブルは単純です。また、インデックスのホットスポットの問題を考慮する必要がある場合もあります。インデックスリージョンを事前に分割する方法の詳細については、 [スプリットリージョン](/sql-statements/sql-statement-split-region.md)を参照してください。
+In this case, the table is simple. In other cases, you might also need to consider the hotspot problem of index. For more details on how to pre-split the index Region, refer to [Split Region](/sql-statements/sql-statement-split-region.md).
 
-## 複雑なホットスポットの問題 {#complex-hotspot-problems}
+## Complex hotspot problems {#complex-hotspot-problems}
 
-**問題1：**
+**Problem one:**
 
-テーブルに主キーがない場合、または主キーが`Int`タイプではなく、ランダムに分散された主キーIDを生成したくない場合、TiDBは行IDとして暗黙の`_tidb_rowid`列を提供します。一般に、 `SHARD_ROW_ID_BITS`パラメーターを使用しない場合、 `_tidb_rowid`列の値も単調に増加し、ホットスポットも発生する可能性があります。詳細については、 [`SHARD_ROW_ID_BITS`](/shard-row-id-bits.md)を参照してください。
+If a table does not have a primary key, or the primary key is not the `Int` type and you do not want to generate a randomly distributed primary key ID, TiDB provides an implicit `_tidb_rowid` column as the row ID. Generally, when you do not use the `SHARD_ROW_ID_BITS` parameter, the values of the `_tidb_rowid` column are also monotonically increasing, which might causes hotspots too. Refer to [`SHARD_ROW_ID_BITS`](/shard-row-id-bits.md) for more details.
 
-この状況でのホットスポットの問題を回避するために、テーブルを作成するときに`SHARD_ROW_ID_BITS`と`PRE_SPLIT_REGIONS`を使用できます。 `PRE_SPLIT_REGIONS`の詳細については、 [分割前の領域](/sql-statements/sql-statement-split-region.md#pre_split_regions)を参照してください。
+To avoid the hotspot problem in this situation, you can use `SHARD_ROW_ID_BITS` and `PRE_SPLIT_REGIONS` when creating a table. For more details about `PRE_SPLIT_REGIONS`, refer to [Pre-split Regions](/sql-statements/sql-statement-split-region.md#pre_split_regions).
 
-`SHARD_ROW_ID_BITS`は、 `_tidb_rowid`列で生成された行IDをランダムに分散させるために使用されます。 `PRE_SPLIT_REGIONS`は、テーブルの作成後にリージョンを事前に分割するために使用されます。
+`SHARD_ROW_ID_BITS` is used to randomly scatter the row ID generated in the `_tidb_rowid` column. `PRE_SPLIT_REGIONS` is used to pre-split the Region after a table is created.
 
-> **ノート：**
+> **Note:**
 >
-> `PRE_SPLIT_REGIONS`の値は、 `SHARD_ROW_ID_BITS`の値以下である必要があります。
+> The value of `PRE_SPLIT_REGIONS` must be smaller than or equal to that of `SHARD_ROW_ID_BITS`.
 
-例：
+Example:
 
 {{< copyable "" >}}
 
@@ -223,26 +223,26 @@ ORDER BY
 create table t (a int, b int) SHARD_ROW_ID_BITS = 4 PRE_SPLIT_REGIONS=3;
 ```
 
--   `SHARD_ROW_ID_BITS = 4`は、 `tidb_rowid`の値が16（16 = 2 ^ 4）の範囲にランダムに分散されることを意味します。
--   `PRE_SPLIT_REGIONS=3`は、テーブルが作成された後、テーブルが8（2 ^ 3）のリージョンに事前に分割されることを意味します。
+-   `SHARD_ROW_ID_BITS = 4` means that the values of `tidb_rowid` will be randomly distributed into 16 (16=2^4) ranges.
+-   `PRE_SPLIT_REGIONS=3` means that the table will be pre-split into 8 (2^3) Regions after it is created.
 
-データがテーブル`t`に書き込まれ始めると、データは事前に分割された8つのリージョンに書き込まれます。これにより、テーブルの作成後にリージョンが1つしかない場合に発生する可能性のあるホットスポットの問題が回避されます。
+When data starts to be written into table `t`, the data is written into the pre-split 8 Regions, which avoids the hotspot problem that might be caused if only one Region exists after table creation.
 
-> **ノート：**
+> **Note:**
 >
-> `tidb_scatter_region`グローバル変数は`PRE_SPLIT_REGIONS`の動作に影響を与えます。
+> The `tidb_scatter_region` global variable affects the behavior of `PRE_SPLIT_REGIONS`.
 >
-> この変数は、テーブルの作成後に結果を返す前に、リージョンが事前に分割および分散されるのを待つかどうかを制御します。テーブルの作成後に集中的な書き込みがある場合は、この変数の値を`1`に設定する必要があります。そうすると、すべてのリージョンが分割されて分散されるまで、TiDBは結果をクライアントに返しません。そうしないと、TiDBはスキャッタリングが完了する前にデータを書き込み、書き込みパフォーマンスに大きな影響を与えます。
+> This variable controls whether to wait for Regions to be pre-split and scattered before returning results after the table creation. If there are intensive writes after creating the table, you need to set the value of this variable to `1`, then TiDB will not return the results to the client until all the Regions are split and scattered. Otherwise, TiDB writes data before the scattering is completed, which will have a significant impact on write performance.
 
-**問題2：**
+**Problem two:**
 
-テーブルの主キーが整数型であり、テーブルが主キーの一意性を確保するために`AUTO_INCREMENT`を使用する場合（必ずしも連続または増分である必要はありません）、TiDBは行の値を直接使用するため、 `SHARD_ROW_ID_BITS`を使用してこのテーブルのホットスポットを分散させることはできません。主キーの`_tidb_rowid`として。
+If a table's primary key is an integer type, and if the table uses `AUTO_INCREMENT` to ensure the uniqueness of the primary key (not necessarily continuous or incremental), you cannot use `SHARD_ROW_ID_BITS` to scatter the hotspot on this table because TiDB directly uses the row values of the primary key as `_tidb_rowid`.
 
-このシナリオの問題に対処するために、データを挿入するときに`AUTO_INCREMENT`を[`AUTO_RANDOM`](/auto-random.md) （列属性）に置き換えることができます。次に、TiDBは整数の主キー列に値を自動的に割り当てます。これにより、行IDの連続性が排除され、ホットスポットが分散されます。
+To address the problem in this scenario, you can replace `AUTO_INCREMENT` with [`AUTO_RANDOM`](/auto-random.md) (a column attribute) when inserting data. Then TiDB automatically assigns values to the integer primary key column, which eliminates the continuity of the row ID and scatters the hotspot.
 
-## パラメータ設定 {#parameter-configuration}
+## Parameter configuration {#parameter-configuration}
 
-v2.1では、書き込みの競合が頻繁に発生するシナリオでトランザクションの競合を事前に識別するために、 [ラッチ機構](/tidb-configuration-file.md#txn-local-latches)がTiDBに導入されました。目的は、書き込みの競合によって引き起こされるTiDBおよびTiKVでのトランザクションコミットの再試行を減らすことです。通常、バッチタスクはTiDBにすでに保存されているデータを使用するため、トランザクションの書き込みの競合は存在しません。この状況では、TiDBのラッチを無効にして、小さなオブジェクトへのメモリ割り当てを減らすことができます。
+In v2.1, the [latch mechanism](/tidb-configuration-file.md#txn-local-latches) is introduced in TiDB to identify transaction conflicts in advance in scenarios where write conflicts frequently appear. The aim is to reduce the retry of transaction commits in TiDB and TiKV caused by write conflicts. Generally, batch tasks use the data already stored in TiDB, so the write conflicts of transaction do not exist. In this situation, you can disable the latch in TiDB to reduce memory allocation for small objects:
 
 ```
 [txn-local-latches]

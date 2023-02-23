@@ -3,32 +3,30 @@ title: Views
 summary: Learn how to use views in TiDB.
 ---
 
-# ビュー {#views}
+# Views {#views}
 
-このドキュメントでは、TiDBでビューを使用する方法について説明します。
+This document describes how to use views in TiDB.
 
-## 概要 {#overview}
+## Overview {#overview}
 
-TiDBはビューをサポートしています。ビューは仮想テーブルとして機能し、そのスキーマはビューを作成する`SELECT`ステートメントによって定義されます。
+TiDB supports views. A view acts as a virtual table, whose schema is defined by the `SELECT` statement that creates the view.
 
--   ビューを作成して、安全なフィールドとデータのみをユーザーに公開できます。これにより、基になるテーブルの機密フィールドとデータのセキュリティが確保されます。
--   複雑なクエリをより簡単かつ便利にするために頻繁に使用される複雑なクエリのビューを作成できます。
+-   You can create views to expose only safe fields and data to users, which ensures the security of sensitive fields and data in the underlying tables.
+-   You can create views for complex queries that are frequently used to make complex queries easier and more convenient.
 
-## ビューを作成する {#create-a-view}
+## Create a view {#create-a-view}
 
-TiDBでは、複雑なクエリを`CREATE VIEW`ステートメントのビューとして定義できます。構文は次のとおりです。
+In TiDB, a complex query can be defined as a view with the `CREATE VIEW` statement. The syntax is as follows:
 
 ```sql
 CREATE VIEW view_name AS query;
 ```
 
-既存のビューまたはテーブルと同じ名前のビューを作成することはできないことに注意してください。
+Note that you cannot create a view with the same name as an existing view or table.
 
-たとえば、 [マルチテーブル結合クエリ](/develop/dev-guide-join-tables.md)は、 `JOIN`ステートメントを介して`books`テーブルと`ratings`テーブルを結合することにより、平均評価のある本のリストを取得します。
+For example, the [multi-table join query](/develop/dev-guide-join-tables.md) gets a list of books with average ratings by joining the `books` table and the `ratings` table through a `JOIN` statement.
 
-後続のクエリの便宜のために、次のステートメントを使用してクエリをビューとして定義できます。
-
-{{< copyable "" >}}
+For the convenience of subsequent queries, you can define the query as a view using the following statement:
 
 ```sql
 CREATE VIEW book_with_ratings AS
@@ -38,26 +36,22 @@ LEFT JOIN ratings r ON b.id = r.book_id
 GROUP BY b.id;
 ```
 
-## クエリビュー {#query-views}
+## Query views {#query-views}
 
-ビューが作成されると、 `SELECT`ステートメントを使用して、通常のテーブルと同じようにビューを照会できます。
-
-{{< copyable "" >}}
+Once a view is created, you can use the `SELECT` statement to query the view just like a normal table.
 
 ```sql
 SELECT * FROM book_with_ratings LIMIT 10;
 ```
 
-TiDBがビューを照会するとき、ビューに関連付けられた`SELECT`のステートメントを照会します。
+When TiDB queries a view, it queries the `SELECT` statement associated with the view.
 
-## ビューを更新 {#update-views}
+## Update views {#update-views}
 
-現在、TiDBのビューは`ALTER VIEW view_name AS query;`をサポートしていません。次の2つの方法で、ビューを「更新」できます。
+Currently, the view in TiDB does not support the `ALTER VIEW view_name AS query;`, you can "update" a view in the following two ways:
 
--   `DROP VIEW view_name;`ステートメントで古いビューを削除してから、 `CREATE VIEW view_name AS query;`ステートメントで新しいビューを作成してビューを更新します。
--   `CREATE OR REPLACE VIEW view_name AS query;`ステートメントを使用して、同じ名前の既存のビューを上書きします。
-
-{{< copyable "" >}}
+-   Delete the old view with the `DROP VIEW view_name;` statement, and then update the view by creating a new view with the `CREATE VIEW view_name AS query;` statement.
+-   Use the `CREATE OR REPLACE VIEW view_name AS query;` statement to overwrite an existing view with the same name.
 
 ```sql
 CREATE OR REPLACE VIEW book_with_ratings AS
@@ -67,17 +61,15 @@ LEFT JOIN ratings r ON b.id = r.book_id
 GROUP BY b.id;
 ```
 
-## ビュー関連情報を取得する {#get-view-related-information}
+## Get view related information {#get-view-related-information}
 
-### <code>SHOW CREATE TABLE|VIEW view_name</code>ステートメントの使用 {#using-the-code-show-create-table-view-view-name-code-statement}
-
-{{< copyable "" >}}
+### Using the <code>SHOW CREATE TABLE|VIEW view_name</code> statement {#using-the-code-show-create-table-view-view-name-code-statement}
 
 ```sql
 SHOW CREATE VIEW book_with_ratings\G
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 *************************** 1. row ***************************
@@ -88,15 +80,13 @@ collation_connection: utf8mb4_general_ci
 1 row in set (0.00 sec)
 ```
 
-### <code>INFORMATION_SCHEMA.VIEWS</code>テーブルを照会します {#query-the-code-information-schema-views-code-table}
-
-{{< copyable "" >}}
+### Query the <code>INFORMATION_SCHEMA.VIEWS</code> table {#query-the-code-information-schema-views-code-table}
 
 ```sql
 SELECT * FROM information_schema.views WHERE TABLE_NAME = 'book_with_ratings'\G
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 *************************** 1. row ***************************
@@ -113,24 +103,22 @@ COLLATION_CONNECTION: utf8mb4_general_ci
 1 row in set (0.00 sec)
 ```
 
-## ビューをドロップ {#drop-views}
+## Drop views {#drop-views}
 
-ビューを削除するには、 `DROP VIEW view_name;`ステートメントを使用します。
-
-{{< copyable "" >}}
+Use the `DROP VIEW view_name;` statement to drop a view.
 
 ```sql
 DROP VIEW book_with_ratings;
 ```
 
-## 制限 {#limitation}
+## Limitation {#limitation}
 
-TiDBのビューの制限については、 [ビューの制限](/views.md#limitations)を参照してください。
+For limitations of views in TiDB, see [Limitations of Views](/views.md#limitations).
 
-## 続きを読む {#read-more}
+## Read More {#read-more}
 
--   [ビュー](/views.md)
--   [CREATEVIEWステートメント](/sql-statements/sql-statement-create-view.md)
--   [DROPVIEWステートメント](/sql-statements/sql-statement-drop-view.md)
--   [ビューを使用したEXPLAINステートメント](/explain-views.md)
--   [TiFlink：TiKVとFlinkを使用した一貫性の高いマテリアライズドビュー](https://github.com/tiflink/tiflink)
+-   [Views](/views.md)
+-   [CREATE VIEW Statement](/sql-statements/sql-statement-create-view.md)
+-   [DROP VIEW Statement](/sql-statements/sql-statement-drop-view.md)
+-   [EXPLAIN Statements Using Views](/explain-views.md)
+-   [TiFlink: Strongly Consistent Materialized Views Using TiKV and Flink](https://github.com/tiflink/tiflink)

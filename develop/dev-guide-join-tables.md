@@ -3,28 +3,26 @@ title: Multi-table Join Queries
 summary: This document describes how to use multi-table join queries.
 ---
 
-# マルチテーブル結合クエリ {#multi-table-join-queries}
+# Multi-table Join Queries {#multi-table-join-queries}
 
-多くのシナリオでは、1つのクエリを使用して、複数のテーブルからデータを取得する必要があります。 `JOIN`ステートメントを使用して、2つ以上のテーブルのデータを組み合わせることができます。
+In many scenarios, you need to use one query to get data from multiple tables. You can use the `JOIN` statement to combine the data from two or more tables.
 
-## 参加タイプ {#join-types}
+## Join types {#join-types}
 
-このセクションでは、結合タイプについて詳しく説明します。
+This section describes the Join types in detail.
 
-### インナージョイン {#inner-join}
+### INNER JOIN {#inner-join}
 
-内部結合の結合結果は、結合条件に一致する行のみを返します。
+The join result of an inner join returns only rows that match the join condition.
 
 ![Inner Join](/media/develop/inner-join.png)
 
-たとえば、最も多作な著者を知りたい場合は、 `authors`という名前の著者テーブルを`book_authors`という名前の本の著者テーブルに結合する必要があります。
+For example, if you want to know the most prolific author, you need to join the author table named `authors` with the book author table named `book_authors`.
 
-<SimpleTab>
-<div label="SQL" href="inner-join-sql">
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
-次のSQLステートメントで、キーワード`JOIN`を使用して、左側のテーブル`authors`と右側のテーブル`book_authors`の行を、結合条件`a.id = ba.author_id`との内部結合として結合することを宣言します。結果セットには、結合条件を満たす行のみが含まれます。著者が本を書いたことがない場合、 `authors`テーブルの彼のレコードは結合条件を満たさないため、結果セットに表示されません。
-
-{{< copyable "" >}}
+In the following SQL statement, use the keyword `JOIN` to declare that you want to join the rows of the left table `authors` and the right table `book_authors` as an inner join with the join condition `a.id = ba.author_id`. The result set will only contain rows that satisfy the join condition. If an author has not written any books, then his record in `authors` table will not satisfy the join condition and will therefore not appear in the result set.
 
 ```sql
 SELECT ANY_VALUE(a.id) AS author_id, ANY_VALUE(a.name) AS author_name, COUNT(ba.book_id) AS books
@@ -35,7 +33,7 @@ ORDER BY books DESC
 LIMIT 10;
 ```
 
-クエリ結果は次のとおりです。
+The query results are as follows:
 
 ```
 +------------+----------------+-------+
@@ -56,9 +54,7 @@ LIMIT 10;
 ```
 
 </div>
-<div label="Java" href="inner-join-java">
-
-{{< copyable "" >}}
+<div label="Java" value="java">
 
 ```java
 public List<Author> getTop10AuthorsOrderByBooks() throws SQLException {
@@ -88,22 +84,20 @@ public List<Author> getTop10AuthorsOrderByBooks() throws SQLException {
 </div>
 </SimpleTab>
 
-### 左アウタージョイン {#left-outer-join}
+### LEFT OUTER JOIN {#left-outer-join}
 
-左外部結合は、左テーブルのすべての行と、結合条件に一致する右テーブルの値を返します。右側のテーブルで一致する行がない場合は、 `NULL`で埋められます。
+The left outer join returns all the rows in the left table and the values ​​in the right table that match the join condition. If no rows are matched in the right table, it will be filled with `NULL`.
 
 ![Left Outer Join](/media/develop/left-outer-join.png)
 
-場合によっては、複数のテーブルを使用してデータクエリを完了したいが、結合条件が満たされていないためにデータセットが小さくなりすぎないようにする必要があります。
+In some cases, you want to use multiple tables to complete the data query, but do not want the data set to become too small because the join condition are not met.
 
-たとえば、Bookshopアプリのホームページで、平均評価のある新しい本のリストを表示したいとします。この場合、新しい本はまだ誰にも評価されていない可能性があります。内部結合を使用すると、これらの未評価の書籍の情報が除外されますが、これは期待したものではありません。
+For example, on the homepage of the Bookshop app, you want to display a list of new books with average ratings. In this case, the new books may not have been rated by anyone yet. Using inner joins will cause the information of these unrated books to be filtered out, which is not what you expect.
 
-<SimpleTab>
-<div label="SQL" href="left-join-sql">
+<SimpleTab groupId="language">
+<div label="SQL" value="sql">
 
-次のSQLステートメントで、 `LEFT JOIN`キーワードを使用して、左側のテーブル`books`が左側の外部結合で右側のテーブル`ratings`に結合されることを宣言します。これにより、 `books`のテーブルのすべての行が返されます。
-
-{{< copyable "" >}}
+In the following SQL statement, use the `LEFT JOIN` keyword to declare that the left table `books` will be joined to the right table `ratings` in a left outer join, thus ensuring that all rows in the `books` table are returned.
 
 ```sql
 SELECT b.id AS book_id, ANY_VALUE(b.title) AS book_title, AVG(r.score) AS average_score
@@ -114,7 +108,7 @@ ORDER BY b.published_at DESC
 LIMIT 10;
 ```
 
-クエリ結果は次のとおりです。
+The query results are as follows:
 
 ```
 +------------+---------------------------------+---------------+
@@ -134,15 +128,13 @@ LIMIT 10;
 10 rows in set (0.30 sec)
 ```
 
-最新の出版された本はすでに多くの評価を持っているようです。上記の方法を確認するために、SQLステートメントを使用して本*The Documentaryoflionの*すべての評価を削除しましょう。
-
-{{< copyable "" >}}
+It seems that the latest published book already has a lot of ratings. To verify the above method, let's delete all the ratings of the book *The Documentary of lion* through the SQL statement:
 
 ```sql
 DELETE FROM ratings WHERE book_id = 3438991610;
 ```
 
-もう一度クエリします。*ライオンのドキュメンタリー*という本はまだ結果セットに表示されていますが、右の表`ratings`の`score`から計算された`average_score`列は`NULL`で埋められています。
+Query again. The book *The Documentary of lion* still appears in the result set, but the `average_score` column calculated from `score` of the right table `ratings` is filled with `NULL`.
 
 ```
 +------------+---------------------------------+---------------+
@@ -162,12 +154,10 @@ DELETE FROM ratings WHERE book_id = 3438991610;
 10 rows in set (0.30 sec)
 ```
 
-`INNER JOIN`を使用するとどうなりますか？試してみるのはあなた次第です。
+What happens if you use `INNER JOIN`? It's up to you to have a try.
 
 </div>
-<div label="Java" href="left-join-java">
-
-{{< copyable "" >}}
+<div label="Java" value="java">
 
 ```java
 public List<Book> getLatestBooksWithAverageScore() throws SQLException {
@@ -197,45 +187,37 @@ public List<Book> getLatestBooksWithAverageScore() throws SQLException {
 </div>
 </SimpleTab>
 
-### 右アウタージョイン {#right-outer-join}
+### RIGHT OUTER JOIN {#right-outer-join}
 
-右外部結合は、右テーブルのすべてのレコードと、結合条件に一致する左テーブルの値を返します。一致する値がない場合は、 `NULL`で埋められます。
+A right outer join returns all the records in the right table and the values ​​in the left table that match the join condition. If there is no matching value, it is filled with `NULL`.
 
 ![Right Outer Join](/media/develop/right-outer-join.png)
 
-### フルアウタージョイン {#full-outer-join}
+### CROSS JOIN {#cross-join}
 
-完全外部結合は、左側のテーブルと右側のテーブルのすべてのレコードに基づいています。結合条件が満たされているかどうかに関係なく、左側のテーブルまたは右側のテーブルに一致する場合は、一致するすべてのレコードが返されます。結合条件に一致する値がない場合は、 `NULL`で埋められます。
+When the join condition is constant, the inner join between the two tables is called a [cross join](https://en.wikipedia.org/wiki/Join_(SQL)#Cross_join). A cross join joins every record of the left table to all the records of the right table. If the number of records in the left table is `m` and the number of records in the right table is `n`, then `m \* n` records will be generated in the result set.
 
-![Full Outer Join](/media/develop/full-outer-join.png)
+### LEFT SEMI JOIN {#left-semi-join}
 
-### クロスジョイン {#cross-join}
+TiDB does not support `LEFT SEMI JOIN table_name` at the SQL syntax level. But at the execution plan level, [subquery-related optimizations](/subquery-optimization.md) will use `semi join` as the default join method for rewritten equivalent JOIN queries.
 
-結合条件が一定の場合、2つのテーブル間の内部結合は[クロスジョイン](https://en.wikipedia.org/wiki/Join_(SQL)#Cross_join)と呼ばれます。クロス結合は、左側のテーブルのすべてのレコードを右側のテーブルのすべてのレコードに結合します。左側のテーブルのレコード数が`m`で、右側のテーブルのレコード数が`n`の場合、結果セットに`m \* n`のレコードが生成されます。
+## Implicit join {#implicit-join}
 
-### 左半結合 {#left-semi-join}
+Before the `JOIN` statement that explicitly declared a join was added to the SQL standard, it was possible to join two or more tables in a SQL statement using the `FROM t1, t2` clause, and specify the conditions for the join using the `WHERE t1.id = t2.id` clause. You can understand it as an implicit join, which uses the inner join to join tables.
 
-TiDBは、SQL構文レベルで`LEFT SEMI JOIN table_name`をサポートしていません。ただし、実行プランレベルでは、 [サブクエリ関連の最適化](/subquery-optimization.md)は、書き換えられた同等のJOINクエリのデフォルトの結合メソッドとして`semi join`を使用します。
+## Join related algorithms {#join-related-algorithms}
 
-## 暗黙の参加 {#implicit-join}
+TiDB supports the following general table join algorithms.
 
-結合を明示的に宣言した`JOIN`ステートメントがSQL標準に追加される前は、 `FROM t1, t2`節を使用してSQLステートメント内の2つ以上のテーブルを結合し、 `WHERE t1.id = t2.id`節を使用して結合の条件を指定することができました。これは、内部結合を使用してテーブルを結合する暗黙的な結合として理解できます。
+-   [Index Join](/explain-joins.md#index-join)
+-   [Hash Join](/explain-joins.md#hash-join)
+-   [Merge Join](/explain-joins.md#merge-join)
 
-## 関連するアルゴリズムに参加する {#join-related-algorithms}
+The optimizer selects an appropriate join algorithm to execute based on the factors such as the data volume in the joined table. You can see which algorithm the query uses for Join by using the `EXPLAIN` statement.
 
-TiDBは、次の一般的なテーブル結合アルゴリズムをサポートしています。
+If the optimizer of TiDB does not execute according to the optimal join algorithm, you can use [Optimizer Hints](/optimizer-hints.md) to force TiDB to use a better join algorithm.
 
--   [インデックス参加](/explain-joins.md#index-join)
--   [ハッシュ参加](/explain-joins.md#hash-join)
--   [マージ結合](/explain-joins.md#merge-join)
-
-オプティマイザは、結合されたテーブルのデータ量などの要因に基づいて、実行する適切な結合アルゴリズムを選択します。 `EXPLAIN`ステートメントを使用すると、クエリが結合に使用するアルゴリズムを確認できます。
-
-TiDBのオプティマイザが最適な結合アルゴリズムに従って実行されない場合は、 [オプティマイザーのヒント](/optimizer-hints.md)を使用して、TiDBに適切な結合アルゴリズムを使用させることができます。
-
-たとえば、上記の左結合クエリの例が、オプティマイザによって選択されていないハッシュ結合アルゴリズムを使用してより高速に実行されると仮定すると、 `SELECT`キーワードの後にヒント`/*+ HASH_JOIN(b, r) */`を追加できます。テーブルにエイリアスがある場合は、ヒントでエイリアスを使用することに注意してください。
-
-{{< copyable "" >}}
+For example, assuming the example for the left join query above executes faster using the Hash Join algorithm, which is not chosen by the optimizer, you can append the hint `/*+ HASH_JOIN(b, r) */` after the `SELECT` keyword. Note that If the table has an alias, use the alias in the hint.
 
 ```sql
 EXPLAIN SELECT /*+ HASH_JOIN(b, r) */ b.id AS book_id, ANY_VALUE(b.title) AS book_title, AVG(r.score) AS average_score
@@ -246,20 +228,18 @@ ORDER BY b.published_at DESC
 LIMIT 10;
 ```
 
-結合アルゴリズムに関連するヒント：
+Hints related to join algorithms:
 
--   [MERGE_JOIN（t1_name [、tl_name ...]）](/optimizer-hints.md#merge_joint1_name--tl_name-)
--   [INL_JOIN（t1_name [、tl_name ...]）](/optimizer-hints.md#inl_joint1_name--tl_name-)
--   [INL_HASH_JOIN（t1_name [、tl_name ...]）](/optimizer-hints.md#inl_hash_join)
--   [HASH_JOIN（t1_name [、tl_name ...]）](/optimizer-hints.md#hash_joint1_name--tl_name-)
+-   [MERGE_JOIN(t1_name [, tl_name ...])](/optimizer-hints.md#merge_joint1_name--tl_name-)
+-   [INL_JOIN(t1_name [, tl_name ...])](/optimizer-hints.md#inl_joint1_name--tl_name-)
+-   [INL_HASH_JOIN(t1_name [, tl_name ...])](/optimizer-hints.md#inl_hash_join)
+-   [HASH_JOIN(t1_name [, tl_name ...])](/optimizer-hints.md#hash_joint1_name--tl_name-)
 
-## 注文に参加する {#join-orders}
+## Join orders {#join-orders}
 
-実際のビジネスシナリオでは、複数のテーブルの結合ステートメントが非常に一般的です。結合の実行効率は、結合内の各テーブルの順序に関連しています。 TiDBは、 結合したテーブルの再配置 Reorderアルゴリズムを使用して、複数のテーブルが結合される順序を決定します。
+In real business scenarios, join statements of multiple tables are very common. The execution efficiency of join is related to the order of each table in join. TiDB uses the Join Reorder algorithm to determine the order in which multiple tables are joined.
 
-オプティマイザによって選択された結合順序が期待どおりに最適でない場合は、 `STRAIGHT_JOIN`を使用して、 `FROM`句で使用されているテーブルの順序でクエリを結合するようにTiDBを強制できます。
-
-{{< copyable "" >}}
+If the join order selected by the optimizer is not optimal as expected, you can use `STRAIGHT_JOIN` to enforce TiDB to join queries in the order of the tables used in the `FROM` clause.
 
 ```sql
 EXPLAIN SELECT *
@@ -267,9 +247,9 @@ FROM authors a STRAIGHT_JOIN book_authors ba STRAIGHT_JOIN books b
 WHERE b.id = ba.book_id AND ba.author_id = a.id;
 ```
 
-この結合したテーブルの再配置アルゴリズムの実装の詳細と制限の詳細については、 [結合したテーブルの再配置アルゴリズムの概要](/join-reorder.md)を参照してください。
+For more information about the implementation details and limitations of this Join Reorder algorithm, see [Introduction to Join Reorder Algorithm](/join-reorder.md).
 
-## も参照してください {#see-also}
+## See also {#see-also}
 
--   [テーブル結合を使用するステートメントを説明する](/explain-joins.md)
--   [再注文に結合したテーブルの再配置ための概要](/join-reorder.md)
+-   [Explain Statements That Use Joins](/explain-joins.md)
+-   [Introduction to Join Reorder](/join-reorder.md)

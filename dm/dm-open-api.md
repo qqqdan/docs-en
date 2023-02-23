@@ -3,19 +3,19 @@ title: Maintain DM Clusters Using OpenAPI
 summary: Learn about how to use OpenAPI interface to manage the cluster status and data replication.
 ---
 
-# OpenAPIを使用してDMクラスターを管理する {#maintain-dm-clusters-using-openapi}
+# Maintain DM Clusters Using OpenAPI {#maintain-dm-clusters-using-openapi}
 
-DMは、DMクラスタを簡単に照会および操作するためのOpenAPI機能を提供します。これは、 [dmctlツール](/dm/dmctl-introduction.md)の機能と同様です。
+DM provides the OpenAPI feature for easily querying and operating the DM cluster, which is similar to the feature of [dmctl tools](/dm/dmctl-introduction.md).
 
-OpenAPIを有効にするには、次のいずれかの操作を実行します。
+To enable OpenAPI, perform one of the following operations:
 
--   DMクラスタがバイナリを使用して直接デプロイされている場合は、次の構成をDMマスター構成ファイルに追加します。
+-   If your DM cluster has been deployed directly using binary, add the following configuration to the DM-master configuration file.
 
     ```toml
     openapi = true
     ```
 
--   DMクラスタがTiUPを使用してデプロイされている場合は、トポロジーファイルに次の構成を追加します。
+-   If your DM cluster has been deployed using TiUP, add the following configuration to the topology file:
 
     ```yaml
     server_configs:
@@ -23,60 +23,60 @@ OpenAPIを有効にするには、次のいずれかの操作を実行します�
         openapi: true
     ```
 
-> **ノート：**
+> **Note:**
 >
-> -   DMは、OpenAPI3.0.0標準を満たす[仕様書](https://github.com/pingcap/tiflow/blob/master/dm/openapi/spec/dm.yaml)を提供します。このドキュメントには、すべてのリクエストパラメータと戻り値が含まれています。ドキュメントyamlをコピーして、 [Swaggerエディター](https://editor.swagger.io/)でプレビューできます。
+> -   DM provides the [specification document](https://github.com/pingcap/tiflow/blob/master/dm/openapi/spec/dm.yaml) that meets the OpenAPI 3.0.0 standard. This document contains all the request parameters and returned values. You can copy the document yaml and preview it in [Swagger Editor](https://editor.swagger.io/).
 >
-> -   DMマスターノードを展開した後、 `http://{master-addr}/api/v1/docs`にアクセスしてドキュメントをオンラインでプレビューできます。
+> -   After you deploy the DM-master nodes, you can access `http://{master-addr}/api/v1/docs` to preview the documentation online.
 
-APIを使用して、DMクラスタで次のメンテナンス操作を実行できます。
+You can use the APIs to perform the following maintenance operations on the DM cluster:
 
-## クラスターを管理するためのAPI {#apis-for-managing-clusters}
+## APIs for managing clusters {#apis-for-managing-clusters}
 
--   [DMマスターノードの情報を取得する](#get-the-information-of-a-dm-master-node)
--   [DMマスターノードを停止します](#stop-a-dm-master-node)
--   [DMワーカーノードの情報を取得します](#get-the-information-of-a-dm-worker-node)
--   [DMワーカーノードを停止します](#stop-a-dm-worker-node)
+-   [Get the information of a DM-master node](#get-the-information-of-a-dm-master-node)
+-   [Stop a DM-master node](#stop-a-dm-master-node)
+-   [Get the information of a DM-worker node](#get-the-information-of-a-dm-worker-node)
+-   [Stop a DM-worker node](#stop-a-dm-worker-node)
 
-## データソースを管理するためのAPI {#apis-for-managing-data-sources}
+## APIs for managing data sources {#apis-for-managing-data-sources}
 
--   [データソースを作成する](#create-a-data-source)
--   [データソースを取得する](#get-a-data-source)
--   [データソースを削除する](#delete-the-data-source)
--   [データソースを更新する](#update-a-data-source)
--   [データソースを有効にする](#enable-a-data-source)
--   [データソースを無効にする](#disable-a-data-source)
--   [データソースの情報を取得する](#get-the-information-of-a-data-source)
--   [データソースリストを取得する](#get-the-data-source-list)
--   [データソースのリレーログ機能を開始します](#start-the-relay-log-feature-for-data-sources)
--   [データソースのリレーログ機能を停止します](#stop-the-relay-log-feature-for-data-sources)
--   [不要になったリレーログファイルを削除します](#purge-relay-log-files-that-are-no-longer-required)
--   [データソースとDMワーカー間のバインディングを変更します](#change-the-bindings-between-the-data-source-and-dm-workers)
--   [データソースのスキーマ名のリストを取得する](#get-the-list-of-schema-names-of-a-data-source)
--   [データソース内の指定されたスキーマのテーブル名のリストを取得します](#get-the-list-of-table-names-of-a-specified-schema-in-a-data-source)
+-   [Create a data source](#create-a-data-source)
+-   [Get a data source](#get-a-data-source)
+-   [Delete the data source](#delete-the-data-source)
+-   [Update a data source](#update-a-data-source)
+-   [Enable a data source](#enable-a-data-source)
+-   [Disable a data source](#disable-a-data-source)
+-   [Get the information of a data source](#get-the-information-of-a-data-source)
+-   [Get the data source list](#get-the-data-source-list)
+-   [Start the relay-log feature for data sources](#start-the-relay-log-feature-for-data-sources)
+-   [Stop the relay-log feature for data sources](#stop-the-relay-log-feature-for-data-sources)
+-   [Purge relay-log files that are no longer required](#purge-relay-log-files-that-are-no-longer-required)
+-   [Change the bindings between the data source and DM-workers](#change-the-bindings-between-the-data-source-and-dm-workers)
+-   [Get the list of schema names of a data source](#get-the-list-of-schema-names-of-a-data-source)
+-   [Get the list of table names of a specified schema in a data source](#get-the-list-of-table-names-of-a-specified-schema-in-a-data-source)
 
-## レプリケーションタスクを管理するためのAPI {#apis-for-managing-replication-tasks}
+## APIs for managing replication tasks {#apis-for-managing-replication-tasks}
 
--   [レプリケーションタスクを作成する](#create-a-replication-task)
--   [レプリケーションタスクを取得する](#get-a-replication-task)
--   [レプリケーションタスクを削除します](#delete-a-replication-task)
--   [レプリケーションタスクを更新します](#update-a-replication-task)
--   [レプリケーションタスクを開始します](#start-a-replication-task)
--   [レプリケーションタスクを停止します](#stop-a-replication-task)
--   [レプリケーションタスクの情報を取得します](#get-the-information-of-a-replication-task)
--   [レプリケーションタスクリストを取得する](#get-the-replication-task-list)
--   [レプリケーションタスクの移行ルールを取得する](#get-the-migration-rules-of-a-replication-task)
--   [レプリケーションタスクに関連付けられているデータソースのスキーマ名のリストを取得します](#get-the-list-of-schema-names-of-the-data-source-that-is-associated-with-a-replication-task)
--   [レプリケーションタスクに関連付けられているデータソース内の指定されたスキーマのテーブル名のリストを取得します](#get-the-list-of-table-names-of-a-specified-schema-in-the-data-source-that-is-associated-with-a-replication-task)
--   [レプリケーションタスクに関連付けられているデータソースのスキーマのCREATEステートメントを取得します](#get-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task)
--   [レプリケーションタスクに関連付けられているデータソースのスキーマのCREATEステートメントを更新します](#update-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task)
--   [レプリケーションタスクに関連付けられているデータソースのスキーマを削除します](#delete-a-schema-of-the-data-source-that-is-associated-with-a-replication-task)
+-   [Create a replication task](#create-a-replication-task)
+-   [Get a replication task](#get-a-replication-task)
+-   [Delete a replication task](#delete-a-replication-task)
+-   [Update a replication task](#update-a-replication-task)
+-   [Start a replication task](#start-a-replication-task)
+-   [Stop a replication task](#stop-a-replication-task)
+-   [Get the information of a replication task](#get-the-information-of-a-replication-task)
+-   [Get the replication task list](#get-the-replication-task-list)
+-   [Get the migration rules of a replication task](#get-the-migration-rules-of-a-replication-task)
+-   [Get the list of schema names of the data source that is associated with a replication task](#get-the-list-of-schema-names-of-the-data-source-that-is-associated-with-a-replication-task)
+-   [Get the list of table names of a specified schema in the data source that is associated with a replication task](#get-the-list-of-table-names-of-a-specified-schema-in-the-data-source-that-is-associated-with-a-replication-task)
+-   [Get the CREATE statement for schemas of the data source that is associated with a replication task](#get-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task)
+-   [Update the CREATE statement for schemas of the data source that is associated with a replication task](#update-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task)
+-   [Delete a schema of the data source that is associated with a replication task](#delete-a-schema-of-the-data-source-that-is-associated-with-a-replication-task)
 
-次のセクションでは、APIの具体的な使用法について説明します。
+The following sections describe the specific usage of the APIs.
 
-## APIエラーメッセージテンプレート {#api-error-message-template}
+## API error message template {#api-error-message-template}
 
-APIリクエストを送信した後、エラーが発生した場合、返されるエラーメッセージは次の形式になります。
+After sending an API request, if an error occurs, the returned error message is in the following format:
 
 ```json
 {
@@ -85,17 +85,17 @@ APIリクエストを送信した後、エラーが発生した場合、返さ�
 }
 ```
 
-上記のJSON出力から、 `error_msg`はエラーメッセージを示し、 `error_code`は対応するエラーコードです。
+From the above JSON output, `error_msg` describes the error message and `error_code` is the corresponding error code.
 
-## DMマスターノードの情報を取得する {#get-the-information-of-a-dm-master-node}
+## Get the information of a DM-master node {#get-the-information-of-a-dm-master-node}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するノードの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding node is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/cluster/masters`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -119,15 +119,15 @@ curl -X 'GET' \
 }
 ```
 
-## DMマスターノードを停止します {#stop-a-dm-master-node}
+## Stop a DM-master node {#stop-a-dm-master-node}
 
-このAPIは同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは204です。
+This API is a synchronous interface. If the request is successful, the status code of the returned body is 204.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `DELETE /api/v1/cluster/masters/{master-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -137,15 +137,15 @@ curl -X 'DELETE' \
   -H 'accept: */*'
 ```
 
-## DMワーカーノードの情報を取得します {#get-the-information-of-a-dm-worker-node}
+## Get the information of a DM-worker node {#get-the-information-of-a-dm-worker-node}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するノードの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding node is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/cluster/workers`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -169,15 +169,15 @@ curl -X 'GET' \
 }
 ```
 
-## DMワーカーノードを停止します {#stop-a-dm-worker-node}
+## Stop a DM-worker node {#stop-a-dm-worker-node}
 
-このAPIは同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは204です。
+This API is a synchronous interface. If the request is successful, the status code of the returned body is 204.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `DELETE /api/v1/cluster/workers/{worker-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -187,15 +187,15 @@ curl -X 'DELETE' \
   -H 'accept: */*'
 ```
 
-## データソースを作成する {#create-a-data-source}
+## Create a data source {#create-a-data-source}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するデータソースの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding data source is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/sources`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -268,15 +268,15 @@ curl -X 'POST' \
 }
 ```
 
-## データソースを取得する {#get-a-data-source}
+## Get a data source {#get-a-data-source}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するデータソースの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding data source is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/sources/{source-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -336,15 +336,15 @@ curl -X 'GET' \
 }
 ```
 
-## データソースを削除する {#delete-the-data-source}
+## Delete the data source {#delete-the-data-source}
 
-このAPIは同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは204です。
+This API is a synchronous interface. If the request is successful, the status code of the returned body is 204.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `DELETE /api/v1/sources/{source-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -354,19 +354,19 @@ curl -X 'DELETE' \
   -H 'accept: application/json'
 ```
 
-## データソースを更新する {#update-a-data-source}
+## Update a data source {#update-a-data-source}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するデータソースの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding data source is returned.
 
-> **ノート：**
+> **Note:**
 >
-> このAPIを使用してデータソース構成を更新するときは、現在のデータソースで実行中のタスクがないことを確認してください。
+> When you use this API to update the data source configuration, make sure that there are no running tasks under the current data source.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `PUT /api/v1/sources/{source-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -436,15 +436,15 @@ curl -X 'PUT' \
 }
 ```
 
-## データソースを有効にする {#enable-a-data-source}
+## Enable a data source {#enable-a-data-source}
 
-これは、要求が成功したときにデータソースを有効にし、このデータソースに依存するタスクのすべてのサブタスクをバッチで開始する同期インターフェイスです。
+This is a synchronous interface that enables a data source on a successful request and starts all subtasks of the task that rely on this data source in batch.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/sources/{source-name}/enable`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -455,15 +455,15 @@ curl -X 'POST' \
   -H 'Content-Type: application/json'
 ```
 
-## データソースを無効にする {#disable-a-data-source}
+## Disable a data source {#disable-a-data-source}
 
-これは、リクエストが成功するとこのデータソースを非アクティブ化し、それに依存するタスクのすべてのサブタスクをバッチで停止する同期インターフェイスです。
+This is a synchronous interface that deactivates this data source on a successful request and stops all subtasks of the task that rely on it in batch.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/sources/{source-name}/disable`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -474,15 +474,15 @@ curl -X 'POST' \
   -H 'Content-Type: application/json'
 ```
 
-## データソースリストを取得する {#get-the-data-source-list}
+## Get the data source list {#get-the-data-source-list}
 
-このAPIは同期インターフェースです。リクエストが成功すると、データソースリストが返されます。
+This API is a synchronous interface. If the request is successful, the data source list is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/sources`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -528,15 +528,15 @@ curl -X 'GET' \
 }
 ```
 
-## データソースの情報を取得する {#get-the-information-of-a-data-source}
+## Get the information of a data source {#get-the-information-of-a-data-source}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するノードの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding node is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/sources/{source-name}/status`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -567,15 +567,15 @@ curl -X 'GET' \
 }
 ```
 
-## データソースのリレーログ機能を開始します {#start-the-relay-log-feature-for-data-sources}
+## Start the relay-log feature for data sources {#start-the-relay-log-feature-for-data-sources}
 
-このAPIは非同期インターフェースです。リクエストが成功した場合、返された本文のステータスコードは200です。最新のステータスを確認するには、 [データソースの情報を取得する](#get-the-information-of-a-data-source)を実行できます。
+This API is an asynchronous interface. If the request is successful, the status code of the returned body is 200. To learn about its latest status, You can [get the information of a data source](#get-the-information-of-a-data-source).
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/sources/{source-name}/relay/enable`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -594,15 +594,15 @@ curl -X 'POST' \
 }'
 ```
 
-## データソースのリレーログ機能を停止します {#stop-the-relay-log-feature-for-data-sources}
+## Stop the relay-log feature for data sources {#stop-the-relay-log-feature-for-data-sources}
 
-このAPIは非同期インターフェースです。リクエストが成功した場合、返された本文のステータスコードは200です。最新のステータスを確認するには、 [データソースの情報を取得する](#get-the-information-of-a-data-source)を実行できます。
+This API is an asynchronous interface. If the request is successful, the status code of the returned body is 200. To learn about its latest status, You can [get the information of a data source](#get-the-information-of-a-data-source).
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/sources/{source-name}/relay/disable`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -618,15 +618,15 @@ curl -X 'POST' \
 }'
 ```
 
-## 不要になったリレーログファイルを削除します {#purge-relay-log-files-that-are-no-longer-required}
+## Purge relay log files that are no longer required {#purge-relay-log-files-that-are-no-longer-required}
 
-このAPIは非同期インターフェースです。リクエストが成功した場合、返された本文のステータスコードは200です。最新のステータスを確認するには、 [データソースの情報を取得する](#get-the-information-of-a-data-source)を実行できます。
+This API is an asynchronous interface. If the request is successful, the status code of the returned body is 200. To learn about its latest status, You can [get the information of a data source](#get-the-information-of-a-data-source).
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/sources/{source-name}/relay/purge`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -641,15 +641,15 @@ curl -X 'POST' \
 }'
 ```
 
-## データソースとDMワーカー間のバインディングを変更します {#change-the-bindings-between-the-data-source-and-dm-workers}
+## Change the bindings between the data source and DM-workers {#change-the-bindings-between-the-data-source-and-dm-workers}
 
-このAPIは非同期インターフェースです。リクエストが成功した場合、返された本文のステータスコードは200です。最新のステータスを確認するには、 [DMワーカーノードの情報を取得する](#get-the-information-of-a-dm-worker-node)を実行できます。
+This API is an asynchronous interface. If the request is successful, the status code of the returned body is 200. To learn about its latest status, You can [get the information of a DM-worker node](#get-the-information-of-a-dm-worker-node).
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/sources/{source-name}/transfer`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -663,15 +663,15 @@ curl -X 'POST' \
 }'
 ```
 
-## データソースのスキーマ名のリストを取得する {#get-the-list-of-schema-names-of-a-data-source}
+## Get the list of schema names of a data source {#get-the-list-of-schema-names-of-a-data-source}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するリストが返されます。
+This API is a synchronous interface. If the request is successful, the corresponding list is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/sources/{source-name}/schemas`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -687,15 +687,15 @@ curl -X 'GET' \
 ]
 ```
 
-## データソース内の指定されたスキーマのテーブル名のリストを取得します {#get-the-list-of-table-names-of-a-specified-schema-in-a-data-source}
+## Get the list of table names of a specified schema in a data source {#get-the-list-of-table-names-of-a-specified-schema-in-a-data-source}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するリストが返されます。
+This API is a synchronous interface. If the request is successful, the corresponding list is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/sources/{source-name}/schemas/{schema-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -711,15 +711,15 @@ curl -X 'GET' \
 ]
 ```
 
-## レプリケーションタスクを作成する {#create-a-replication-task}
+## Create a replication task {#create-a-replication-task}
 
-このAPIは同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは200です。リクエストが成功すると、対応するレプリケーションタスクの情報が返されます。
+This API is a synchronous interface. If the request is successful, the status code of the returned body is 200. A successful request will return the information of the corresponding replication task.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/tasks`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -907,15 +907,15 @@ curl -X 'POST' \
 }
 ```
 
-## レプリケーションタスクを取得する {#get-a-replication-task}
+## Get a replication task {#get-a-replication-task}
 
-このAPIは同期インターフェースです。要求が成功すると、対応するレプリケーションタスクの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding replication task is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/tasks/{task-name}?with_status=true`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1014,15 +1014,15 @@ curl -X 'GET' \
 }
 ```
 
-## レプリケーションタスクを削除します {#delete-a-replication-task}
+## Delete a replication task {#delete-a-replication-task}
 
-このインターフェースは同期インターフェースであり、要求が成功すると、返される本文のステータスコードは204になります。
+This interface is a synchronous interface and the Status Code of the returned body is 204 upon successful request.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `DELETE /api/v1/tasks/{task-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1032,19 +1032,19 @@ curl -X 'DELETE' \
   -H 'accept: application/json'
 ```
 
-## レプリケーションタスクを更新します {#update-a-replication-task}
+## Update a replication task {#update-a-replication-task}
 
-このインターフェースは同期インターフェースであり、リクエストが成功するとタスクの情報が返されます。
+This interface is a synchronous interface and a successful request returns the information of the task.
 
-> **ノート：**
+> **Note:**
 >
-> このAPIを使用してタスク構成を更新するときは、タスクが停止して増分同期が実行されていること、および一部のフィールドのみを更新できることを確認してください。
+> When you use this API to update the task configuration, make sure that the task is stopped and has run into incremental sync and that only some of the fields can be updated.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `PUT /api/v1/tasks/{task-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1232,15 +1232,15 @@ curl -X 'PUT' \
 }
 ```
 
-## レプリケーションタスクを開始します {#start-a-replication-task}
+## Start a replication task {#start-a-replication-task}
 
-このAPIは非同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは204です。タスクの最新のステータスを知るには、 [レプリケーションタスクの情報を取得する](#get-the-information-of-a-replication-task)を実行できます。
+This API is an asynchronous interface. If the request is successful, the status code of the returned body is 204. To learn the latest status of a task, You can [get the information of a replication task](#get-the-information-of-a-replication-task).
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/tasks/{task-name}/start`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1250,15 +1250,15 @@ curl -X 'POST' \
   -H 'accept: */*'
 ```
 
-## レプリケーションタスクを停止します {#stop-a-replication-task}
+## Stop a replication task {#stop-a-replication-task}
 
-このAPIは非同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは200です。タスクの最新のステータスを知るには、 [レプリケーションタスクの情報を取得する](#get-the-information-of-a-replication-task)を実行できます。
+This API is an asynchronous interface. If the request is successful, the status code of the returned body is 200. To learn the latest status of a task, You can [get the information of a replication task](#get-the-information-of-a-replication-task).
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/tasks/{task-name}/stop`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1268,15 +1268,15 @@ curl -X 'POST' \
   -H 'accept: */*'
 ```
 
-## レプリケーションタスクの情報を取得します {#get-the-information-of-a-replication-task}
+## Get the information of a replication task {#get-the-information-of-a-replication-task}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するノードの情報が返されます。
+This API is a synchronous interface. If the request is successful, the information of the corresponding node is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/tasks/task-1/status`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1339,15 +1339,15 @@ curl -X 'GET' \
 }
 ```
 
-## レプリケーションタスクリストを取得する {#get-the-replication-task-list}
+## Get the replication task list {#get-the-replication-task-list}
 
-このAPIは同期インターフェースであり、リクエストが成功すると、対応するタスクのリストが返されます。
+This API is a synchronous interface and a successful request returns a list of the corresponding tasks.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/tasks`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1451,15 +1451,15 @@ curl -X 'GET' \
 }
 ```
 
-## レプリケーションタスクの移行ルールを取得する {#get-the-migration-rules-of-a-replication-task}
+## Get the migration rules of a replication task {#get-the-migration-rules-of-a-replication-task}
 
-このAPIは同期インターフェースであり、リクエストが成功すると、このタスクの移行ルールのリストが返されます。
+This API is a synchronous interface and a successful request returns a list of the migration rules of this task.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/tasks/{task-name}/sources/{source-name}/migrate_targets`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1483,15 +1483,15 @@ curl -X 'GET' \
 }
 ```
 
-## レプリケーションタスクに関連付けられているデータソースのスキーマ名のリストを取得します {#get-the-list-of-schema-names-of-the-data-source-that-is-associated-with-a-replication-task}
+## Get the list of schema names of the data source that is associated with a replication task {#get-the-list-of-schema-names-of-the-data-source-that-is-associated-with-a-replication-task}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するリストが返されます。
+This API is a synchronous interface. If the request is successful, the corresponding list is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/tasks/{task-name}/sources/{source-name}/schemas`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1507,15 +1507,15 @@ curl -X 'GET' \
 ]
 ```
 
-## レプリケーションタスクに関連付けられているデータソース内の指定されたスキーマのテーブル名のリストを取得します {#get-the-list-of-table-names-of-a-specified-schema-in-the-data-source-that-is-associated-with-a-replication-task}
+## Get the list of table names of a specified schema in the data source that is associated with a replication task {#get-the-list-of-table-names-of-a-specified-schema-in-the-data-source-that-is-associated-with-a-replication-task}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するリストが返されます。
+This API is a synchronous interface. If the request is successful, the corresponding list is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/tasks/{task-name}/sources/{source-name}/schemas/{schema-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1531,15 +1531,15 @@ curl -X 'GET' \
 ]
 ```
 
-## レプリケーションタスクに関連付けられているデータソースのスキーマのCREATEステートメントを取得します {#get-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task}
+## Get the CREATE statement for schemas of the data source that is associated with a replication task {#get-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task}
 
-このAPIは同期インターフェースです。リクエストが成功すると、対応するCREATEステートメントが返されます。
+This API is a synchronous interface. If the request is successful, the corresponding CREATE statement is returned.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `GET /api/v1/tasks/{task-name}/sources/{source-name}/schemas/{schema-name}/{table-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1557,15 +1557,15 @@ curl -X 'GET' \
 }
 ```
 
-## レプリケーションタスクに関連付けられているデータソースのスキーマのCREATEステートメントを更新します {#update-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task}
+## Update the CREATE statement for schemas of the data source that is associated with a replication task {#update-the-create-statement-for-schemas-of-the-data-source-that-is-associated-with-a-replication-task}
 
-このAPIは同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは200です。
+This API is a synchronous interface. If the request is successful, the status code of the returned body is 200.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `POST /api/v1/tasks/{task-name}/sources/{source-name}/schemas/{schema-name}/{table-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 
@@ -1581,15 +1581,15 @@ curl -X 'PUT' \
 }'
 ```
 
-## レプリケーションタスクに関連付けられているデータソースのスキーマを削除します {#delete-a-schema-of-the-data-source-that-is-associated-with-a-replication-task}
+## Delete a schema of the data source that is associated with a replication task {#delete-a-schema-of-the-data-source-that-is-associated-with-a-replication-task}
 
-このAPIは同期インターフェースです。リクエストが成功した場合、返される本文のステータスコードは200です。
+This API is a synchronous interface. If the request is successful, the status code of the returned body is 200.
 
-### URIをリクエストする {#request-uri}
+### Request URI {#request-uri}
 
 `DELETE /api/v1/tasks/{task-name}/sources/{source-name}/schemas/{schema-name}/{table-name}`
 
-### 例 {#example}
+### Example {#example}
 
 {{< copyable "" >}}
 

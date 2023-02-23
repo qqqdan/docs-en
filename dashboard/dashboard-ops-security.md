@@ -3,49 +3,49 @@ title: Secure TiDB Dashboard
 summary: Learn how to improve the security of TiDB Dashboard.
 ---
 
-# セキュリティTiDBダッシュボード {#secure-tidb-dashboard}
+# Secure TiDB Dashboard {#secure-tidb-dashboard}
 
-TiDBダッシュボードにアクセスする前にサインインする必要がありますが、TiDBダッシュボードは、デフォルトで信頼できるユーザーエンティティからアクセスできるように設計されています。外部ネットワークユーザーまたは信頼できないユーザーにアクセスのためにTiDBダッシュボードを提供する場合は、セキュリティの脆弱性を回避するために次の対策を講じてください。
+Although you need to sign into TiDB Dashboard before accessing it, TiDB Dashboard is designed to be accessed by trusted user entities by default. When you want to provide TiDB Dashboard to external network users or untrusted users for access, take the following measures to avoid security vulnerabilities.
 
-## TiDBユーザーのセキュリティを強化する {#enhance-security-of-tidb-users}
+## Enhance security of TiDB users {#enhance-security-of-tidb-users}
 
-### <code>root</code>ユーザーに強力なパスワードを設定します {#set-a-strong-password-for-the-tidb-code-root-code-user}
+### Set a strong password for the TiDB <code>root</code> user {#set-a-strong-password-for-the-tidb-code-root-code-user}
 
-TiDBダッシュボードのアカウントシステムは、TiDBSQLユーザーのアカウントシステムと一致しています。デフォルトでは、TiDBの`root`ユーザーにはパスワードがないため、TiDBダッシュボードにアクセスするためにパスワード認証は必要ありません。これにより、悪意のある訪問者に、特権SQLステートメントの実行を含む高い特権が与えられます。
+The account system of TiDB Dashboard is consistent with that of TiDB SQL users. By default, TiDB's `root` user has no password, so accessing TiDB Dashboard does not require password authentication, which will give the malicious visitor high privileges, including executing privileged SQL statements.
 
-`root`ユーザーには強力なパスワードを設定することをお勧めします。詳細については、 [TiDBユーザーアカウント管理](/user-account-management.md)を参照してください。または、 `root`ユーザーを無効にすることもできます。
+It is recommended that you set a strong password for the TiDB `root` user. See [TiDB User Account Management](/user-account-management.md) for details. Alternatively, you can disable the TiDB `root` user.
 
-### TiDBダッシュボードの最小特権ユーザーを作成します {#create-a-least-privileged-user-for-tidb-dashboard}
+### Create a least-privileged user for TiDB Dashboard {#create-a-least-privileged-user-for-tidb-dashboard}
 
-TiDBダッシュボードのアカウントシステムは、TiDBSQLのアカウントシステムと一致しています。 TiDBダッシュボードにアクセスするユーザーは、TiDBSQLユーザーの権限に基づいて認証および承認されます。したがって、TiDBダッシュボードには、制限された特権、または単に読み取り専用の特権が必要です。最小特権の原則に基づいてTiDBダッシュボードにアクセスするようにユーザーを構成できるため、特権の高いユーザーのアクセスを回避できます。
+The account system of TiDB Dashboard is consistent with that of TiDB SQL. Users accessing TiDB Dashboard are authenticated and authorized based on TiDB SQL user's privileges. Therefore, TiDB Dashboard requires limited privileges, or merely the read-only privilege. You can configure users to access TiDB Dashboard based on the principle of least privilege, thus avoiding access of high-privileged users.
 
-TiDBダッシュボードにアクセスしてサインインするための最小特権SQLユーザーを作成することをお勧めします。これにより、特権の高いユーザーのアクセスが回避され、セキュリティが向上します。詳細については、 [TiDBダッシュボードユーザー管理](/dashboard/dashboard-user.md)を参照してください。
+It is recommended that you create a least-privileged SQL user to access and sign in to TiDB Dashboard. This avoids access of high-privileged users and improves security. See [TiDB Dashboard User Management](/dashboard/dashboard-user.md) for details.
 
-## ファイアウォールを使用して、信頼できないアクセスをブロックします {#use-a-firewall-to-block-untrusted-access}
+## Use a firewall to block untrusted access {#use-a-firewall-to-block-untrusted-access}
 
-TiDBダッシュボードは、PDクライアントポートを介してサービスを提供します。デフォルトは[http：// IP：2379 / dashboard /](http://IP:2379/dashboard/)です。 TiDBダッシュボードにはID認証が必要ですが、PDクライアントポートで伝送されるPDの他の特権インターフェイス（ [http：// IP：2379 / pd / api / v1 / members](http://IP:2379/pd/api/v1/members)など）はID認証を必要とせず、特権操作を実行できます。したがって、PDクライアントポートを外部ネットワークに直接公開することは非常に危険です。
+TiDB Dashboard provides services through the PD client port, which defaults to [http://IP:2379/dashboard/](http://IP:2379/dashboard/). Although TiDB Dashboard requires identity authentication, other privileged interfaces (such as [http://IP:2379/pd/api/v1/members](http://IP:2379/pd/api/v1/members)) in PD carried on the PD client port do not require identity authentication and can perform privileged operations. Therefore, exposing the PD client port directly to the external network is extremely risky.
 
-次の対策を講じることをお勧めします。
+It is recommended that you take the following measures:
 
--   ファイアウォールを使用して、コンポーネントが外部ネットワークまたは信頼できないネットワークを介してPDコンポーネントのクライアントポートにアクセス**すること**を禁止します。
+-   Use a firewall to prohibit a component from accessing **any** client port of the PD component via the external network or untrusted network.
 
-    > **ノート：**
+    > **Note:**
     >
-    > TiDB、TiKV、およびその他のコンポーネントは、PDクライアントポートを介してPDコンポーネントと通信する必要があるため、コンポーネント間の内部ネットワークへのアクセスをブロックしないでください。そうしないと、クラスタが使用できなくなります。
+    > TiDB, TiKV, and other components need to communicate with the PD component through the PD client port, so do not block access to the internal network between components. Otherwise, the cluster will become unavailable.
 
--   別のポートで外部ネットワークにTiDBダッシュボードサービスを安全に提供するようにリバースプロキシを構成する方法については、 [リバースプロキシの背後でTiDBダッシュボードを使用する](/dashboard/dashboard-ops-reverse-proxy.md)を参照してください。
+-   See [Use TiDB Dashboard behind a Reverse Proxy](/dashboard/dashboard-ops-reverse-proxy.md) to learn how to configure the reverse proxy to safely provide the TiDB Dashboard service on another port to the external network.
 
-### 複数のPDインスタンスを展開するときにTiDBダッシュボードポートへのアクセスを開く方法 {#how-to-open-access-to-tidb-dashboard-port-when-deploying-multiple-pd-instances}
+### How to open access to TiDB Dashboard port when deploying multiple PD instances {#how-to-open-access-to-tidb-dashboard-port-when-deploying-multiple-pd-instances}
 
-> **警告：**
+> **Warning:**
 >
-> このセクションでは、テスト環境専用の安全でないアクセスソリューションについて説明します。このソリューションを実稼働環境で使用し**ない**でください。
+> This section describes an unsafe access solution, which is for the test environment only. **DO NOT** use this solution in the production environment.
 
-テスト環境では、外部アクセス用にTiDBダッシュボードポートを開くようにファイアウォールを構成する必要がある場合があります。
+In the test environment, you might need to configure the firewall to open the TiDB Dashboard port for external access.
 
-複数のPDインスタンスがデプロイされている場合、実際に実行されるのは1つのPDインスタンスのみであり、他のPDインスタンスにアクセスするとブラウザーのリダイレクトが発生します。したがって、ファイアウォールが正しいIPアドレスで構成されていることを確認する必要があります。このメカニズムの詳細については、 [複数のPDインスタンスを使用した展開](/dashboard/dashboard-ops-deploy.md#deployment-with-multiple-pd-instances)を参照してください。
+When multiple PD instances are deployed, only one of the PD instances actually runs TiDB Dashboard, and browser redirection occurs when you access other PD instances. Therefore, you need to ensure that the firewall is configured with the correct IP address. For details of this mechanism, see [Deployment with multiple PD instances](/dashboard/dashboard-ops-deploy.md#deployment-with-multiple-pd-instances).
 
-TiUPデプロイメントツールを使用する場合、次のコマンドを実行することにより、実際にTiDBダッシュボードを実行するPDインスタンスのアドレスを表示できます（ `CLUSTER_NAME`をクラスタ名に置き換えます）。
+When using the TiUP deployment tool, you can view the address of the PD instance that actually runs TiDB Dashboard by running the following command (replace `CLUSTER_NAME` with the cluster name):
 
 {{< copyable "" >}}
 
@@ -53,15 +53,14 @@ TiUPデプロイメントツールを使用する場合、次のコマンドを�
 tiup cluster display CLUSTER_NAME --dashboard
 ```
 
-出力は実際のTiDBダッシュボードアドレスです。
+The output is the actual TiDB Dashboard address.
 
-> **ノート：**
+> **Note:**
 >
-> この機能は、 `tiup cluster`デプロイメントツールの新しいバージョン（v1.0.3以降）でのみ使用できます。
+> This feature is available only in the later version of the `tiup cluster` deployment tool (v1.0.3 or later).
 >
-> <details><summary>TiUPクラスターをアップグレードする</summary>
->
-> {{< copyable "" >}}
+> <details>
+> <summary>Upgrade TiUP Cluster</summary>
 >
 > ```bash
 > tiup update --self
@@ -70,27 +69,27 @@ tiup cluster display CLUSTER_NAME --dashboard
 >
 > </details>
 
-次に出力例を示します。
+The following is a sample output:
 
 ```bash
 http://192.168.0.123:2379/dashboard/
 ```
 
-この例では、ファイアウォールは`192.168.0.123`のオープンIPの`2379`のポートへのインバウンドアクセスで構成する必要があり、TiDBダッシュボードは[http://192.168.0.123:2379/dashboard/](http://192.168.0.123:2379/dashboard/)を介してアクセスされます。
+In this example, the firewall needs to be configured with inbound access for the `2379` port of the `192.168.0.123` open IP, and the TiDB Dashboard is accessed via [http://192.168.0.123:2379/dashboard/](http://192.168.0.123:2379/dashboard/).
 
-## TiDBダッシュボード専用のリバースプロキシ {#reverse-proxy-only-for-tidb-dashboard}
+## Reverse proxy only for TiDB Dashboard {#reverse-proxy-only-for-tidb-dashboard}
 
-[ファイアウォールを使用して信頼できないアクセスをブロックする]（＃use-a-firewall-to-block-untrustedアクセス）で説明したように、PDクライアントポートで提供されるサービスには、TiDBダッシュボード（ [http：// IP：2379 / dashboard /](http://IP:2379/dashboard/)にあります）だけでなく、他のPDの特権インターフェイス（ [http：// IP：2379 / pd / api / v1 / members](http://IP:2379/pd/api/v1/members)など）。したがって、リバースプロキシを使用して外部ネットワークにTiDBダッシュボードを提供する場合は、外部ネットワークがPDの特権インターフェイスにアクセスできるように、プレフィックスが`/dashboard`のサービス**のみ**が提供されていることを確認してください（ポート内のすべてのサービスではあり<strong>ません</strong>）。リバースプロキシ。
+As mentioned in [Use a firewall to block untrusted access](#use-a-firewall-to-block-untrusted access), the services provided under the PD client port include not only TiDB Dashboard (located at [http://IP:2379/dashboard/](http://IP:2379/dashboard/)), but also other privileged interfaces in PD (such as [http://IP:2379/pd/api/v1/members](http://IP:2379/pd/api/v1/members)). Therefore, when using a reverse proxy to provide TiDB Dashboard to the external network, ensure that the services **ONLY** with the `/dashboard` prefix are provided (<strong>NOT</strong> all services under the port) to avoid that the external network can access the privileged interface in PD through the reverse proxy.
 
-安全で推奨されるリバースプロキシ構成を学習するには、 [リバースプロキシの背後でTiDBダッシュボードを使用する](/dashboard/dashboard-ops-reverse-proxy.md)を表示することをお勧めします。
+It is recommended that you see [Use TiDB Dashboard behind a Reverse Proxy](/dashboard/dashboard-ops-reverse-proxy.md) to learn a safe and recommended reverse proxy configuration.
 
-## リバースプロキシのTLSを有効にする {#enable-tls-for-reverse-proxy}
+## Enable TLS for reverse proxy {#enable-tls-for-reverse-proxy}
 
-トランスポート層のセキュリティをさらに強化するために、リバースプロキシのTLSを有効にしたり、ユーザー証明書を認証するためにmTLSを導入したりすることもできます。
+To further enhance the security of the transport layer, you can enable TLS for reverse proxy, and even introduce mTLS to authenticate user certificates.
 
-詳細については、 [HTTPSサーバーの構成](http://nginx.org/en/docs/http/configuring_https_servers.html)と[HAProxySSLターミネーション](https://www.haproxy.com/blog/haproxy-ssl-termination/)を参照してください。
+See [Configuring HTTPS servers](http://nginx.org/en/docs/http/configuring_https_servers.html) and [HAProxy SSL Termination](https://www.haproxy.com/blog/haproxy-ssl-termination/) for more details.
 
-## その他の推奨される安全対策 {#other-recommended-safety-measures}
+## Other recommended safety measures {#other-recommended-safety-measures}
 
--   [TLS認証を有効にし、保存されたデータを暗号化する](/enable-tls-between-components.md)
--   [TiDBクライアントとサーバー間のTLSを有効にする](/enable-tls-between-clients-and-servers.md)
+-   [Enable TLS Authentication and Encrypt the Stored Data](/enable-tls-between-components.md)
+-   [Enable TLS Between TiDB Clients and Servers](/enable-tls-between-clients-and-servers.md)

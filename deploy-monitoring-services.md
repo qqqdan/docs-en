@@ -3,26 +3,26 @@ title: Deploy Monitoring Services for the TiDB Cluster
 summary: Learn how to deploy monitoring services for the TiDB cluster.
 ---
 
-# TiDBクラスターの監視サービスをデプロイ {#deploy-monitoring-services-for-the-tidb-cluster}
+# Deploy Monitoring Services for the TiDB Cluster {#deploy-monitoring-services-for-the-tidb-cluster}
 
-このドキュメントは、TiDB監視およびアラートサービスを手動で展開するユーザーを対象としています。
+This document is intended for users who want to manually deploy TiDB monitoring and alert services.
 
-TiUPを使用してTiDBクラスタを展開する場合、監視およびアラートサービスは自動的に展開され、手動で展開する必要はありません。
+If you deploy the TiDB cluster using TiUP, the monitoring and alert services are automatically deployed, and no manual deployment is needed.
 
-## PrometheusとGrafanaをデプロイ {#deploy-prometheus-and-grafana}
+## Deploy Prometheus and Grafana {#deploy-prometheus-and-grafana}
 
-TiDBクラスタトポロジが次のとおりであると想定します。
+Assume that the TiDB cluster topology is as follows:
 
-| 名前    | ホストIP           | サービス                                    |
-| :---- | :-------------- | :-------------------------------------- |
-| Node1 | 192.168.199.113 | PD1、TiDB、node_export、Prometheus、Grafana |
-| Node2 | 192.168.199.114 | PD2、node_export                         |
-| Node3 | 192.168.199.115 | PD3、node_export                         |
-| Node4 | 192.168.199.116 | TiKV1、node_export                       |
-| Node5 | 192.168.199.117 | TiKV2、node_export                       |
-| Node6 | 192.168.199.118 | TiKV3、node_export                       |
+| Name  | Host IP         | Services                                    |
+| :---- | :-------------- | :------------------------------------------ |
+| Node1 | 192.168.199.113 | PD1, TiDB, node_export, Prometheus, Grafana |
+| Node2 | 192.168.199.114 | PD2, node_export                            |
+| Node3 | 192.168.199.115 | PD3, node_export                            |
+| Node4 | 192.168.199.116 | TiKV1, node_export                          |
+| Node5 | 192.168.199.117 | TiKV2, node_export                          |
+| Node6 | 192.168.199.118 | TiKV3, node_export                          |
 
-### ステップ1：バイナリパッケージをダウンロードする {#step-1-download-the-binary-package}
+### Step 1: Download the binary package {#step-1-download-the-binary-package}
 
 {{< copyable "" >}}
 
@@ -30,7 +30,7 @@ TiDBクラスタトポロジが次のとおりであると想定します。
 # Downloads the package.
 wget https://download.pingcap.org/prometheus-2.27.1.linux-amd64.tar.gz
 wget https://download.pingcap.org/node_exporter-0.17.0.linux-amd64.tar.gz
-wget https://download.pingcap.org/grafana-6.1.6.linux-amd64.tar.gz
+wget https://download.pingcap.org/grafana-7.5.11.linux-amd64.tar.gz
 ```
 
 {{< copyable "" >}}
@@ -39,10 +39,10 @@ wget https://download.pingcap.org/grafana-6.1.6.linux-amd64.tar.gz
 # Extracts the package.
 tar -xzf prometheus-2.27.1.linux-amd64.tar.gz
 tar -xzf node_exporter-0.17.0.linux-amd64.tar.gz
-tar -xzf grafana-6.1.6.linux-amd64.tar.gz
+tar -xzf grafana-7.5.11.linux-amd64.tar.gz
 ```
 
-### ステップ2：Node1、Node2、Node3、およびNode4で<code>node_exporter</code>を開始します {#step-2-start-code-node-exporter-code-on-node1-node2-node3-and-node4}
+### Step 2: Start <code>node_exporter</code> on Node1, Node2, Node3, and Node4 {#step-2-start-code-node-exporter-code-on-node1-node2-node3-and-node4}
 
 {{< copyable "" >}}
 
@@ -54,9 +54,9 @@ $ ./node_exporter --web.listen-address=":9100" \
     --log.level="info" &
 ```
 
-### ステップ3：Node1でPrometheusを起動する {#step-3-start-prometheus-on-node1}
+### Step 3: Start Prometheus on Node1 {#step-3-start-prometheus-on-node1}
 
-Prometheus構成ファイルを編集します。
+Edit the Prometheus configuration file:
 
 {{< copyable "" >}}
 
@@ -114,7 +114,7 @@ scrape_configs:
 
 ```
 
-Prometheusサービスを開始します。
+Start the Prometheus service:
 
 ```bash
 $ ./prometheus \
@@ -127,14 +127,14 @@ $ ./prometheus \
     --storage.tsdb.retention="15d" &
 ```
 
-### ステップ4：Node1でGrafanaを起動する {#step-4-start-grafana-on-node1}
+### Step 4: Start Grafana on Node1 {#step-4-start-grafana-on-node1}
 
-Grafana構成ファイルを編集します。
+Edit the Grafana configuration file:
 
 {{< copyable "" >}}
 
 ```ini
-cd grafana-6.1.6 &&
+cd grafana-7.5.11 &&
 vi conf/grafana.ini
 
 ...
@@ -179,7 +179,7 @@ url = https://grafana.net
 
 ```
 
-Grafanaサービスを開始します。
+Start the Grafana service:
 
 {{< copyable "" >}}
 
@@ -188,86 +188,86 @@ Grafanaサービスを開始します。
     --config="./conf/grafana.ini" &
 ```
 
-## Grafanaを構成する {#configure-grafana}
+## Configure Grafana {#configure-grafana}
 
-このセクションでは、Grafanaを構成する方法について説明します。
+This section describes how to configure Grafana.
 
-### ステップ1：Prometheusデータソースを追加する {#step-1-add-a-prometheus-data-source}
+### Step 1: Add a Prometheus data source {#step-1-add-a-prometheus-data-source}
 
-1.  GrafanaWebインターフェースにログインします。
+1.  Log in to the Grafana Web interface.
 
-    -   デフォルトアドレス： [http：// localhost：3000](http://localhost:3000)
+    -   Default address: [http://localhost:3000](http://localhost:3000)
 
-    -   デフォルトのアカウント：admin
+    -   Default account: admin
 
-    -   デフォルトのパスワード：admin
+    -   Default password: admin
 
-    > **ノート：**
+    > **Note:**
     >
-    > [**パスワードの変更]**ステップでは、[<strong>スキップ]</strong>を選択できます。
+    > For the **Change Password** step, you can choose <strong>Skip</strong>.
 
-2.  Grafanaサイドバーメニューで、**Configuration / コンフィグレーション**内の<strong>データソース</strong>をクリックします。
+2.  In the Grafana sidebar menu, click **Data Source** within the <strong>Configuration</strong>.
 
-3.  [**データソースの追加]を**クリックします。
+3.  Click **Add data source**.
 
-4.  データソース情報を指定します。
+4.  Specify the data source information.
 
-    -   データソースの**名前**を指定します。
-    -   [**タイプ]**で、[<strong>プロメテウス]</strong>を選択します。
-    -   **URL**には、Prometheusアドレスを指定します。
-    -   必要に応じて他のフィールドを指定します。
+    -   Specify a **Name** for the data source.
+    -   For **Type**, select <strong>Prometheus</strong>.
+    -   For **URL**, specify the Prometheus address.
+    -   Specify other fields as needed.
 
-5.  [**追加]**をクリックして、新しいデータソースを保存します。
+5.  Click **Add** to save the new data source.
 
-### ステップ2：Grafanaダッシュボードをインポートする {#step-2-import-a-grafana-dashboard}
+### Step 2: Import a Grafana dashboard {#step-2-import-a-grafana-dashboard}
 
-PDサーバー、TiKVサーバー、およびTiDBサーバーのGrafanaダッシュボードをインポートするには、それぞれ次の手順を実行します。
+To import a Grafana dashboard for the PD server, the TiKV server, and the TiDB server, take the following steps respectively:
 
-1.  Grafanaロゴをクリックして、サイドバーメニューを開きます。
+1.  Click the Grafana logo to open the sidebar menu.
 
-2.  サイドバーメニューで、[**ダッシュボード**]-&gt; [<strong>インポート</strong>]をクリックして、[ダッシュボードの<strong>インポート</strong>]ウィンドウを開きます。
+2.  In the sidebar menu, click **Dashboards** -> <strong>Import</strong> to open the <strong>Import Dashboard</strong> window.
 
-3.  [ **.jsonファイルのアップロード]**をクリックして、JSONファイルをアップロードし[tikv / tikv](https://github.com/tikv/tikv/tree/master/metrics/grafana) （ [pingcap / tidb](https://github.com/pingcap/tidb/tree/master/metrics/grafana) 、および[tikv / pd](https://github.com/tikv/pd/tree/master/metrics/grafana)からTiDB Grafana構成ファイルをダウンロードします）。
+3.  Click **Upload .json File** to upload a JSON file (Download TiDB Grafana configuration files from [pingcap/tidb](https://github.com/pingcap/tidb/tree/master/metrics/grafana), [tikv/tikv](https://github.com/tikv/tikv/tree/master/metrics/grafana), and [tikv/pd](https://github.com/tikv/pd/tree/master/metrics/grafana)).
 
-    > **ノート：**
+    > **Note:**
     >
-    > `tidb.json` 、PD、および`tikv_trouble_shooting.json`ダッシュボードの場合、対応する`tidb_summary.json`ファイルは`tikv_summary.json` 、および`pd.json` `tikv_details.json` 。
+    > For the TiKV, PD, and TiDB dashboards, the corresponding JSON files are `tikv_summary.json`, `tikv_details.json`, `tikv_trouble_shooting.json`, `pd.json`, `tidb.json`, and `tidb_summary.json`.
 
-4.  [**ロード]**をクリックします。
+4.  Click **Load**.
 
-5.  Prometheusデータソースを選択します。
+5.  Select a Prometheus data source.
 
-6.  [**インポート]**をクリックします。 Prometheusダッシュボードがインポートされます。
+6.  Click **Import**. A Prometheus dashboard is imported.
 
-## コンポーネントメトリックを表示する {#view-component-metrics}
+## View component metrics {#view-component-metrics}
 
-トップメニューの[**新しいダッシュボード**]をクリックして、表示するダッシュボードを選択します。
+Click **New dashboard** in the top menu and choose the dashboard you want to view.
 
 ![view dashboard](/media/view-dashboard.png)
 
-クラスタコンポーネントについて、次のメトリックを取得できます。
+You can get the following metrics for cluster components:
 
--   **TiDBサーバー：**
+-   **TiDB server:**
 
-    -   レイテンシとスループットを監視するためのクエリ処理時間
-    -   DDLプロセスの監視
-    -   TiKVクライアント関連の監視
-    -   PDクライアント関連の監視
+    -   Query processing time to monitor the latency and throughput
+    -   The DDL process monitoring
+    -   TiKV client related monitoring
+    -   PD client related monitoring
 
--   **PDサーバー：**
+-   **PD server:**
 
-    -   コマンドが実行される合計回数
-    -   特定のコマンドが失敗した合計回数
-    -   コマンドが成功する期間
-    -   コマンドが失敗する期間
-    -   コマンドが終了して結果を返す期間
+    -   The total number of times that the command executes
+    -   The total number of times that a certain command fails
+    -   The duration that a command succeeds
+    -   The duration that a command fails
+    -   The duration that a command finishes and returns result
 
--   **TiKVサーバー：**
+-   **TiKV server:**
 
-    -   ガベージコレクション（GC）の監視
-    -   TiKVコマンドが実行される合計回数
-    -   スケジューラがコマンドを実行する期間
-    -   ラフト提案コマンドの合計回数
-    -   Raftがコマンドを実行する期間
-    -   Raftコマンドが失敗した合計回数
-    -   Raftが準備完了状態を処理する合計回数
+    -   Garbage Collection (GC) monitoring
+    -   The total number of times that the TiKV command executes
+    -   The duration that Scheduler executes commands
+    -   The total number of times of the Raft propose command
+    -   The duration that Raft executes commands
+    -   The total number of times that Raft commands fail
+    -   The total number of times that Raft processes the ready state

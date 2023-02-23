@@ -3,24 +3,24 @@ title: Enable TLS Between TiDB Clients and Servers
 summary: Use the encrypted connection to ensure data security.
 ---
 
-# TiDBクライアントとサーバー間のTLSを有効にする {#enable-tls-between-tidb-clients-and-servers}
+# Enable TLS between TiDB Clients and Servers {#enable-tls-between-tidb-clients-and-servers}
 
-TiDBのサーバーとクライアント間の暗号化されていない接続がデフォルトで許可されます。これにより、チャネルトラフィックを監視するサードパーティは、クエリコンテンツ、クエリ結果などを含むがこれらに限定されない、サーバーとクライアント間で送受信されるデータを知ることができます。 。チャネルが信頼できない場合（クライアントがパブリックネットワークを介してTiDBサーバーに接続されている場合など）、暗号化されていない接続では情報が漏洩する傾向があります。この場合、セキュリティ上の理由から、暗号化された接続を要求することをお勧めします。
+Non-encrypted connection between TiDB's server and clients is allowed by default, which enables third parties that monitor channel traffic to know the data sent and received between the server and the client, including query content and query results. If a channel is untrustworthy (such as if the client is connected to the TiDB server via a public network), then a non-encrypted connection is prone to information leakage. In this case, for security reasons, it is recommended to require an encrypted connection.
 
-TiDBサーバーは、TLS（Transport Layer Security）に基づく暗号化された接続をサポートします。プロトコルはMySQL暗号化接続と一貫性があり、MySQLクライアント、MySQLシェル、MySQLドライバーなどの既存のMySQLクライアントによって直接サポートされます。 TLSはSSL（セキュリティ Sockets Layer）と呼ばれることもあります。 SSLプロトコルには[既知のセキュリティの脆弱性](https://en.wikipedia.org/wiki/Transport_Layer_Security)があるため、TiDBはSSLをサポートしていません。 TiDBは、TLSv1.0、TLSv1.1、TLSv1.2、およびTLSv1.3のプロトコルをサポートしています。
+The TiDB server supports the encrypted connection based on the TLS (Transport Layer Security). The protocol is consistent with MySQL encrypted connections and is directly supported by existing MySQL clients such as MySQL Client, MySQL Shell and MySQL drivers. TLS is sometimes referred to as SSL (Secure Sockets Layer). Because the SSL protocol has [known security vulnerabilities](https://en.wikipedia.org/wiki/Transport_Layer_Security), TiDB does not support SSL. TiDB supports the following protocols: TLSv1.0, TLSv1.1, TLSv1.2 and TLSv1.3.
 
-暗号化された接続を使用する場合、接続には次のセキュリティプロパティがあります。
+When an encrypted connection is used, the connection has the following security properties:
 
--   機密性：盗聴を避けるためにトラフィックの平文は暗号化されています
--   整合性：トラフィックの平文を改ざんすることはできません
--   認証:(オプション）クライアントはサーバーのIDを確認でき、サーバーはクライアントのIDを確認して中間者攻撃を回避できます
+-   Confidentiality: the traffic plaintext is encrypted to avoid eavesdropping
+-   Integrity: the traffic plaintext cannot be tampered
+-   Authentication: (optional) the client can verify the identity of the server and the server can verify the identity of the client to avoid man-in-the-middle attacks
 
-TLSで保護された接続を使用するには、最初にTLSを有効にするようにTiDBサーバーを構成する必要があります。次に、TLSを使用するようにクライアントアプリケーションを構成する必要があります。サーバーでTLSサポートが正しく構成されている場合、ほとんどのクライアントライブラリはTLSを自動的に有効にします。
+To use connections secured with TLS, you first need to configure the TiDB server to enable TLS. Then you need to configure the client application to use TLS. Most client libraries enable TLS automatically when the server has TLS support configured correctly.
 
-MySQLと同様に、TiDBは同じTCPポートでTLS接続と非TLS接続を許可します。 TLSが有効になっているTiDBサーバーの場合、暗号化された接続を介してTiDBサーバーに安全に接続するか、暗号化されていない接続を使用するかを選択できます。次の方法を使用して、安全な接続の使用を要求できます。
+Similar to MySQL, TiDB allows TLS and non-TLS connections on the same TCP port. For a TiDB server with TLS enabled, you can choose to securely connect to the TiDB server through an encrypted connection, or to use an unencrypted connection. You can use the following ways to require the use of secure connections:
 
--   すべてのユーザーにTiDBサーバーへの安全な接続を要求するようにシステム変数`require_secure_transport`を構成します。
--   ユーザーを作成するときは`REQUIRE SSL`を指定し（ `create user` ）、既存のユーザーを変更するときは（ `alter user` ）、指定したユーザーがTiDBにアクセスするために暗号化された接続を使用する必要があることを指定します。以下は、ユーザーの作成例です。
+-   Configure the system variable `require_secure_transport` to require secure connections to the TiDB server for all users.
+-   Specify `REQUIRE SSL` when you create a user (`create user`), or modify an existing user (`alter user`), which is to specify that specified users must use the encrypted connection to access TiDB. The following is an example of creating a user:
 
     {{< copyable "" >}}
 
@@ -28,67 +28,67 @@ MySQLと同様に、TiDBは同じTCPポートでTLS接続と非TLS接続を許�
     CREATE USER 'u1'@'%' IDENTIFIED BY 'my_random_password' REQUIRE SSL;
     ```
 
-> **ノート：**
+> **Note:**
 >
-> ログインユーザーが[ログイン用のTiDB証明書ベースの認証](/certificate-authentication.md#configure-the-user-certificate-information-for-login-verification)を使用して構成した場合、ユーザーはTiDBへの暗号化された接続を有効にする必要があります。
+> If the login user has configured using the [TiDB Certificate-Based Authentication for Login](/certificate-authentication.md#configure-the-user-certificate-information-for-login-verification), the user is implicitly required to enable the encrypted connection to TiDB.
 
-## 安全な接続を使用するようにTiDBサーバーを構成する {#configure-tidb-server-to-use-secure-connections}
+## Configure TiDB server to use secure connections {#configure-tidb-server-to-use-secure-connections}
 
-安全な接続を有効にするための関連パラメーターについては、以下の説明を参照してください。
+See the following descriptions about the related parameters to enable secure connections:
 
--   [`auto-tls`](/tidb-configuration-file.md#auto-tls) ：自動証明書生成を有効にします（v5.2.0以降）
--   [`ssl-cert`](/tidb-configuration-file.md#ssl-cert) ：SSL証明書のファイルパスを指定します
--   [`ssl-key`](/tidb-configuration-file.md#ssl-key) ：証明書と一致する秘密鍵を指定します
--   [`ssl-ca`](/tidb-configuration-file.md#ssl-ca) :(オプション）信頼できるCA証明書のファイルパスを指定します
--   [`tls-version`](/tidb-configuration-file.md#tls-version) :(オプション）最小TLSバージョンを指定します（例：「TLSv1.2」）
+-   [`auto-tls`](/tidb-configuration-file.md#auto-tls): enables automatic certificate generation (since v5.2.0)
+-   [`ssl-cert`](/tidb-configuration-file.md#ssl-cert): specifies the file path of the SSL certificate
+-   [`ssl-key`](/tidb-configuration-file.md#ssl-key): specifies the private key that matches the certificate
+-   [`ssl-ca`](/tidb-configuration-file.md#ssl-ca): (optional) specifies the file path of the trusted CA certificate
+-   [`tls-version`](/tidb-configuration-file.md#tls-version): (optional) specifies the minimum TLS version, e.g. "TLSv1.2"
 
-`auto-tls`は安全な接続を許可しますが、クライアント証明書の検証は提供しません。証明書の検証、および証明書の生成方法を制御するには、以下の`ssl-cert` 、および`ssl-key`変数の構成に関するアドバイスを参照して`ssl-ca` 。
+`auto-tls` allows secure connections but does not provide client certificate validation. For certificate validation, and to control how certificates are generated, see the advice on configuring the `ssl-cert`, `ssl-key` and `ssl-ca` variables below.
 
-TiDBサーバーで独自の証明書を使用して安全な接続を有効にするには、TiDBサーバーを起動するときに、構成ファイルで`ssl-cert`と`ssl-key`の両方のパラメーターを指定する必要があります。クライアント認証用に`ssl-ca`のパラメーターを指定することもできます（ [認証を有効にする](#enable-authentication)を参照）。
+To enable secure connections with your own certificates in the TiDB server, you must specify both of the `ssl-cert` and `ssl-key` parameters in the configuration file when you start the TiDB server. You can also specify the `ssl-ca` parameter for client authentication (see [Enable authentication](#enable-authentication)).
 
-パラメータで指定されたすべてのファイルは、PEM（Privacy Enhanced Mail）形式です。現在、TiDBはパスワードで保護された秘密鍵のインポートをサポートしていないため、パスワードなしで秘密鍵ファイルを提供する必要があります。証明書または秘密鍵が無効な場合、TiDBサーバーは通常どおり起動しますが、クライアントは暗号化された接続を介してTiDBサーバーに接続できません。
+All the files specified by the parameters are in PEM (Privacy Enhanced Mail) format. Currently, TiDB does not support the import of a password-protected private key, so it is required to provide a private key file without a password. If the certificate or private key is invalid, the TiDB server starts as usual, but the client cannot connect to the TiDB server through an encrypted connection.
 
-証明書パラメータが正しい場合、TiDBは起動時に`secure connection is enabled`を出力します。それ以外の場合は、 `secure connection is NOT ENABLED`を出力します。
+If the certificate parameters are correct, TiDB outputs `secure connection is enabled` when started; otherwise, it outputs `secure connection is NOT ENABLED`.
 
-v5.2.0より前のバージョンのTiDBの場合、 `mysql_ssl_rsa_setup --datadir=./certs`を使用して証明書を生成できます。 `mysql_ssl_rsa_setup`ツールはMySQLサーバーの一部です。
+For TiDB versions earlier than v5.2.0, you can use `mysql_ssl_rsa_setup --datadir=./certs` to generate certficates. The `mysql_ssl_rsa_setup` tool is a part of MySQL Server.
 
-## 暗号化された接続を使用するようにMySQLクライアントを構成する {#configure-the-mysql-client-to-use-encrypted-connections}
+## Configure the MySQL client to use encrypted connections {#configure-the-mysql-client-to-use-encrypted-connections}
 
-MySQL 5.7以降のバージョンのクライアントは、デフォルトで暗号化された接続を確立しようとします。サーバーが暗号化された接続をサポートしていない場合、サーバーは自動的に暗号化されていない接続に戻ります。バージョン5.7より前のMySQLのクライアントは、デフォルトで暗号化されていない接続を使用します。
+The client of MySQL 5.7 or later versions attempts to establish an encrypted connection by default. If the server does not support encrypted connections, it automatically returns to unencrypted connections. The client of MySQL earlier than version 5.7 uses the unencrypted connection by default.
 
-次の`--ssl-mode`つのパラメータを使用して、クライアントの接続動作を変更できます。
+You can change the connection behavior of the client using the following `--ssl-mode` parameters:
 
--   `--ssl-mode=REQUIRED` ：クライアントには暗号化された接続が必要です。サーバー側が暗号化された接続をサポートしていない場合、接続を確立できません。
--   `--ssl-mode`つのパラメーターがない場合：クライアントは暗号化された接続を使用しようとしますが、サーバー側が暗号化された接続をサポートしていない場合、暗号化された接続を確立できません。次に、クライアントは暗号化されていない接続を使用します。
--   `--ssl-mode=DISABLED` ：クライアントは暗号化されていない接続を使用します。
+-   `--ssl-mode=REQUIRED`: The client requires an encrypted connection. The connection cannot be established if the server side does not support encrypted connections.
+-   In the absence of the `--ssl-mode` parameter: The client attempts to use an encrypted connection, but the encrypted connection cannot be established if the server side does not support encrypted connections. Then the client uses an unencrypted connection.
+-   `--ssl-mode=DISABLED`: The client uses an unencrypted connection.
 
-MySQL 8.0クライアントには、このパラメーターに加えて2つのSSLモードがあります。
+MySQL 8.0 clients have two SSL modes in addition to this parameter:
 
--   `--ssl-mode=VERIFY_CA` ： `--ssl-ca`を必要とするCAに対して、サーバーからの証明書を検証します。
--   `--ssl-mode=VERIFY_IDENTITY` ： `VERIFY_CA`と同じですが、接続先のホスト名が証明書と一致するかどうかも検証します。
+-   `--ssl-mode=VERIFY_CA`: Validates the certificate from the server against the CA that requires `--ssl-ca`.
+-   `--ssl-mode=VERIFY_IDENTITY`: The same as `VERIFY_CA`, but also validating whether the hostname you are connecting to matches the certificate.
 
-詳細については、MySQLの[暗号化された接続のクライアント側のConfiguration / コンフィグレーション](https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html#using-encrypted-connections-client-side-configuration)を参照してください。
+For more information, see [Client-Side Configuration for Encrypted Connections](https://dev.mysql.com/doc/refman/5.7/en/using-encrypted-connections.html#using-encrypted-connections-client-side-configuration) in MySQL.
 
-## 認証を有効にする {#enable-authentication}
+## Enable authentication {#enable-authentication}
 
-TiDBサーバーまたはMySQLクライアントで`ssl-ca`パラメーターが指定されていない場合、クライアントまたはサーバーはデフォルトで認証を実行せず、man-in-the-middle攻撃を防ぐことができません。たとえば、クライアントは偽装されたクライアントに「安全に」接続する場合があります。サーバーとクライアントでの認証用に`ssl-ca`のパラメーターを構成できます。通常、サーバーを認証するだけで済みますが、クライアントを認証してセキュリティをさらに強化することもできます。
+If the `ssl-ca` parameter is not specified in the TiDB server or MySQL client, the client or the server does not perform authentication by default and cannot prevent man-in-the-middle attack. For example, the client might "securely" connect to a disguised client. You can configure the `ssl-ca` parameter for authentication in the server and client. Generally, you only need to authenticate the server, but you can also authenticate the client to further enhance the security.
 
--   MySQLクライアントからTiDBサーバーを認証するには：
-    1.  TiDBサーバーで`ssl-cert`と`ssl-key`のパラメーターを指定します。
-    2.  MySQLクライアントで`--ssl-ca`つのパラメータを指定します。
-    3.  少なくともMySQLクライアントでは`--ssl-mode`から`VERIFY_CA`を指定してください。
-    4.  TiDBサーバーで構成された証明書（ `ssl-cert` ）が、クライアント`--ssl-ca`パラメーターで指定されたCAによって署名されていることを確認してください。そうしないと、認証は失敗します。
+-   To authenticate the TiDB server from the MySQL client:
+    1.  Specify the `ssl-cert` and `ssl-key` parameters in the TiDB server.
+    2.  Specify the `--ssl-ca` parameter in the MySQL client.
+    3.  Specify the `--ssl-mode` to `VERIFY_CA` at least in the MySQL client.
+    4.  Make sure that the certificate (`ssl-cert`) configured in the TiDB server is signed by the CA specified by the client `--ssl-ca` parameter; otherwise, the authentication fails.
 
--   TiDBサーバーからMySQLクライアントを認証するには：
-    1.  TiDBサーバーで`ssl-cert` 、および`ssl-key`パラメーターを指定し`ssl-ca` 。
-    2.  クライアントで`--ssl-cert`と`--ssl-key`のパラメーターを指定します。
-    3.  サーバー構成の証明書とクライアント構成の証明書の両方が、サーバーによって指定された`ssl-ca`によって署名されていることを確認してください。
+-   To authenticate the MySQL client from the TiDB server:
+    1.  Specify the `ssl-cert`, `ssl-key`, and `ssl-ca` parameters in the TiDB server.
+    2.  Specify the `--ssl-cert` and `--ssl-key` parameters in the client.
+    3.  Make sure the server-configured certificate and the client-configured certificate are both signed by the `ssl-ca` specified by the server.
 
 <!---->
 
--   相互認証を実行するには、上記の両方の要件を満たします。
+-   To perform mutual authentication, meet both of the above requirements.
 
-デフォルトでは、サーバーからクライアントへの認証はオプションです。クライアントがTLSハンドシェイク中に識別証明書を提示しなくても、TLS接続を確立できます。また、ユーザーの作成時（ `create user` ）、権限の付与時（ `grant` ）、または既存のユーザーの変更時（ `alter user` ）に`require x509`を指定して、クライアントの認証を要求することもできます。以下は、ユーザーの作成例です。
+By default, the server-to-client authentication is optional. Even if the client does not present its certificate of identification during the TLS handshake, the TLS connection can be still established. You can also require the client to be authenticated by specifying `require x509` when creating a user (`create user`), granting permissions (`grant`), or modifying an existing user (`alter user`). The following is an example of creating a user:
 
 {{< copyable "" >}}
 
@@ -96,15 +96,15 @@ TiDBサーバーまたはMySQLクライアントで`ssl-ca`パラメーターが
 create user 'u1'@'%'  require x509;
 ```
 
-> **ノート：**
+> **Note:**
 >
-> ログインユーザーが[ログイン用のTiDB証明書ベースの認証](/certificate-authentication.md#configure-the-user-certificate-information-for-login-verification)を使用して構成した場合、ユーザーはTiDBへの暗号化された接続を有効にする必要があります。
+> If the login user has configured using the [TiDB Certificate-Based Authentication for Login](/certificate-authentication.md#configure-the-user-certificate-information-for-login-verification), the user is implicitly required to enable the encrypted connection to TiDB.
 
-## 現在の接続が暗号化を使用しているかどうかを確認します {#check-whether-the-current-connection-uses-encryption}
+## Check whether the current connection uses encryption {#check-whether-the-current-connection-uses-encryption}
 
-`SHOW STATUS LIKE "%Ssl%";`ステートメントを使用して、暗号化が使用されているかどうか、暗号化された接続で使用されている暗号化プロトコル、TLSバージョン番号など、現在の接続の詳細を取得します。
+Use the `SHOW STATUS LIKE "%Ssl%";` statement to get the details of the current connection, including whether encryption is used, the encryption protocol used by encrypted connections and the TLS version number.
 
-暗号化された接続での結果の次の例を参照してください。結果は、クライアントでサポートされているさまざまなTLSバージョンまたは暗号化プロトコルに応じて変わります。
+See the following example of the result in an encrypted connection. The results change according to different TLS versions or encryption protocols supported by the client.
 
 ```
 mysql> SHOW STATUS LIKE "%Ssl%";
@@ -115,7 +115,7 @@ mysql> SHOW STATUS LIKE "%Ssl%";
 ......
 ```
 
-公式のMySQLクライアントの場合、 `STATUS`または`\s`ステートメントを使用して接続ステータスを表示することもできます。
+For the official MySQL client, you can also use the `STATUS` or `\s` statement to view the connection status:
 
 ```
 mysql> \s
@@ -124,24 +124,24 @@ SSL: Cipher in use is ECDHE-RSA-AES128-GCM-SHA256
 ...
 ```
 
-## サポートされているTLSバージョン、キー交換プロトコル、および暗号化アルゴリズム {#supported-tls-versions-key-exchange-protocols-and-encryption-algorithms}
+## Supported TLS versions, key exchange protocols, and encryption algorithms {#supported-tls-versions-key-exchange-protocols-and-encryption-algorithms}
 
-TiDBでサポートされているTLSバージョン、キー交換プロトコル、および暗号化アルゴリズムは、公式のGolangライブラリによって決定されます。
+The TLS versions, key exchange protocols and encryption algorithms supported by TiDB are determined by the official Golang libraries.
 
-オペレーティングシステムと使用しているクライアントライブラリの暗号化ポリシーも、サポートされているプロトコルと暗号スイートのリストに影響を与える可能性があります。
+The crypto policy for your operating system and the client library you are using might also impact the list of supported protocols and cipher suites.
 
-### サポートされているTLSバージョン {#supported-tls-versions}
+### Supported TLS versions {#supported-tls-versions}
 
--   TLSv1.0（デフォルトでは無効）
+-   TLSv1.0 (disabled by default)
 -   TLSv1.1
 -   TLSv1.2
 -   TLSv1.3
 
-`tls-version`構成オプションを使用して、使用できるTLSバージョンを制限できます。
+The `tls-version` configuration option can be used to limit the TLS versions that can be used.
 
-使用できる実際のTLSバージョンは、OS暗号化ポリシー、MySQLクライアントのバージョン、およびクライアントが使用するSSL/TLSライブラリによって異なります。
+The actual TLS versions that can be used depend on the OS crypto policy, MySQL client version and the SSL/TLS library that is used by the client.
 
-### サポートされている鍵交換プロトコルと暗号化アルゴリズム {#supported-key-exchange-protocols-and-encryption-algorithms}
+### Supported key exchange protocols and encryption algorithms {#supported-key-exchange-protocols-and-encryption-algorithms}
 
 -   TLS_RSA_WITH_AES_128_CBC_SHA
 -   TLS_RSA_WITH_AES_256_CBC_SHA
@@ -164,15 +164,15 @@ TiDBでサポートされているTLSバージョン、キー交換プロトコ�
 -   TLS_AES_256_GCM_SHA384
 -   TLS_CHACHA20_POLY1305_SHA256
 
-## 証明書、キー、およびCAをリロードします {#reload-certificate-key-and-ca}
+## Reload certificate, key, and CA {#reload-certificate-key-and-ca}
 
-証明書、キー、またはCAを置き換えるには、最初に対応するファイルを置き換え、次に実行中のTiDBインスタンスで[`ALTER INSTANCE RELOAD TLS`](/sql-statements/sql-statement-alter-instance.md)ステートメントを実行して、元の構成から証明書（ [`ssl-cert`](/tidb-configuration-file.md#ssl-cert) ）、キー（ [`ssl-key`](/tidb-configuration-file.md#ssl-key) ）、およびCA（ [`ssl-ca`](/tidb-configuration-file.md#ssl-ca) ）を再ロードします。道。このように、TiDBインスタンスを再起動する必要はありません。
+To replace the certificate, the key or CA, first replace the corresponding files, then execute the [`ALTER INSTANCE RELOAD TLS`](/sql-statements/sql-statement-alter-instance.md) statement on the running TiDB instance to reload the certificate ([`ssl-cert`](/tidb-configuration-file.md#ssl-cert)), the key ([`ssl-key`](/tidb-configuration-file.md#ssl-key)), and the CA ([`ssl-ca`](/tidb-configuration-file.md#ssl-ca)) from the original configuration path. In this way, you do not need to restart the TiDB instance.
 
-新しくロードされた証明書、キー、およびCAは、ステートメントが正常に実行された後に確立された接続で有効になります。ステートメントの実行前に確立された接続は影響を受けません。
+The newly loaded certificate, key, and CA take effect on the connection that is established after the statement is successfully executed. The connection established before the statement execution is not affected.
 
-## モニタリング {#monitoring}
+## Monitoring {#monitoring}
 
-TiDB v5.2.0以降では、 `Ssl_server_not_after`と`Ssl_server_not_before`のステータス変数を使用して、証明書の有効性の開始日と終了日を監視できます。
+Since TiDB v5.2.0, you can use the `Ssl_server_not_after` and `Ssl_server_not_before` status variables to monitor the start and end dates of the validity of the certificate.
 
 ```sql
 SHOW GLOBAL STATUS LIKE 'Ssl\_server\_not\_%';
@@ -188,6 +188,6 @@ SHOW GLOBAL STATUS LIKE 'Ssl\_server\_not\_%';
 2 rows in set (0.0076 sec)
 ```
 
-## も参照してください {#see-also}
+## See also {#see-also}
 
--   [TiDBコンポーネント間のTLSを有効にする](/enable-tls-between-components.md) 。
+-   [Enable TLS Between TiDB Components](/enable-tls-between-components.md).

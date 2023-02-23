@@ -3,101 +3,105 @@ title: CRUD SQL in TiDB
 summary: A brief introduction to TiDB's CURD SQL.
 ---
 
-# TiDBのCRUDSQL {#crud-sql-in-tidb}
+# CRUD SQL in TiDB {#crud-sql-in-tidb}
 
-このドキュメントでは、TiDBのCURDSQLの使用方法を簡単に紹介します。
+This document briefly introduces how to use TiDB's CURD SQL.
 
-## 始める前に {#before-you-start}
+## Before you start {#before-you-start}
 
-TiDBクラスタに接続していることを確認してください。そうでない場合は、 [TiDB CloudでTiDBクラスターを構築する（DevTier）](/develop/dev-guide-build-cluster-in-cloud.md#step-1-create-a-free-cluster)を参照して無料のクラスタを作成します。
+Please make sure you are connected to a TiDB cluster. If not, refer to [Build a TiDB Cluster in TiDB Cloud (Serverless Tier)](/develop/dev-guide-build-cluster-in-cloud.md#step-1-create-a-serverless-tier-cluster) to create a Serverless Tier cluster.
 
-## TiDBでSQLを探索する {#explore-sql-with-tidb}
+## Explore SQL with TiDB {#explore-sql-with-tidb}
 
-> **ノート：**
+> **Note:**
 >
-> このドキュメントでは、 [TiDBでSQLを探索する](/basic-sql-operations.md)を参照して簡略化しています。詳細については、 [TiDBでSQLを探索する](/basic-sql-operations.md)を参照してください。
+> This document references and simplifies [Explore SQL with TiDB](/basic-sql-operations.md). For more details, see [Explore SQL with TiDB](/basic-sql-operations.md).
 
-TiDBはMySQLと互換性があり、ほとんどの場合、MySQLステートメントを直接使用できます。サポートされていない機能については、 [MySQLとの互換性](/mysql-compatibility.md#unsupported-features)を参照してください。
+TiDB is compatible with MySQL, you can use MySQL statements directly in most cases. For unsupported features, see [Compatibility with MySQL](/mysql-compatibility.md#unsupported-features).
 
-SQLを試し、MySQLクエリとのTiDBの互換性をテストするには、次のようにします[TiDBをインストールせずに、Webブラウザで直接実行します](https://tour.tidb.io/) 。また、最初にTiDBクラスタをデプロイしてから、そのクラスターでSQLステートメントを実行することもできます。
+To experiment with SQL and test out TiDB compatibility with MySQL queries, you can try Chat2Query (beta) in your [TiDB Cloud console](https://tidbcloud.com/). To access Chat2Query, go to the [**Clusters**](https://tidbcloud.com/console/clusters) page of your project, click your cluster name, and then click **Chat2Query** in the left navigation pane. In Chat2Query, you can either let AI generate SQL queries automatically or write SQL queries manually, and run SQL queries against databases without a terminal.
 
-このページでは、DDL、DML、CRUD操作などの基本的なTiDBSQLステートメントについて説明します。 TiDBステートメントの完全なリストについては、 [TiDBSQL構文図](https://pingcap.github.io/sqlgram/)を参照してください。
+> **Note:**
+>
+> Chat2Query currently has limited support on SQL statements. DDLs such as `CREATE TABLE` or `DROP TABLE` are not supported yet.
+>
+> <CustomContent platform="tidb">
+>
+> If you want to explore all SQL statements with TiDB, you can deploy a TiDB cluster and then run SQL statements in it.
+>
+> </CustomContent>
+>
+> <CustomContent platform="tidb-cloud">
+>
+> If you want to explore all SQL statements with TiDB, you can [connect to your TiDB Cloud cluster](/tidb-cloud/connect-to-tidb-cluster.md) and then run SQL statements from a SQL client.
+>
+> </CustomContent>
 
-## カテゴリー {#category}
+This page walks you through the basic TiDB SQL statements such as DDL, DML, and CRUD operations. For a complete list of TiDB statements, see [TiDB SQL Syntax Diagram](https://pingcap.github.io/sqlgram/).
 
-SQLは、その機能に応じて次の4つのタイプに分類されます。
+## Category {#category}
 
--   **DDL（データ定義言語）** ：データベース、テーブル、ビュー、インデックスなどのデータベースオブジェクトを定義するために使用されます。
+SQL is divided into the following 4 types according to their functions:
 
--   **DML（データ操作言語）** ：アプリケーション関連のレコードを操作するために使用されます。
+-   **DDL (Data Definition Language)**: It is used to define database objects, including databases, tables, views, and indexes.
 
--   **DQL（データクエリ言語）** ：条件付きフィルタリング後にレコードをクエリするために使用されます。
+-   **DML (Data Manipulation Language)**: It is used to manipulate application related records.
 
--   **DCL（データ制御言語）** ：アクセス権限とセキュリティレベルを定義するために使用されます。
+-   **DQL (Data Query Language)**: It is used to query the records after conditional filtering.
 
-以下は主にDMLとDQLを紹介します。 DDLおよびDCLの詳細については、 [TiDBでSQLを探索する](/basic-sql-operations.md)または[TiDBSQL構文の詳細な説明](https://pingcap.github.io/sqlgram/)を参照してください。
+-   **DCL (Data Control Language)**: It is used to define access privileges and security levels.
 
-## データ操作言語 {#data-manipulation-language}
+The following mainly introduces DML and DQL. For more information about DDL and DCL, see [Explore SQL with TiDB](/basic-sql-operations.md) or [TiDB SQL syntax detailed explanation](https://pingcap.github.io/sqlgram/).
 
-一般的なDML機能は、テーブルレコードの追加、変更、および削除です。対応するコマンドは`INSERT` 、および`UPDATE` `DELETE` 。
+## Data Manipulation Language {#data-manipulation-language}
 
-テーブルにデータを挿入するには、次の`INSERT`ステートメントを使用します。
+Common DML features are adding, modifying, and deleting table records. The corresponding commands are `INSERT`, `UPDATE`, and `DELETE`.
 
-{{< copyable "" >}}
+To insert data into a table, use the `INSERT` statement:
 
 ```sql
 INSERT INTO person VALUES(1,'tom','20170912');
 ```
 
-一部のフィールドのデータを含むレコードをテーブルに挿入するには、次の`INSERT`ステートメントを使用します。
-
-{{< copyable "" >}}
+To insert a record containing data of some fields into a table, use the `INSERT` statement:
 
 ```sql
 INSERT INTO person(id,name) VALUES('2','bob');
 ```
 
-テーブル内のレコードの一部のフィールドを更新するには、 `UPDATE`ステートメントを使用します。
-
-{{< copyable "" >}}
+To update some fields of a record in a table, use the `UPDATE` statement:
 
 ```sql
 UPDATE person SET birthday='20180808' WHERE id=2;
 ```
 
-テーブル内のデータを削除するには、次の`DELETE`ステートメントを使用します。
-
-{{< copyable "" >}}
+To delete the data in a table, use the `DELETE` statement:
 
 ```sql
 DELETE FROM person WHERE id=2;
 ```
 
-> **ノート：**
+> **Note:**
 >
-> フィルタとして`WHERE`句を含まない`UPDATE`および`DELETE`ステートメントは、テーブル全体で機能します。
+> The `UPDATE` and `DELETE` statements without the `WHERE` clause as a filter operate on the entire table.
 
-## データクエリ言語 {#data-query-language}
+## Data Query Language {#data-query-language}
 
-DQLは、1つまたは複数のテーブルから目的のデータ行を取得するために使用されます。
+DQL is used to retrieve the desired data rows from a table or multiple tables.
 
-テーブル内のデータを表示するには、 `SELECT`ステートメントを使用します。
-
-{{< copyable "" >}}
+To view the data in a table, use the `SELECT` statement:
 
 ```sql
 SELECT * FROM person;
 ```
 
-特定の列を照会するには、 `SELECT`キーワードの後に列名を追加します。
-
-{{< copyable "" >}}
+To query a specific column, add the column name after the `SELECT` keyword:
 
 ```sql
 SELECT name FROM person;
 ```
 
-結果は次のとおりです。
+The result is as follows:
 
 ```
 +------+
@@ -108,9 +112,7 @@ SELECT name FROM person;
 1 rows in set (0.00 sec)
 ```
 
-`WHERE`句を使用して、条件に一致するすべてのレコードをフィルタリングし、結果を返します。
-
-{{< copyable "" >}}
+Use the `WHERE` clause to filter all records that match the conditions and then return the result:
 
 ```sql
 SELECT * FROM person WHERE id < 5;

@@ -3,13 +3,13 @@ title: Export and Import Data Sources and Task Configuration of Clusters
 summary: Learn how to export and import data sources and task configuration of clusters when you use DM.
 ---
 
-# データソースのエクスポートとインポート、およびクラスターのタスクConfiguration / コンフィグレーション {#export-and-import-data-sources-and-task-configuration-of-clusters}
+# Export and Import Data Sources and Task Configuration of Clusters {#export-and-import-data-sources-and-task-configuration-of-clusters}
 
-`config`コマンドは、クラスターのデータソースとタスク構成をエクスポートおよびインポートするために使用されます。
+`config` command is used to export and import data sources and task configuration of clusters.
 
-> **ノート：**
+> **Note:**
 >
-> v2.0.5より前のクラスターの場合、dmctl v2.0.5以降を使用して、データソースおよびタスク構成ファイルをエクスポートおよびインポートできます。
+> For clusters earlier than v2.0.5, you can use dmctl v2.0.5 or later to export and import the data source and task configuration files.
 
 {{< copyable "" >}}
 
@@ -28,9 +28,9 @@ Global Flags:
 Use "dmctl config [command] --help" for more information about a command.
 ```
 
-## クラスターのデータソースとタスク構成をエクスポートします {#export-the-data-source-and-task-configuration-of-clusters}
+## Export the data source and task configuration of clusters {#export-the-data-source-and-task-configuration-of-clusters}
 
-`export`のコマンドを使用して、クラスターのデータソースとタスク構成を指定したファイルにエクスポートできます。
+You can use `export` command to export the data source and task configuration of clusters to specified files.
 
 {{< copyable "" >}}
 
@@ -38,14 +38,14 @@ Use "dmctl config [command] --help" for more information about a command.
 config export [--dir directory]
 ```
 
-### パラメータの説明 {#parameter-explanation}
+### Parameter explanation {#parameter-explanation}
 
--   `dir` ：
-    -   オプション
-    -   エクスポートするファイルパスを指定します
-    -   デフォルト値は`./configs`です
+-   `dir`:
+    -   optional
+    -   specifies the file path for exporting
+    -   the default value is `./configs`
 
-### 返された結果 {#returned-results}
+### Returned results {#returned-results}
 
 {{< copyable "" >}}
 
@@ -57,9 +57,9 @@ config export -d /tmp/configs
 export configs to directory `/tmp/configs` succeed
 ```
 
-## クラスターのデータソースとタスク構成をインポートします {#import-the-data-source-and-task-configuration-of-clusters}
+## import the data source and task configuration of clusters {#import-the-data-source-and-task-configuration-of-clusters}
 
-`import`のコマンドを使用して、指定したファイルからクラスターのデータソースとタスク構成をインポートできます。
+You can use `import` command to import the data source and task configuration of clusters from specified files.
 
 {{< copyable "" >}}
 
@@ -67,18 +67,18 @@ export configs to directory `/tmp/configs` succeed
 config import [--dir directory]
 ```
 
-> **ノート：**
+> **Note:**
 >
-> v2.0.2以降のクラスターの場合、現在、リレーワーカーに関連する構成を自動的にインポートすることはサポートされていません。 `start-relay`のコマンドを使用して手動で[リレーログを開始](/dm/relay-log.md#start-and-stop-the-relay-log-feature)を実行できます。
+> For clusters later than v2.0.2, currently, it is not supported to automatically import the configuration related to relay worker. You can use `start-relay` command to manually [start relay log](/dm/relay-log.md#start-and-stop-the-relay-log-feature).
 
-### パラメータの説明 {#parameter-explanation}
+### Parameter explanation {#parameter-explanation}
 
--   `dir` ：
-    -   オプション
-    -   インポートするファイルパスを指定します
-    -   デフォルト値は`./configs`です
+-   `dir`:
+    -   optional
+    -   specifies the file path for importing
+    -   the default value is `./configs`
 
-### 返された結果 {#returned-results}
+### Returned results {#returned-results}
 
 {{< copyable "" >}}
 

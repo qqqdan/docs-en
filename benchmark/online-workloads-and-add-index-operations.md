@@ -3,52 +3,52 @@ title: Interaction Test on Online Workloads and `ADD INDEX` Operations
 summary: This document tests the interaction effects between online workloads and `ADD INDEX` operations.
 ---
 
-# オンラインワークロードと<code>ADD INDEX</code>操作の相互作用テスト {#interaction-test-on-online-workloads-and-code-add-index-code-operations}
+# Interaction Test on Online Workloads and <code>ADD INDEX</code> Operations {#interaction-test-on-online-workloads-and-code-add-index-code-operations}
 
-## テスト目的 {#test-purpose}
+## Test purpose {#test-purpose}
 
-このドキュメントでは、OLTPシナリオでのオンラインワークロードと`ADD INDEX`の操作の間の相互作用の影響をテストします。
+This document tests the interaction effects between online workloads and `ADD INDEX` operations in the OLTP scenario.
 
-## テストバージョン、時間、場所 {#test-version-time-and-place}
+## Test version, time, and place {#test-version-time-and-place}
 
-TiDBバージョン：v3.0.1
+TiDB version: v3.0.1
 
-時間：2019年7月
+Time: July, 2019
 
-場所：北京
+Place: Beijing
 
-## テスト環境 {#test-environment}
+## Test environment {#test-environment}
 
-このテストは、3つのTiDBインスタンス、3つのTiKVインスタンス、および3つのPDインスタンスでデプロイされたKubernetesクラスタで実行されます。
+This test runs in a Kubernetes cluster deployed with 3 TiDB instances, 3 TiKV instances and 3 PD instances.
 
-### バージョン情報 {#version-information}
+### Version information {#version-information}
 
-| 成分   | GitHash                                    |
-| :--- | :----------------------------------------- |
-| TiDB | `9e4e8da3c58c65123db5f26409759fe1847529f8` |
-| TiKV | `4151dc8878985df191b47851d67ca21365396133` |
-| PD   | `811ce0b9a1335d1b2a049fd97ef9e186f1c9efc1` |
+| Component | GitHash                                    |
+| :-------- | :----------------------------------------- |
+| TiDB      | `9e4e8da3c58c65123db5f26409759fe1847529f8` |
+| TiKV      | `4151dc8878985df191b47851d67ca21365396133` |
+| PD        | `811ce0b9a1335d1b2a049fd97ef9e186f1c9efc1` |
 
-Sysbenchバージョン：1.0.17
+Sysbench version: 1.0.17
 
-### TiDBパラメータ設定 {#tidb-parameter-configuration}
+### TiDB parameter configuration {#tidb-parameter-configuration}
 
-TiDB、TiKV、およびPDはすべて、デフォルトの[TiDB Operator](https://github.com/pingcap/tidb-operator)構成を使用します。
+TiDB, TiKV and PD all use the default [TiDB Operator](https://github.com/pingcap/tidb-operator) configuration.
 
-### クラスタートポロジー {#cluster-topology}
+### Cluster topology {#cluster-topology}
 
-| マシンIP                                  | デプロイメントインスタンス |
-| :------------------------------------- | :------------ |
-| 172.31.8.8                             | Sysbench      |
-| 172.31.7.69、172.31.5.152、172.31.11.133 | PD            |
-| 172.31.4.172、172.31.1.155、172.31.9.210 | TiKV          |
-| 172.31.7.80、172.31.5.163、172.31.11.123 | TiDB          |
+| Machine IP                               | Deployment instance |
+| :--------------------------------------- | :------------------ |
+| 172.31.8.8                               | Sysbench            |
+| 172.31.7.69, 172.31.5.152, 172.31.11.133 | PD                  |
+| 172.31.4.172, 172.31.1.155, 172.31.9.210 | TiKV                |
+| 172.31.7.80, 172.31.5.163, 172.31.11.123 | TiDB                |
 
-### Sysbenchを使用したオンラインワークロードシミュレーション {#online-workloads-simulation-using-sysbench}
+### Online workloads simulation using Sysbench {#online-workloads-simulation-using-sysbench}
 
-Sysbenchを使用**して、2,000,000行のデータを含むテーブルを**Kubernetesクラスタにインポートします。
+Use Sysbench to import **a table with 2,000,000 rows of data** into the Kubernetes cluster.
 
-次のコマンドを実行して、データをインポートします。
+Execute the following command to import data:
 
 {{< copyable "" >}}
 
@@ -64,7 +64,7 @@ sysbench oltp_common \
     prepare --tables=1 --table-size=2000000
 ```
 
-次のコマンドを実行して、テストを実行します。
+Execute the following command to run the test:
 
 {{< copyable "" >}}
 
@@ -83,17 +83,17 @@ sysbench $testname \
     run --tables=1 --table-size=2000000
 ```
 
-## テスト計画1： <code>ADD INDEX</code>ステートメントのターゲット列への書き込み操作を頻繁に実行します {#test-plan-1-frequently-perform-write-operations-to-the-target-column-of-the-code-add-index-code-statement}
+## Test plan 1: Frequently perform write operations to the target column of the <code>ADD INDEX</code> statement {#test-plan-1-frequently-perform-write-operations-to-the-target-column-of-the-code-add-index-code-statement}
 
-1.  `oltp_read_write`のテストを開始します。
-2.  手順1と同時に実行します`alter table sbtest1 add index c_idx(c)`を使用してインデックスを追加します。
-3.  手順2の最後に実行します。インデックスが正常に追加されたら、 `oltp_read_write`のテストを停止します。
-4.  `alter table ... add index`の期間と、この期間のSysbenchの平均TPSおよびQPSを取得します。
-5.  2つのパラメータ`tidb_ddl_reorg_worker_cnt`と`tidb_ddl_reorg_batch_size`の値を徐々に増やしてから、手順1〜4を繰り返します。
+1.  Start the `oltp_read_write` test.
+2.  Perform at the same time with step 1: use `alter table sbtest1 add index c_idx(c)` to add an index.
+3.  Perform at the end of step 2: when the index is added successfully, stop the `oltp_read_write` test.
+4.  Get the duration of `alter table ... add index` and the average TPS and QPS of Sysbench in this period.
+5.  Gradually increase the value of two parameters `tidb_ddl_reorg_worker_cnt` and `tidb_ddl_reorg_batch_size`, and then repeat step 1-4.
 
-### 試験結果 {#test-results}
+### Test results {#test-results}
 
-#### <code>ADD INDEX</code>操作なしの<code>oltp_read_write</code>のテスト結果 {#test-result-of-code-oltp-read-write-code-without-code-add-index-code-operations}
+#### Test result of <code>oltp_read_write</code> without <code>ADD INDEX</code> operations {#test-result-of-code-oltp-read-write-code-without-code-add-index-code-operations}
 
 | sysbench TPS | sysbench QPS |
 | :----------- | :----------- |
@@ -101,7 +101,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 32</code> {#code-tidb-ddl-reorg-batch-size-32-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 402                    | 338.4        | 6776         |
 | 2                         | 266                    | 330.3        | 6001         |
@@ -115,7 +115,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 64</code> {#code-tidb-ddl-reorg-batch-size-64-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 264                    | 269.4        | 5388         |
 | 2                         | 163                    | 266.2        | 5324         |
@@ -129,7 +129,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 128</code> {#code-tidb-ddl-reorg-batch-size-128-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 171                    | 289.1        | 5779         |
 | 2                         | 110                    | 274.2        | 5485         |
@@ -143,7 +143,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 256</code> {#code-tidb-ddl-reorg-batch-size-256-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 145                    | 283.0        | 5659         |
 | 2                         | 96                     | 282.2        | 5593         |
@@ -151,13 +151,13 @@ sysbench $testname \
 | 8                         | 45                     | 194.2        | 3882         |
 | 16                        | 39                     | 149.3        | 2893         |
 | 32                        | 36                     | 113.5        | 2268         |
-| 48                        | 33                     | 86.2         | 1715年        |
+| 48                        | 33                     | 86.2         | 1715         |
 
 ![add-index-load-1-b256](/media/add-index-load-1-b256.png)
 
 #### <code>tidb_ddl_reorg_batch_size = 512</code> {#code-tidb-ddl-reorg-batch-size-512-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 135                    | 257.8        | 5147         |
 | 2                         | 78                     | 252.8        | 5053         |
@@ -171,21 +171,21 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 1024</code> {#code-tidb-ddl-reorg-batch-size-1024-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 111                    | 244.3        | 4885         |
 | 2                         | 78                     | 228.4        | 4573         |
 | 4                         | 54                     | 168.8        | 3320         |
 | 8                         | 39                     | 123.8        | 2475         |
 | 16                        | 36                     | 59.6         | 1213         |
-| 32                        | 42                     | 93.2         | 1835年        |
+| 32                        | 42                     | 93.2         | 1835         |
 | 48                        | 51                     | 115.7        | 2261         |
 
 ![add-index-load-1-b1024](/media/add-index-load-1-b1024.png)
 
 #### <code>tidb_ddl_reorg_batch_size = 2048</code> {#code-tidb-ddl-reorg-batch-size-2048-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 918                    | 243.3        | 4855         |
 | 2                         | 1160                   | 209.9        | 4194         |
@@ -199,7 +199,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 4096</code> {#code-tidb-ddl-reorg-batch-size-4096-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 3042                   | 200.0        | 4001         |
 | 2                         | 3022                   | 203.8        | 4076         |
@@ -211,24 +211,24 @@ sysbench $testname \
 
 ![add-index-load-1-b4096](/media/add-index-load-1-b4096.png)
 
-### テストの結論 {#test-conclusion}
+### Test conclusion {#test-conclusion}
 
-`ADD INDEX`ステートメントのターゲット列に対して頻繁に書き込み操作（このテストには`UPDATE` 、および`INSERT`の操作が含まれ`DELETE` ）を実行すると、デフォルトの`ADD INDEX`構成がシステムのオンラインワークロードに大きな影響を与えます。これは主に、 `ADD INDEX`操作と列更新によって引き起こされる書き込みの競合が原因です。システムのパフォーマンスは次のとおりです。
+When you perform frequent write operations (this test involves `UPDATE`, `INSERT` and `DELETE` operations) to the target column of the `ADD INDEX` statement, the default `ADD INDEX` configuration has a significant impact on the online workload of the system. It is mainly because of the write conflicts caused by the concurrent `ADD INDEX` operation and column update. The performance of the system is as follows:
 
--   `tidb_ddl_reorg_worker_cnt`と`tidb_ddl_reorg_batch_size`のパラメーターの値が増加すると、 `TiKV_prewrite_latch_wait_duration`の値が大幅に増加し、書き込み速度が低下します。
--   `tidb_ddl_reorg_worker_cnt`と`tidb_ddl_reorg_batch_size`の値が非常に大きい場合は、 `admin show ddl`コマンドを実行して、 `Write conflict, txnStartTS 410327455965380624 is stale [try again later], ErrCount:38, SnapshotVersion: 410327228136030220`などのDDLジョブの複数回の再試行を確認できます。この状況では、 `ADD INDEX`操作が完了するまでに非常に長い時間がかかります。
+-   As the value of `tidb_ddl_reorg_worker_cnt` and `tidb_ddl_reorg_batch_size` parameters increase, the value of `TiKV_prewrite_latch_wait_duration` increases significantly, slowing down the write speed.
+-   When the value of `tidb_ddl_reorg_worker_cnt` and `tidb_ddl_reorg_batch_size` are very large, you can execute the `admin show ddl` command to see multiple retry attempts of the DDL job, such as `Write conflict, txnStartTS 410327455965380624 is stale [try again later], ErrCount:38, SnapshotVersion: 410327228136030220`. In this situation, the `ADD INDEX` operation takes a very long time to complete.
 
-## テスト計画2： <code>ADD INDEX</code>ステートメントのターゲット列への書き込み操作を実行しない（クエリのみ） {#test-plan-2-do-not-perform-write-operations-to-the-target-column-of-the-code-add-index-code-statement-query-only}
+## Test plan 2: Do not perform write operations to the target column of the <code>ADD INDEX</code> statement (query-only) {#test-plan-2-do-not-perform-write-operations-to-the-target-column-of-the-code-add-index-code-statement-query-only}
 
-1.  `oltp_read_only`のテストを開始します。
-2.  手順1と同時に実行します`alter table sbtest1 add index c_idx(c)`を使用してインデックスを追加します。
-3.  手順2の最後に実行します。インデックスが正常に追加されたら、 `oltp_read_only`のテストを停止します。
-4.  `alter table ... add index`の期間と、この期間のSysbenchの平均TPSおよびQPSを取得します。
-5.  2つのパラメータ`tidb_ddl_reorg_worker_cnt`と`tidb_ddl_reorg_batch_size`の値を徐々に増やしてから、手順1〜4を繰り返します。
+1.  Start the `oltp_read_only` test.
+2.  Perform at the same time with step 1: use `alter table sbtest1 add index c_idx(c)` to add an index.
+3.  Perform at the end of step 2: when the index is added successfully, stop the `oltp_read_only` test.
+4.  Get the duration of `alter table ... add index` and the average TPS and QPS of Sysbench in this period.
+5.  Gradually increase the value of two parameters `tidb_ddl_reorg_worker_cnt` and `tidb_ddl_reorg_batch_size`, and then repeat step 1-4.
 
-### 試験結果 {#test-results}
+### Test results {#test-results}
 
-#### <code>ADD INDEX</code>操作なしの<code>oltp_read_only</code>のテスト結果 {#test-result-of-code-oltp-read-only-code-without-code-add-index-code-operations}
+#### Test result of <code>oltp_read_only</code> without <code>ADD INDEX</code> operations {#test-result-of-code-oltp-read-only-code-without-code-add-index-code-operations}
 
 | sysbench TPS | sysbench QPS |
 | :----------- | :----------- |
@@ -236,7 +236,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 32</code> {#code-tidb-ddl-reorg-batch-size-32-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 376                    | 548.9        | 8780         |
 | 2                         | 212                    | 541.5        | 8523         |
@@ -250,7 +250,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 1024</code> {#code-tidb-ddl-reorg-batch-size-1024-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 91                     | 536.8        | 8316         |
 | 2                         | 52                     | 533.9        | 8165         |
@@ -264,7 +264,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 4096</code> {#code-tidb-ddl-reorg-batch-size-4096-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 103                    | 502.2        | 7823         |
 | 2                         | 63                     | 486.5        | 7672         |
@@ -276,21 +276,21 @@ sysbench $testname \
 
 ![add-index-load-2-b4096](/media/add-index-load-2-b4096.png)
 
-### テストの結論 {#test-conclusion}
+### Test conclusion {#test-conclusion}
 
-`ADD INDEX`のステートメントのターゲット列に対してのみクエリ操作を実行する場合、オンラインワークロードに対する`ADD INDEX`の操作の影響は明らかではありません。
+When you only perform query operations to the target column of the `ADD INDEX` statement, the effect of `ADD INDEX` operations on online workloads is not obvious.
 
-## テスト計画3： <code>ADD INDEX</code>ステートメントのターゲット列はオンラインワークロードとは無関係です {#test-plan-3-the-target-column-of-the-code-add-index-code-statement-is-irrelevant-to-online-workloads}
+## Test plan 3: The target column of the <code>ADD INDEX</code> statement is irrelevant to online workloads {#test-plan-3-the-target-column-of-the-code-add-index-code-statement-is-irrelevant-to-online-workloads}
 
-1.  `oltp_read_write`のテストを開始します。
-2.  手順1と同時に実行します`alter table test add index pad_idx(pad)`を使用してインデックスを追加します。
-3.  手順2の最後に実行します。インデックスが正常に追加されたら、 `oltp_read_only`のテストを停止します。
-4.  `alter table ... add index`の期間と、この期間のSysbenchの平均TPSおよびQPSを取得します。
-5.  2つのパラメータ`tidb_ddl_reorg_worker_cnt`と`tidb_ddl_reorg_batch_size`の値を徐々に増やしてから、手順1〜4を繰り返します。
+1.  Start the `oltp_read_write` test.
+2.  Perform at the same time with step 1: use `alter table test add index pad_idx(pad)` to add an index.
+3.  Perform at the end of step 2: when the index is added successfully, stop the `oltp_read_only` test.
+4.  Get the duration of `alter table ... add index` and the average TPS and QPS of Sysbench in this period.
+5.  Gradually increase the value of two parameters `tidb_ddl_reorg_worker_cnt` and `tidb_ddl_reorg_batch_size`, and then repeat step 1-4.
 
-### 試験結果 {#test-results}
+### Test results {#test-results}
 
-### <code>ADD INDEX</code>操作なしの<code>oltp_read_write</code>のテスト結果 {#test-result-of-code-oltp-read-write-code-without-code-add-index-code-operations}
+### Test result of <code>oltp_read_write</code> without <code>ADD INDEX</code> operations {#test-result-of-code-oltp-read-write-code-without-code-add-index-code-operations}
 
 | sysbench TPS | sysbench QPS |
 | :----------- | :----------- |
@@ -298,7 +298,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 32</code> {#code-tidb-ddl-reorg-batch-size-32-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 372                    | 350.4        | 6892         |
 | 2                         | 207                    | 344.2        | 6700         |
@@ -312,7 +312,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 1024</code> {#code-tidb-ddl-reorg-batch-size-1024-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 94                     | 352.4        | 6794         |
 | 2                         | 50                     | 332          | 6493         |
@@ -326,7 +326,7 @@ sysbench $testname \
 
 #### <code>tidb_ddl_reorg_batch_size = 4096</code> {#code-tidb-ddl-reorg-batch-size-4096-code}
 
-| tidb_ddl_reorg_worker_cnt | add_index_durations（s） | sysbench TPS | sysbench QPS |
+| tidb_ddl_reorg_worker_cnt | add_index_durations(s) | sysbench TPS | sysbench QPS |
 | :------------------------ | :--------------------- | :----------- | :----------- |
 | 1                         | 116                    | 325.5        | 6324         |
 | 2                         | 65                     | 312.5        | 6290         |
@@ -338,11 +338,11 @@ sysbench $testname \
 
 ![add-index-load-3-b4096](/media/add-index-load-3-b4096.png)
 
-### テストの結論 {#test-conclusion}
+### Test conclusion {#test-conclusion}
 
-`ADD INDEX`のステートメントのターゲット列がオンラインワークロードと無関係である場合、ワークロードに対する`ADD INDEX`の操作の影響は明らかではありません。
+When the target column of the `ADD INDEX` statement is irrelevant to online workloads, the effect of `ADD INDEX` operations on the workload is not obvious.
 
-## 概要 {#summary}
+## Summary {#summary}
 
--   `UPDATE` `INSERT` `DELETE`含む）を実行すると、デフォルトの`ADD INDEX`構成により、比較的頻繁な書き込みの競合が発生し、オンラインワークロードに大きな影響を与え`ADD INDEX` 。同時に、 `ADD INDEX`回の操作は、再試行が続くため、完了するまでに長い時間がかかります。このテストでは、 `tidb_ddl_reorg_worker_cnt`と`tidb_ddl_reorg_batch_size`の積をデフォルト値の1/32に変更できます。たとえば、パフォーマンスを向上させるために`tidb_ddl_reorg_worker_cnt`から`4`および`tidb_ddl_reorg_batch_size`から`256`を設定できます。
--   `ADD INDEX`ステートメントのターゲット列に対してのみクエリ操作を実行する場合、またはターゲット列がオンラインワークロードに直接関連していない場合は、デフォルトの`ADD INDEX`構成を使用できます。
+-   When you perform frequent write operations (including `INSERT`, `DELETE` and `UPDATE` operations) to the target column of the `ADD INDEX` statement, the default `ADD INDEX` configuration causes relatively frequent write conflicts, which has a great impact on online workloads. At the same time, the `ADD INDEX` operation takes a long time to complete due to continuous retry attempts. In this test, you can modify the product of `tidb_ddl_reorg_worker_cnt` and `tidb_ddl_reorg_batch_size` to 1/32 of the default value. For example, you can set `tidb_ddl_reorg_worker_cnt` to `4` and `tidb_ddl_reorg_batch_size` to `256` for better performance.
+-   When only performing query operations to the target column of the `ADD INDEX` statement or the target column is not directly related to online workloads, you can use the default `ADD INDEX` configuration.
