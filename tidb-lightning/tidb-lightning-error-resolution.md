@@ -3,21 +3,21 @@ title: TiDB Lightning Error Resolution
 summary: Learn how to resolve type conversion and duplication errors during data import.
 ---
 
-# TiDBLightningエラー解決 {#tidb-lightning-error-resolution}
+# TiDB Lightning Error Resolution {#tidb-lightning-error-resolution}
 
-v5.4.0以降では、無効な型変換や一意キーの競合などのエラーをスキップし、それらの間違った行データが存在しないかのようにデータ処理を続行するようにTiDBLightningを構成できます。後でエラーを読んで手動で修正するためのレポートが生成されます。これは、エラーを手動で特定することが難しく、遭遇するたびにTiDB Lightningを再起動するのにコストがかかる、少し汚れたデータソースからインポートする場合に理想的です。
+Starting from v5.4.0, you can configure TiDB Lightning to skip errors like invalid type conversion and unique key conflicts, and to continue the data processing as if those wrong row data does not exist. A report will be generated for you to read and manually fix errors afterward. This is ideal for importing from a slightly dirty data source, where locating the errors manually is difficult and restarting TiDB Lightning on every encounter is costly.
 
-このドキュメントでは、タイプエラー機能（ `lightning.max-error` ）と重複解決機能（ `tikv-importer.duplicate-resolution` ）の使用方法を紹介します。また、これらのエラーが保存されているデータベースも紹介します（ `lightning.task-info-schema-name` ）。このドキュメントの最後に、例が示されています。
+This document introduces how to use the type error feature (`lightning.max-error`) and the duplicate resolution feature (`tikv-importer.duplicate-resolution`). It also introduces the database where these errors are stored (`lightning.task-info-schema-name`). At the end of this document, an example is provided.
 
-## タイプエラー {#type-error}
+## Type error {#type-error}
 
-> **警告：**
+> **Warning:**
 >
-> TiDB Lightningタイプのエラー（ `lightning.max-error` ）は実験的機能です。実稼働環境のエラーを解決するためだけに依存することはお勧めし**ません**。
+> The TiDB Lightning type error (`lightning.max-error`) is an experimental feature. It is **NOT** recommended to only rely on it to resolve errors in the production environment.
 
-`lightning.max-error`構成を使用して、データ型に関連するエラーの許容度を上げることができます。この構成が*N*に設定されている場合、TiDB Lightningは、データソースが存在する前に最大<em>N個</em>のエラーを許可してスキップします。デフォルト値の`0`は、エラーが許可されないことを意味します。
+You can use the `lightning.max-error` configuration to increase the tolerance of errors related to data types. If this configuration is set to *N*, TiDB Lightning allows and skips up to <em>N</em> errors from the data source before it exists. The default value `0` means that no error is allowed.
 
-これらのエラーはデータベースに記録されます。インポートが完了したら、データベース内のエラーを表示して手動で処理できます。詳細については、 [エラーレポート](#error-report)を参照してください。
+These errors are recorded in a database. After the import is completed, you can view the errors in the database and process them manually. For more information, see [Error Report](#error-report).
 
 {{< copyable "" >}}
 
@@ -26,28 +26,28 @@ v5.4.0以降では、無効な型変換や一意キーの競合などのエラ�
 max-error = 0
 ```
 
-上記の構成は、次のエラーをカバーします。
+The above configuration covers the following errors:
 
--   無効な値（例： `'Text'`をINT列に設定）。
--   数値オーバーフロー（例： `500`をTINYINT列に設定）
--   文字列オーバーフロー（例： `'Very Long Text'`をVARCHAR（5）列に設定）。
--   ゼロ日時（つまり、 `'0000-00-00'`と`'2021-12-00'` ）。
--   NULLをNOTNULL列に設定します。
--   生成された列式の評価に失敗しました。
--   列数の不一致。行の値の数がテーブルの列の数と一致しません。
--   `on-duplicate = "error"`の場合、TiDBバックエンドでの一意/主キーの競合。
--   その他のSQLエラー。
+-   Invalid values (example: set `'Text'` to an INT column).
+-   Numeric overflow (example: set `500` to a TINYINT column)
+-   String overflow (example: set `'Very Long Text'` to a VARCHAR(5) column).
+-   Zero date-time (namely `'0000-00-00'` and `'2021-12-00'`).
+-   Set NULL to a NOT NULL column.
+-   Failed to evaluate a generated column expression.
+-   Column count mismatch. The number of values in the row does not match the number of columns of the table.
+-   Unique/Primary key conflict in TiDB-backend, when `on-duplicate = "error"`.
+-   Any other SQL errors.
 
-次のエラーは常に致命的であり、 `max-error`を変更してもスキップできません。
+The following errors are always fatal, and cannot be skipped by changing `max-error`:
 
--   元のCSV、SQL、またはParquetファイルの構文エラー（閉じられていない引用符など）。
--   I / O、ネットワークまたはシステムの許可エラー。
+-   Syntax error (such as unclosed quotation marks) in the original CSV, SQL or Parquet file.
+-   I/O, network or system permission errors.
 
-ローカルバックエンドでの一意/主キーの競合は個別に処理され、次のセクションで説明されます。
+Unique/Primary key conflict in the Local-backend is handled separately and explained in the next section.
 
-## ローカルバックエンドモードでの重複解決 {#duplicate-resolution-in-local-backend-mode}
+## Duplicate resolution in Local-backend mode {#duplicate-resolution-in-local-backend-mode}
 
-ローカルバックエンドモードでは、TiDB Lightningは、最初にデータをKVペアに変換し、ペアをバッチでTiKVに取り込むことにより、データをインポートします。 TiDBバックエンドモードとは異なり、重複する行はタスクが終了するまで検出されません。したがって、ローカルバックエンドモードでの重複エラーは`max-error`によって制御されるのではなく、別の構成`duplicate-resolution`によって制御されます。
+In the Local-backend mode, TiDB Lightning imports data by first converting them to KV pairs and ingesting the pairs into TiKV in batches. Unlike the TiDB-backend mode, duplicate rows are not detected until the end of a task. Therefore, duplicate errors in the Local-backend mode are not controlled by `max-error`, but rather by a separate configuration `duplicate-resolution`.
 
 {{< copyable "" >}}
 
@@ -56,19 +56,19 @@ max-error = 0
 duplicate-resolution = 'none'
 ```
 
-`duplicate-resolution`の値オプションは次のとおりです。
+The value options of `duplicate-resolution` are as follows:
 
--   **&#39;none&#39;** ：重複データを検出しません。一意/主キーの競合が存在する場合、インポートされたテーブルには一貫性のないデータとインデックスがあり、チェックサムチェックに失敗します。
--   **&#39;record&#39;** ：重複データを検出しますが、修正は試みません。一意/主キーの競合が存在する場合、インポートされたテーブルには一貫性のないデータとインデックスがあり、チェックサムをスキップして競合エラーの数を報告します。
--   **&#39;remove&#39;** ：重複データを検出し、重複した*すべての*行を削除します。インポートされたテーブルは一貫性がありますが、関連する行は無視され、手動で追加し直す必要があります。
+-   **'none'**: Does not detect duplicate data. If a unique/primary key conflict does exist, the imported table will have inconsistent data and index, and will fail checksum check.
+-   **'record'**: Detects duplicate data, but does not attempt to fix it. If a unique/primary key conflict does exist, the imported table will have inconsistent data and index, and will skip checksum and report the count of the conflict errors.
+-   **'remove'**: Detects duplicate data, and removes *all* duplicated rows. The imported table will be consistent, but the involved rows are ignored and have to be added back manually.
 
-TiDB Lightningの重複解決では、データソース内でのみ重複データを検出できます。この機能は、TiDBLightningを実行する前に既存のデータとの競合を処理できません。
+TiDB Lightning duplicate resolution can detect duplicate data only within the data source. This feature cannot handle conflict with existing data before running TiDB Lightning.
 
-## エラーレポート {#error-report}
+## Error report {#error-report}
 
-すべてのエラーは、ダウンストリームTiDBクラスタの`lightning_task_info`のデータベースのテーブルに書き込まれます。インポートが完了したら、データベース内のエラーを表示して手動で処理できます。
+All errors are written to tables in the `lightning_task_info` database in the downstream TiDB cluster. After the import is completed, you can view the errors in the database and process them manually.
 
-`lightning.task-info-schema-name`を設定することにより、データベース名を変更できます。
+You can change the database name by configuring `lightning.task-info-schema-name`.
 
 {{< copyable "" >}}
 
@@ -77,7 +77,7 @@ TiDB Lightningの重複解決では、データソース内でのみ重複デー
 task-info-schema-name = 'lightning_task_info'
 ```
 
-TiDB Lightningは、このデータベースに3つのテーブルを作成します。
+TiDB Lightning creates 3 tables in this database:
 
 ```sql
 CREATE TABLE syntax_error_v1 (
@@ -119,50 +119,50 @@ CREATE TABLE conflict_error_v1 (
 **syntax_error_v1** is intended to record syntax error from files. It is not implemented yet.
 -->
 
-**type_error_v1**は、 `max-error`の構成によって管理される[タイプエラー](#type-error)すべてを記録します。エラーごとに1つの行があります。
+**type_error_v1** records all [type errors](#type-error) managed by the `max-error` configuration. There is one row per error.
 
-**conflict_error_v1**は[ローカルバックエンドでの一意/主キーの競合](#duplicate-resolution-in-local-backend-mode)すべてを記録します。競合のペアごとに2つの行があります。
+**conflict_error_v1** records all [unique/primary key conflict in the Local-backend](#duplicate-resolution-in-local-backend-mode). There are 2 rows per pair of conflicts.
 
-| 桁            | 構文 | タイプ | 対立 | 説明                                                                              |
-| ------------ | -- | --- | -- | ------------------------------------------------------------------------------- |
-| task_id      | ✓✓ | ✓✓  | ✓✓ | このエラーを生成するTiDBLightningタスクID                                                    |
-| create_table | ✓✓ | ✓✓  | ✓✓ | エラーが記録された時刻                                                                     |
-| table_name   | ✓✓ | ✓✓  | ✓✓ | エラーを含むテーブルの名前（ ``'`db`.`tbl`'``の形式）                                             |
-| 道            | ✓✓ | ✓✓  |    | エラーを含むファイルのパス                                                                   |
-| オフセット        | ✓✓ | ✓✓  |    | エラーが見つかったファイル内のバイト位置                                                            |
-| エラー          | ✓✓ | ✓✓  |    | エラーメッセージ                                                                        |
-| 環境           | ✓✓ |     |    | エラーを囲むテキスト                                                                      |
-| index_name   |    |     | ✓✓ | 競合している一意のキーの名前。主キーの競合の場合は`'PRIMARY'`です。                                         |
-| key_data     |    |     | ✓✓ | エラーの原因となった行のフォーマットされたキーハンドル。コンテンツは人間が参照するためのものであり、機械で読み取り可能であることを意図したものではありません。 |
-| row_data     |    | ✓✓  | ✓✓ | エラーの原因となるフォーマットされた行データ。コンテンツは人間が参照するためのものであり、機械で読み取り可能であることを意図したものではありません。      |
-| raw_key      |    |     | ✓✓ | 競合するKVペアのキー                                                                     |
-| raw_value    |    |     | ✓✓ | 競合するKVペアの値                                                                      |
-| raw_handle   |    |     | ✓✓ | 競合する行の行ハンドル                                                                     |
-| raw_row      |    |     | ✓✓ | 競合する行のエンコードされた値                                                                 |
+| Column      | Syntax | Type | Conflict | Description                                                                                                                                  |
+| ----------- | ------ | ---- | -------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| task_id     | ✓      | ✓    | ✓        | The TiDB Lightning task ID that generates this error                                                                                         |
+| create_time | ✓      | ✓    | ✓        | The time at which the error is recorded                                                                                                      |
+| table_name  | ✓      | ✓    | ✓        | The name of the table that contains the error, in the form of ``'`db`.`tbl`'``                                                               |
+| path        | ✓      | ✓    |          | The path of the file that contains the error                                                                                                 |
+| offset      | ✓      | ✓    |          | The byte position in the file where the error is found                                                                                       |
+| error       | ✓      | ✓    |          | The error message                                                                                                                            |
+| context     | ✓      |      |          | The text that surrounds the error                                                                                                            |
+| index_name  |        |      | ✓        | The name of the unique key in conflict. It is `'PRIMARY'` for primary key conflicts.                                                         |
+| key_data    |        |      | ✓        | The formatted key handle of the row that causes the error. The content is for human reference only, and not intended to be machine-readable. |
+| row_data    |        | ✓    | ✓        | The formatted row data that causes the error. The content is for human reference only, and not intended to be machine-readable               |
+| raw_key     |        |      | ✓        | The key of the conflicted KV pair                                                                                                            |
+| raw_value   |        |      | ✓        | The value of the conflicted KV pair                                                                                                          |
+| raw_handle  |        |      | ✓        | The row handle of the conflicted row                                                                                                         |
+| raw_row     |        |      | ✓        | The encoded value of the conflicted row                                                                                                      |
 
-> **ノート：**
+> **Note:**
 >
-> エラーレポートは、取得するのが非効率的な行/列番号ではなく、ファイルオフセットを記録します。次のコマンドを使用して、バイト位置の近くにすばやくジャンプできます（例として183を使用）。
+> The error report records the file offset, not line/column number which is inefficient to obtain. You can quickly jump near a byte position (using 183 as example) using the following commands:
 >
-> -   シェル、最初の数行を印刷します。
+> -   shell, printing the first several lines.
 >
 >     ```shell
 >     head -c 183 file.csv | tail
 >     ```
 >
-> -   シェル、次の数行を印刷します。
+> -   shell, printing the next several lines:
 >
 >     ```shell
 >     tail -c +183 file.csv | head
 >     ```
 >
-> -   vim `:goto 183`または`183go`
+> -   vim — `:goto 183` or `183go`
 
-## 例 {#example}
+## Example {#example}
 
-この例では、データソースはいくつかの既知のエラーで準備されています。
+In this example, a data source is prepared with some known errors.
 
-1.  データベースとテーブルスキーマを準備します。
+1.  Prepare the database and table schema.
 
     {{< copyable "" >}}
 
@@ -173,7 +173,7 @@ CREATE TABLE conflict_error_v1 (
     echo 'CREATE TABLE t(a TINYINT PRIMARY KEY, b VARCHAR(12) NOT NULL UNIQUE);' > example.t-schema.sql
     ```
 
-2.  データを準備します。
+2.  Prepare the data.
 
     {{< copyable "" >}}
 
@@ -188,13 +188,13 @@ CREATE TABLE conflict_error_v1 (
         (54, 'fifty-four'),     -- conflicts with the other 'fifty-four' below
         (77, 'seventy-seven'),  -- the string is longer than 12 characters
         (600, 'six hundred'),   -- the number overflows TINYINT
-        (40, 'fourty'),         -- conflicts with the other 40 above
+        (40, 'forty'),         -- conflicts with the other 40 above
         (42, 'fifty-four');     -- conflicts with the other 'fifty-four' above
 
     EOF
     ```
 
-3.  厳密なSQLモードを有効にするようにTiDBLightningを構成し、ローカルバックエンドを使用してデータをインポートし、重複を削除し、最大10個のエラーをスキップします。
+3.  Configure TiDB Lightning to enable strict SQL mode, use the Local-backend to import data, delete duplicates, and skip up to 10 errors.
 
     {{< copyable "" >}}
 
@@ -221,7 +221,7 @@ CREATE TABLE conflict_error_v1 (
     EOF
     ```
 
-4.  TiDBLightningを実行します。すべてのエラーがスキップされるため、このコマンドは正常に終了します。
+4.  Run TiDB Lightning. This command will exit successfully because all errors are skipped.
 
     {{< copyable "" >}}
 
@@ -229,7 +229,7 @@ CREATE TABLE conflict_error_v1 (
     tiup tidb-lightning -c config.toml
     ```
 
-5.  インポートされたテーブルに通常の2つの行のみが含まれていることを確認します。
+5.  Verify that the imported table only contains the two normal rows:
 
     ```sql
     $ mysql -u root -h 127.0.0.1 -P 4000 -e 'select * from example.t'
@@ -241,7 +241,7 @@ CREATE TABLE conflict_error_v1 (
     +---+-----+
     ```
 
-6.  `type_error_v1`つのテーブルが型変換を含む3つの行をキャッチしたかどうかを確認します。
+6.  Check whether the `type_error_v1` table has caught the three rows involving type conversion:
 
     ```sql
     $ mysql -u root -h 127.0.0.1 -P 4000 -e 'select * from lightning_task_info.type_error_v1;' -E
@@ -274,7 +274,7 @@ CREATE TABLE conflict_error_v1 (
        row_data: (600,'six hundred')
     ```
 
-7.  `conflict_error_v1`つのテーブルが一意/主キーの競合がある4つの行をキャッチしたかどうかを確認します。
+7.  Check whether the `conflict_error_v1` table has caught the four rows that have unique/primary key conflicts:
 
     ```sql
     $ mysql -u root -h 127.0.0.1 -P 4000 -e 'select * from lightning_task_info.conflict_error_v1;' --binary-as-hex -E
@@ -297,7 +297,7 @@ CREATE TABLE conflict_error_v1 (
      table_name: `example`.`t`
      index_name: PRIMARY
        key_data: 40
-       row_data: (40, "fourty")
+       row_data: (40, "forty")
         raw_key: 0x7480000000000000C15F728000000000000028
       raw_value: 0x800001000000020600666F75727479
      raw_handle: 0x7480000000000000C15F728000000000000028

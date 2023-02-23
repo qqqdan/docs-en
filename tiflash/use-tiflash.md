@@ -2,20 +2,20 @@
 title: Use TiFlash
 ---
 
-データのインポートからTPC-Hデータセットでのクエリまでのプロセス全体を体験するには、 [TiDB HTAPのクイックスタートガイド](/quick-start-with-htap.md)を参照してください。
+To experience the whole process from importing data to querying in a TPC-H dataset, refer to [Quick Start Guide for TiDB HTAP](/quick-start-with-htap.md).
 
-# TiFlashを使用する {#use-tiflash}
+# Use TiFlash {#use-tiflash}
 
-TiFlashがデプロイされた後、データレプリケーションは自動的に開始されません。複製するテーブルを手動で指定する必要があります。
+After TiFlash is deployed, data replication does not automatically begin. You need to manually specify the tables to be replicated.
 
-TiDBを使用して中規模の分析処理用のTiFlashレプリカを読み取るか、TiSparkを使用して大規模な分析処理用のTiFlashレプリカを読み取ることができます。これは独自のニーズに基づいています。詳細については、次のセクションを参照してください。
+You can either use TiDB to read TiFlash replicas for medium-scale analytical processing, or use TiSpark to read TiFlash replicas for large-scale analytical processing, which is based on your own needs. See the following sections for details:
 
--   [TiDBを使用してTiFlashレプリカを読み取る](#use-tidb-to-read-tiflash-replicas)
--   [TiSparkを使用してTiFlashレプリカを読み取ります](#use-tispark-to-read-tiflash-replicas)
+-   [Use TiDB to read TiFlash replicas](#use-tidb-to-read-tiflash-replicas)
+-   [Use TiSpark to read TiFlash replicas](#use-tispark-to-read-tiflash-replicas)
 
-## テーブルのTiFlashレプリカを作成する {#create-tiflash-replicas-for-tables}
+## Create TiFlash replicas for tables {#create-tiflash-replicas-for-tables}
 
-TiFlashがTiKVクラスタに接続された後、デフォルトではデータレプリケーションは開始されません。 MySQLクライアントを介してDDLステートメントをTiDBに送信して、特定のテーブルのTiFlashレプリカを作成できます。
+After TiFlash is connected to the TiKV cluster, data replication by default does not begin. You can send a DDL statement to TiDB through a MySQL client to create a TiFlash replica for a specific table:
 
 {{< copyable "" >}}
 
@@ -23,13 +23,13 @@ TiFlashがTiKVクラスタに接続された後、デフォルトではデータ
 ALTER TABLE table_name SET TIFLASH REPLICA count;
 ```
 
-上記のコマンドのパラメータは次のとおりです。
+The parameter of the above command is described as follows:
 
--   `count`はレプリカの数を示します。値が`0`の場合、レプリカは削除されます。
+-   `count` indicates the number of replicas. When the value is `0`, the replica is deleted.
 
-同じテーブルで複数のDDLステートメントを実行すると、最後のステートメントのみが有効になります。次の例では、2つのDDLステートメントがテーブル`tpch50`で実行されますが、2番目のステートメント（レプリカを削除するため）のみが有効になります。
+If you execute multiple DDL statements on the same table, only the last statement is ensured to take effect. In the following example, two DDL statements are executed on the table `tpch50`, but only the second statement (to delete the replica) takes effect.
 
-テーブルのレプリカを2つ作成します。
+Create two replicas for the table:
 
 {{< copyable "" >}}
 
@@ -37,7 +37,7 @@ ALTER TABLE table_name SET TIFLASH REPLICA count;
 ALTER TABLE `tpch50`.`lineitem` SET TIFLASH REPLICA 2;
 ```
 
-レプリカを削除します。
+Delete the replica:
 
 {{< copyable "" >}}
 
@@ -45,9 +45,9 @@ ALTER TABLE `tpch50`.`lineitem` SET TIFLASH REPLICA 2;
 ALTER TABLE `tpch50`.`lineitem` SET TIFLASH REPLICA 0;
 ```
 
-**ノート：**
+**Notes:**
 
--   テーブル`t`が上記のDDLステートメントを介してTiFlashに複製される場合、次のステートメントを使用して作成されたテーブルも自動的にTiFlashに複製されます。
+-   If the table `t` is replicated to TiFlash through the above DDL statements, the table created using the following statement will also be automatically replicated to TiFlash:
 
     {{< copyable "" >}}
 
@@ -55,17 +55,17 @@ ALTER TABLE `tpch50`.`lineitem` SET TIFLASH REPLICA 0;
     CREATE TABLE table_name like t;
     ```
 
--   v4.0.6より前のバージョンでは、TiDB Lightningを使用してデータをインポートする前にTiFlashレプリカを作成すると、データのインポートが失敗します。テーブルのTiFlashレプリカを作成する前に、データをテーブルにインポートする必要があります。
+-   For versions earlier than v4.0.6, if you create the TiFlash replica before using TiDB Lightning to import the data, the data import will fail. You must import data to the table before creating the TiFlash replica for the table.
 
--   TiDBとTiDBLightningの両方がv4.0.6以降の場合、テーブルにTiFlashレプリカがあるかどうかに関係なく、TiDBLightningを使用してそのテーブルにデータをインポートできます。これにより、TiDB Lightningの手順が遅くなる可能性があることに注意してください。これは、LightningホストのNIC帯域幅、TiFlashノードのCPUとディスクの負荷、およびTiFlashレプリカの数によって異なります。
+-   If TiDB and TiDB Lightning are both v4.0.6 or later, no matter a table has TiFlash replica(s) or not, you can import data to that table using TiDB Lightning. Note that this might slow the TiDB Lightning procedure, which depends on the NIC bandwidth on the lightning host, the CPU and disk load of the TiFlash node, and the number of TiFlash replicas.
 
--   PDスケジューリングのパフォーマンスが低下するため、1,000を超えるテーブルを複製しないことをお勧めします。この制限は、今後のバージョンで削除される予定です。
+-   It is recommended that you do not replicate more than 1,000 tables because this lowers the PD scheduling performance. This limit will be removed in later versions.
 
--   v5.1以降のバージョンでは、システムテーブルのレプリカの設定はサポートされなくなりました。クラスタをアップグレードする前に、関連するシステムテーブルのレプリカをクリアする必要があります。そうしないと、クラスタを新しいバージョンにアップグレードした後、システムテーブルのレプリカ設定を変更できません。
+-   In v5.1 and later versions, setting the replicas for the system tables is no longer supported. Before upgrading the cluster, you need to clear the replicas of the relevant system tables. Otherwise, you cannot modify the replica settings of the system tables after you upgrade the cluster to a later version.
 
-### レプリケーションの進行状況を確認する {#check-replication-progress}
+### Check replication progress {#check-replication-progress}
 
-次のステートメントを使用して、特定のテーブルのTiFlashレプリカのステータスを確認できます。テーブルは`WHERE`句を使用して指定されます。 `WHERE`句を削除すると、すべてのテーブルのレプリカステータスが確認されます。
+You can check the status of the TiFlash replicas of a specific table using the following statement. The table is specified using the `WHERE` clause. If you remove the `WHERE` clause, you will check the replica status of all tables.
 
 {{< copyable "" >}}
 
@@ -73,16 +73,80 @@ ALTER TABLE `tpch50`.`lineitem` SET TIFLASH REPLICA 0;
 SELECT * FROM information_schema.tiflash_replica WHERE TABLE_SCHEMA = '<db_name>' and TABLE_NAME = '<table_name>';
 ```
 
-上記のステートメントの結果：
+In the result of above statement:
 
--   `AVAILABLE`は、このテーブルのTiFlashレプリカが使用可能かどうかを示します。 `1`は利用可能、 `0`は利用不可を意味します。レプリカが使用可能になると、このステータスは変更されません。 DDLステートメントを使用してレプリカの数を変更すると、レプリケーションステータスが再計算されます。
--   `PROGRESS`は、レプリケーションの進行状況を意味します。値は`0.0` `1.0` 。 `1`は、少なくとも1つのレプリカが複製されることを意味します。
+-   `AVAILABLE` indicates whether the TiFlash replicas of this table are available or not. `1` means available and `0` means unavailable. Once the replicas become available, this status does not change. If you use DDL statements to modify the number of replicas, the replication status will be recalculated.
+-   `PROGRESS` means the progress of the replication. The value is between `0.0` and `1.0`. `1` means at least one replica is replicated.
 
-### 利用可能なゾーンを設定する {#set-available-zones}
+### Speed up TiFlash replication {#speed-up-tiflash-replication}
 
-レプリカを構成するときに、ディザスタリカバリのためにTiFlashレプリカを複数のデータセンターに配布する必要がある場合は、以下の手順に従って使用可能なゾーンを構成できます。
+Before TiFlash replicas are added, each TiKV instance performs a full table scan and sends the scanned data to TiFlash as a "snapshot" to create replicas. By default, TiFlash replicas are added slowly with fewer resources usage in order to minimize the impact on the online service. If there are spare CPU and disk IO resources in your TiKV and TiFlash nodes, you can accelerate TiFlash replication by performing the following steps.
 
-1.  クラスタ構成ファイルでTiFlashノードのラベルを指定します。
+1.  Temporarily increase the snapshot write speed limit for each TiKV and TiFlash instance by adjusting the TiFlash Proxy and TiKV configuration. For example, when using TiUP to manage configurations, the configuration is as below:
+
+    ```yaml
+    tikv:
+      server.snap-max-write-bytes-per-sec: 300MiB  # Default to 100MiB.
+    tiflash-learner:
+      raftstore.snap-handle-pool-size: 10          # Default to 2. Can be adjusted to >= node's CPU num * 0.6.
+      raftstore.apply-low-priority-pool-size: 10   # Default to 1. Can be adjusted to >= node's CPU num * 0.6.
+      server.snap-max-write-bytes-per-sec: 300MiB  # Default to 100MiB.
+    ```
+
+    The configuration change takes effect after restarting the TiFlash and TiKV instances. The TiKV configuration can be also changed online by using the [Dynamic Config SQL statement](https://docs.pingcap.com/tidb/stable/dynamic-config), which takes effect immediately without restarting TiKV instances:
+
+    ```sql
+    SET CONFIG tikv `server.snap-max-write-bytes-per-sec` = '300MiB';
+    ```
+
+    After adjusting the preceding configurations, you cannot observe the acceleration for now, as the replication speed is still restricted by the PD limit globally.
+
+2.  Use [PD Control](https://docs.pingcap.com/tidb/stable/pd-control) to progressively ease the new replica speed limit.
+
+    The default new replica speed limit is 30, which means, approximately 30 Regions add TiFlash replicas every minute. Executing the following command will adjust the limit to 60 for all TiFlash instances, which doubles the original speed:
+
+    ```shell
+    tiup ctl:v<CLUSTER_VERSION> pd -u http://<PD_ADDRESS>:2379 store limit all engine tiflash 60 add-peer
+    ```
+
+    > In the preceding command, you need to replace `<CLUSTER_VERSION>` with the actual cluster version and `<PD_ADDRESS>:2379` with the address of any PD node. For example:
+    >
+    > ```shell
+    > tiup ctl:v6.1.1 pd -u http://192.168.1.4:2379 store limit all engine tiflash 60 add-peer
+    > ```
+
+    Within a few minutes, you will observe a significant increase in CPU and disk IO resource usage of the TiFlash nodes, and TiFlash should create replicas faster. At the same time, the TiKV nodes' CPU and disk IO resource usage increases as well.
+
+    If the TiKV and TiFlash nodes still have spare resources at this point and the latency of your online service does not increase significantly, you can further ease the limit, for example, triple the original speed:
+
+    ```shell
+    tiup ctl:v<CLUSTER_VERSION> pd -u http://<PD_ADDRESS>:2379 store limit all engine tiflash 90 add-peer
+    ```
+
+3.  After the TiFlash replication is complete, revert to the default configuration to reduce the impact on online services.
+
+    Execute the following PD Control command to restore the default new replica speed limit:
+
+    ```shell
+    tiup ctl:v<CLUSTER_VERSION> pd -u http://<PD_ADDRESS>:2379 store limit all engine tiflash 30 add-peer
+    ```
+
+    Comment out the changed configuration in TiUP to restore the default snapshot write speed limit:
+
+    ```yaml
+    # tikv:
+    #   server.snap-max-write-bytes-per-sec: 300MiB
+    # tiflash-learner:
+    #   raftstore.snap-handle-pool-size: 10
+    #   raftstore.apply-low-priority-pool-size: 10
+    #   server.snap-max-write-bytes-per-sec: 300MiB
+    ```
+
+### Set available zones {#set-available-zones}
+
+When configuring replicas, if you need to distribute TiFlash replicas to multiple data centers for disaster recovery, you can configure available zones by following the steps below:
+
+1.  Specify labels for TiFlash nodes in the cluster configuration file.
 
     ```
     tiflash_servers:
@@ -97,7 +161,7 @@ SELECT * FROM information_schema.tiflash_replica WHERE TABLE_SCHEMA = '<db_name>
           flash.proxy.labels: zone=z2
     ```
 
-2.  クラスタを起動した後、レプリカを作成するときにラベルを指定します。
+2.  After starting a cluster, specify the labels when creating replicas.
 
     {{< copyable "" >}}
 
@@ -105,7 +169,7 @@ SELECT * FROM information_schema.tiflash_replica WHERE TABLE_SCHEMA = '<db_name>
     ALTER TABLE table_name SET TIFLASH REPLICA count LOCATION LABELS location_labels;
     ```
 
-    例えば：
+    For example:
 
     {{< copyable "" >}}
 
@@ -113,10 +177,10 @@ SELECT * FROM information_schema.tiflash_replica WHERE TABLE_SCHEMA = '<db_name>
     ALTER TABLE t SET TIFLASH REPLICA 2 LOCATION LABELS "zone";
     ```
 
-3.  PDは、ラベルに基づいてレプリカをスケジュールします。この例では、PDはそれぞれテーブル`t`の2つのレプリカを2つの使用可能なゾーンにスケジュールします。 pd-ctlを使用してスケジュールを表示できます。
+3.  PD schedules the replicas based on the labels. In this example, PD respectively schedules two replicas of the table `t` to two available zones. You can use pd-ctl to view the scheduling.
 
     ```shell
-    > tiup ctl:<version> pd -u<pd-host>:<pd-port> store
+    > tiup ctl:v<CLUSTER_VERSION> pd -u http://<PD_ADDRESS>:2379 store
 
         ...
         "address": "172.16.5.82:23913",
@@ -144,15 +208,15 @@ SELECT * FROM information_schema.tiflash_replica WHERE TABLE_SCHEMA = '<db_name>
         ...
     ```
 
-ラベルを使用したレプリカのスケジューリングの詳細については、 [トポロジラベルによるレプリカのスケジュール](/schedule-replicas-by-topology-labels.md) 、および[1 つの地域展開における複数のデータセンター](/multi-data-centers-in-one-city-deployment.md)を参照して[2つの都市に配置された3つのデータセンター](/three-data-centers-in-two-cities-deployment.md) 。
+For more information about scheduling replicas by using labels, see [Schedule Replicas by Topology Labels](/schedule-replicas-by-topology-labels.md), [Multiple Data Centers in One City Deployment](/multi-data-centers-in-one-city-deployment.md), and [Three Data Centers in Two Cities Deployment](/three-data-centers-in-two-cities-deployment.md).
 
-## TiDBを使用してTiFlashレプリカを読み取る {#use-tidb-to-read-tiflash-replicas}
+## Use TiDB to read TiFlash replicas {#use-tidb-to-read-tiflash-replicas}
 
-TiDBは、TiFlashレプリカを読み取る3つの方法を提供します。エンジン構成なしでTiFlashレプリカを追加した場合、デフォルトでCBO（コストベースの最適化）モードが使用されます。
+TiDB provides three ways to read TiFlash replicas. If you have added a TiFlash replica without any engine configuration, the CBO (cost-based optimization) mode is used by default.
 
-### スマートセレクション {#smart-selection}
+### Smart selection {#smart-selection}
 
-TiFlashレプリカを含むテーブルの場合、TiDBオプティマイザは、コスト見積もりに基づいてTiFlashレプリカを使用するかどうかを自動的に決定します。 `desc`または`explain analyze`ステートメントを使用して、TiFlashレプリカが選択されているかどうかを確認できます。例えば：
+For tables with TiFlash replicas, the TiDB optimizer automatically determines whether to use TiFlash replicas based on the cost estimation. You can use the `desc` or `explain analyze` statement to check whether or not a TiFlash replica is selected. For example:
 
 {{< copyable "" >}}
 
@@ -187,24 +251,24 @@ explain analyze select count(*) from test.t;
 +--------------------------+---------+---------+--------------+---------------+----------------------------------------------------------------------+--------------------------------+-----------+------+
 ```
 
-`cop[tiflash]`は、タスクが処理のためにTiFlashに送信されることを意味します。 TiFlashレプリカを選択していない場合は、 `analyze table`ステートメントを使用して統計を更新し、 `explain analyze`ステートメントを使用して結果を確認できます。
+`cop[tiflash]` means that the task will be sent to TiFlash for processing. If you have not selected a TiFlash replica, you can try to update the statistics using the `analyze table` statement, and then check the result using the `explain analyze` statement.
 
-テーブルにTiFlashレプリカが1つしかなく、関連ノードがサービスを提供できない場合、CBOモードのクエリは繰り返し再試行することに注意してください。この状況では、エンジンを指定するか、手動ヒントを使用してTiKVレプリカからデータを読み取る必要があります。
+Note that if a table has only a single TiFlash replica and the related node cannot provide service, queries in the CBO mode will repeatedly retry. In this situation, you need to specify the engine or use the manual hint to read data from the TiKV replica.
 
-### エンジンの分離 {#engine-isolation}
+### Engine isolation {#engine-isolation}
 
-エンジンの分離とは、対応する変数を構成することにより、すべてのクエリが指定されたエンジンのレプリカを使用するように指定することです。オプションのエンジンは、「tikv」、「tidb」（一部のTiDBシステムテーブルを格納し、ユーザーがアクティブに使用できないTiDBの内部メモリテーブル領域を示します）、および「tiflash」で、次の2つの構成レベルがあります。
+Engine isolation is to specify that all queries use a replica of the specified engine by configuring the corresponding variable. The optional engines are "tikv", "tidb" (indicates the internal memory table area of TiDB, which stores some TiDB system tables and cannot be actively used by users), and "tiflash", with the following two configuration levels:
 
--   TiDBインスタンスレベル、つまりINSTANCEレベル。 TiDB構成ファイルに次の構成項目を追加します。
+-   TiDB instance-level, namely, INSTANCE level. Add the following configuration item in the TiDB configuration file:
 
     ```
     [isolation-read]
     engines = ["tikv", "tidb", "tiflash"]
     ```
 
-    **INSTANCEレベルのデフォルト構成は`[&quot;tikv&quot;, &quot;tidb&quot;, &quot;tiflash&quot;]`です。**
+    **The INSTANCE-level default configuration is `["tikv", "tidb", "tiflash"]`.**
 
--   SESSIONレベル。次のステートメントを使用して構成します。
+-   SESSION level. Use the following statement to configure:
 
     {{< copyable "" >}}
 
@@ -212,7 +276,7 @@ explain analyze select count(*) from test.t;
     set @@session.tidb_isolation_read_engines = "engine list separated by commas";
     ```
 
-    また
+    or
 
     {{< copyable "" >}}
 
@@ -220,19 +284,19 @@ explain analyze select count(*) from test.t;
     set SESSION tidb_isolation_read_engines = "engine list separated by commas";
     ```
 
-    SESSIONレベルのデフォルト構成は、TiDBINSTANCEレベルの構成を継承します。
+    The default configuration of the SESSION level inherits from the configuration of the TiDB INSTANCE level.
 
-最終的なエンジン構成はセッションレベルの構成です。つまり、セッションレベルの構成はインスタンスレベルの構成をオーバーライドします。たとえば、INSTANCEレベルで「tikv」を構成し、SESSIONレベルで「tiflash」を構成した場合、TiFlashレプリカが読み取られます。最終的なエンジン構成が「tikv」と「tiflash」の場合、TiKVとTiFlashのレプリカが両方とも読み取られ、オプティマイザーは実行するのに適したエンジンを自動的に選択します。
+The final engine configuration is the session-level configuration, that is, the session-level configuration overrides the instance-level configuration. For example, if you have configured "tikv" in the INSTANCE level and "tiflash" in the SESSION level, then the TiFlash replicas are read. If the final engine configuration is "tikv" and "tiflash", then the TiKV and TiFlash replicas are both read, and the optimizer automatically selects a better engine to execute.
 
-> **ノート：**
+> **Note:**
 >
-> [TiDBダッシュボード](/dashboard/dashboard-intro.md)およびその他のコンポーネントは、TiDBメモリテーブル領域に格納されている一部のシステムテーブルを読み取る必要があるため、常に「tidb」エンジンをインスタンスレベルのエンジン構成に追加することをお勧めします。
+> Because [TiDB Dashboard](/dashboard/dashboard-intro.md) and other components need to read some system tables stored in the TiDB memory table area, it is recommended to always add the "tidb" engine to the instance-level engine configuration.
 
-照会されたテーブルに指定されたエンジンのレプリカがない場合（たとえば、エンジンが「tiflash」として構成されているが、テーブルにTiFlashレプリカがない場合）、クエリはエラーを返します。
+If the queried table does not have a replica of the specified engine (for example, the engine is configured as "tiflash" but the table does not have a TiFlash replica), the query returns an error.
 
-### 手動ヒント {#manual-hint}
+### Manual hint {#manual-hint}
 
-手動のヒントにより、TiDBは、エンジンの分離を満たすことを前提として、特定のテーブルに指定されたレプリカを使用するように強制できます。手動ヒントの使用例を次に示します。
+Manual hint can force TiDB to use specified replicas for specific table(s) on the premise of satisfying engine isolation. Here is an example of using the manual hint:
 
 {{< copyable "" >}}
 
@@ -240,7 +304,7 @@ explain analyze select count(*) from test.t;
 select /*+ read_from_storage(tiflash[table_name]) */ ... from table_name;
 ```
 
-クエリステートメントでテーブルにエイリアスを設定する場合は、ヒントを有効にするためのヒントを含むエイリアスをステートメントで使用する必要があります。例えば：
+If you set an alias to a table in a query statement, you must use the alias in the statement that includes a hint for the hint to take effect. For example:
 
 {{< copyable "" >}}
 
@@ -248,120 +312,111 @@ select /*+ read_from_storage(tiflash[table_name]) */ ... from table_name;
 select /*+ read_from_storage(tiflash[alias_a,alias_b]) */ ... from table_name_1 as alias_a, table_name_2 as alias_b where alias_a.column_1 = alias_b.column_2;
 ```
 
-上記のステートメントで、 `tiflash[]`はオプティマイザにTiFlashレプリカを読み取るように促します。 `tikv[]`を使用して、必要に応じてオプティマイザにTiKVレプリカを読み取るように求めることもできます。ヒント構文の詳細については、 [READ_FROM_STORAGE](/optimizer-hints.md#read_from_storagetiflasht1_name--tl_name--tikvt2_name--tl_name-)を参照してください。
+In the above statements, `tiflash[]` prompts the optimizer to read the TiFlash replicas. You can also use `tikv[]` to prompt the optimizer to read the TiKV replicas as needed. For hint syntax details, refer to [READ_FROM_STORAGE](/optimizer-hints.md#read_from_storagetiflasht1_name--tl_name--tikvt2_name--tl_name-).
 
-ヒントで指定されたテーブルに指定されたエンジンのレプリカがない場合、ヒントは無視され、警告が報告されます。さらに、ヒントはエンジン分離の前提でのみ有効になります。ヒントで指定されたエンジンがエンジン分離リストにない場合、ヒントも無視され、警告が報告されます。
+If the table specified by a hint does not have a replica of the specified engine, the hint is ignored and a warning is reported. In addition, a hint only takes effect on the premise of engine isolation. If the engine specified in a hint is not in the engine isolation list, the hint is also ignored and a warning is reported.
 
-> **ノート：**
+> **Note:**
 >
-> 5.7.7以前のバージョンのMySQLクライアントは、デフォルトでオプティマイザヒントをクリアします。これらの初期バージョンでヒント構文を使用するには、 `--comments`オプション（たとえば、 `mysql -h 127.0.0.1 -P 4000 -uroot --comments` ）でクライアントを起動します。
+> The MySQL client of 5.7.7 or earlier versions clears optimizer hints by default. To use the hint syntax in these early versions, start the client with the `--comments` option, for example, `mysql -h 127.0.0.1 -P 4000 -uroot --comments`.
 
-### スマートセレクション、エンジン分離、および手動ヒントの関係 {#the-relationship-of-smart-selection-engine-isolation-and-manual-hint}
+### The relationship of smart selection, engine isolation, and manual hint {#the-relationship-of-smart-selection-engine-isolation-and-manual-hint}
 
-上記の3つのTiFlashレプリカの読み取り方法では、エンジン分離により、エンジンの使用可能なレプリカの全体的な範囲が指定されます。この範囲内で、手動ヒントは、よりきめ細かいステートメントレベルおよびテーブルレベルのエンジン選択を提供します。最後に、CBOが決定を下し、指定されたエンジンリスト内のコスト見積もりに基づいてエンジンのレプリカを選択します。
+In the above three ways of reading TiFlash replicas, engine isolation specifies the overall range of available replicas of engines; within this range, manual hint provides statement-level and table-level engine selection that is more fine-grained; finally, CBO makes the decision and selects a replica of an engine based on cost estimation within the specified engine list.
 
-> **ノート：**
+> **Note:**
 >
-> `UPDATE ...`より前では、非読み取り専用SQLステートメント（たとえば、 `INSERT INTO ... SELECT` ）での`SELECT ... FOR UPDATE`レプリカからの読み取りの`DELETE ...`は定義されていません。 v4.0.3以降のバージョンでは、内部的にTiDBは非読み取り専用SQLステートメントのTiFlashレプリカを無視して、データの正確性を保証します。つまり、 [スマートセレクション](#smart-selection)の場合、TiDBは非TiFlashレプリカを自動的に選択します。 TiFlashレプリカ**のみ**を指定する[エンジンの分離](#engine-isolation)の場合、TiDBはエラーを報告します。 [手動ヒント](#manual-hint)の場合、TiDBはヒントを無視します。
+> Before v4.0.3, the behavior of reading from TiFlash replica in a non-read-only SQL statement (for example, `INSERT INTO ... SELECT`, `SELECT ... FOR UPDATE`, `UPDATE ...`, `DELETE ...`) is undefined. In v4.0.3 and later versions, internally TiDB ignores the TiFlash replica for a non-read-only SQL statement to guarantee the data correctness. That is, for [smart selection](#smart-selection), TiDB automatically selects the non-TiFlash replica; for [engine isolation](#engine-isolation) that specifies TiFlash replica **only**, TiDB reports an error; and for [manual hint](#manual-hint), TiDB ignores the hint.
 
-## TiSparkを使用してTiFlashレプリカを読み取ります {#use-tispark-to-read-tiflash-replicas}
+## Use TiSpark to read TiFlash replicas {#use-tispark-to-read-tiflash-replicas}
 
-現在、TiSparkを使用して、TiDBのエンジン分離と同様の方法でTiFlashレプリカを読み取ることができます。この方法は、 `spark.tispark.isolation_read_engines`つのパラメーターを構成するためのものです。パラメータ値のデフォルトは`tikv,tiflash`です。これは、TiDBがCBOの選択に従ってTiFlashまたはTiKVからデータを読み取ることを意味します。パラメータ値を`tiflash`に設定すると、TiDBがTiFlashからデータを強制的に読み取ることを意味します。
+Currently, you can use TiSpark to read TiFlash replicas in a method similar to the engine isolation in TiDB. This method is to configure the `spark.tispark.isolation_read_engines` parameter. The parameter value defaults to `tikv,tiflash`, which means that TiDB reads data from TiFlash or from TiKV according to CBO's selection. If you set the parameter value to `tiflash`, it means that TiDB forcibly reads data from TiFlash.
 
-> **ノート**
+> **Note:**
 >
-> このパラメーターが`tiflash`に設定されている場合、クエリに関係するすべてのテーブルのTiFlashレプリカのみが読み取られ、これらのテーブルにはTiFlashレプリカが必要です。 TiFlashレプリカがないテーブルの場合、エラーが報告されます。このパラメーターが`tikv`に設定されている場合、TiKVレプリカのみが読み取られます。
+> When this parameter is set to `tiflash`, only the TiFlash replicas of all tables involved in the query are read and these tables must have TiFlash replicas; for tables that do not have TiFlash replicas, an error is reported. When this parameter is set to `tikv`, only the TiKV replica is read.
 
-このパラメーターは、次のいずれかの方法で構成できます。
+You can configure this parameter in one of the following ways:
 
--   `spark-defaults.conf`のファイルに次の項目を追加します。
+-   Add the following item in the `spark-defaults.conf` file:
 
     ```
     spark.tispark.isolation_read_engines tiflash
     ```
 
--   SparkシェルまたはThriftサーバーを初期化するときに、初期化コマンドに`--conf spark.tispark.isolation_read_engines=tiflash`を追加します。
+-   Add `--conf spark.tispark.isolation_read_engines=tiflash` in the initialization command when initializing Spark shell or Thrift server.
 
--   リアルタイムでSparkシェルに`spark.conf.set("spark.tispark.isolation_read_engines", "tiflash")`を設定します。
+-   Set `spark.conf.set("spark.tispark.isolation_read_engines", "tiflash")` in Spark shell in a real-time manner.
 
--   サーバーがbeeline経由で接続された後、Thriftサーバーに`set spark.tispark.isolation_read_engines=tiflash`を設定します。
+-   Set `set spark.tispark.isolation_read_engines=tiflash` in Thrift server after the server is connected via beeline.
 
-## サポートされているプッシュダウン計算 {#supported-push-down-calculations}
+## Supported push-down calculations {#supported-push-down-calculations}
 
-TiFlashは、次の演算子のプッシュダウンをサポートしています。
+TiFlash supports the push-down of the following operators:
 
--   TableScan：テーブルからデータを読み取ります。
--   選択：データをフィルタリングします。
--   HashAgg： [ハッシュ集計](/explain-aggregation.md#hash-aggregation)アルゴリズムに基づいてデータ集約を実行します。
--   StreamAgg： [ストリーム集計](/explain-aggregation.md#stream-aggregation)のアルゴリズムに基づいてデータ集約を実行します。 SteamAggは、 `GROUP BY`の条件なしで集約のみをサポートします。
--   TopN：TopN計算を実行します。
--   制限：制限計算を実行します。
--   プロジェクト：投影計算を実行します。
--   HashJoin（Equi Join）： [ハッシュ参加](/explain-joins.md#hash-join)アルゴリズムに基づいて結合計算を実行しますが、次の条件があります。
-    -   オペレーターは[MPPモード](#use-the-mpp-mode)でのみ押し下げることができます。
-    -   `Full Outer Join`のプッシュダウンはサポートされていません。
--   HashJoin（非等結合）：デカルト結合アルゴリズムを実行しますが、次の条件があります。
-    -   オペレーターは[MPPモード](#use-the-mpp-mode)でのみ押し下げることができます。
-    -   デカルト結合は、ブロードキャスト結合でのみサポートされます。
+-   TableScan: Reads data from tables.
+-   Selection: Filters data.
+-   HashAgg: Performs data aggregation based on the [Hash Aggregation](/explain-aggregation.md#hash-aggregation) algorithm.
+-   StreamAgg: Performs data aggregation based on the [Stream Aggregation](/explain-aggregation.md#stream-aggregation) algorithm. SteamAgg only supports the aggregation without the `GROUP BY` condition.
+-   TopN: Performs the TopN calculation.
+-   Limit: Performs the limit calculation.
+-   Project: Performs the projection calculation.
+-   HashJoin (Equi Join): Performs the join calculation based on the [Hash Join](/explain-joins.md#hash-join) algorithm, but with the following conditions:
+    -   The operator can be pushed down only in the [MPP mode](#use-the-mpp-mode).
+    -   The push-down of `Full Outer Join` is not supported.
+-   HashJoin (Non-Equi Join): Performs the Cartesian Join algorithm, but with the following conditions:
+    -   The operator can be pushed down only in the [MPP mode](#use-the-mpp-mode).
+    -   Cartesian Join is supported only in Broadcast Join.
 
-TiDBでは、演算子はツリー構造で編成されています。オペレーターをTiFlashにプッシュダウンするには、次のすべての前提条件が満たされている必要があります。
+In TiDB, operators are organized in a tree structure. For an operator to be pushed down to TiFlash, all of the following prerequisites must be met:
 
--   その子演算子はすべてTiFlashにプッシュダウンできます。
--   演算子に式が含まれている場合（ほとんどの演算子に式が含まれている場合）、演算子のすべての式をTiFlashにプッシュダウンできます。
+-   All of its child operators can be pushed down to TiFlash.
+-   If an operator contains expressions (most of the operators contain expressions), all expressions of the operator can be pushed down to TiFlash.
 
-現在、TiFlashは次のプッシュダウン式をサポートしています。
+Currently, TiFlash supports the following push-down expressions:
 
--   数学関数： `+, -, /, *, %, >=, <=, =, !=, <, >, round, abs, floor(int), ceil(int), ceiling(int), sqrt, log, log2, log10, ln, exp, pow, sign, radians, degrees, conv, crc32`
--   論理関数： `and, or, not, case when, if, ifnull, isnull, in, like, coalesce`
--   ビット演算： `bitand, bitor, bigneg, bitxor`
--   文字列関数： `substr, char_length, replace, concat, concat_ws, left, right, ascii, length, trim, ltrim, rtrim, position, format, lower, ucase, upper, substring_index, lpad, rpad, strcmp`
--   日付関数： `date_format, timestampdiff, from_unixtime, unix_timestamp(int), unix_timestamp(decimal), str_to_date(date), str_to_date(datetime), datediff, year, month, day, extract(datetime), date, hour, microsecond, minute, second, sysdate, date_add, date_sub, adddate, subdate, quarter`
--   JSON関数： `json_length`
--   変換機能： `cast(int as double), cast(int as decimal), cast(int as string), cast(int as time), cast(double as int), cast(double as decimal), cast(double as string), cast(double as time), cast(string as int), cast(string as double), cast(string as decimal), cast(string as time), cast(decimal as int), cast(decimal as string), cast(decimal as time), cast(time as int), cast(time as decimal), cast(time as string), cast(time as real)`
--   集計関数： `min, max, sum, count, avg, approx_count_distinct, group_concat`
--   その他の機能： `inetntoa, inetaton, inet6ntoa, inet6aton`
+-   Mathematical functions: `+, -, /, *, %, >=, <=, =, !=, <, >, round, abs, floor(int), ceil(int), ceiling(int), sqrt, log, log2, log10, ln, exp, pow, sign, radians, degrees, conv, crc32`
+-   Logical functions: `and, or, not, case when, if, ifnull, isnull, in, like, coalesce`
+-   Bitwise operations: `bitand, bitor, bigneg, bitxor`
+-   String functions: `substr, char_length, replace, concat, concat_ws, left, right, ascii, length, trim, ltrim, rtrim, position, format, lower, ucase, upper, substring_index, lpad, rpad, strcmp`
+-   Date functions: `date_format, timestampdiff, from_unixtime, unix_timestamp(int), unix_timestamp(decimal), str_to_date(date), str_to_date(datetime), datediff, year, month, day, extract(datetime), date, hour, microsecond, minute, second, sysdate, date_add/adddate(datetime, int), date_add/adddate(string, int), date_add/adddate(string, real), date_sub/subdate(datetime, int), date_sub/subdate(string, int), date_sub/subdate(string, real), quarter`
+-   JSON function: `json_length`
+-   Conversion functions: `cast(int as double), cast(int as decimal), cast(int as string), cast(int as time), cast(double as int), cast(double as decimal), cast(double as string), cast(double as time), cast(string as int), cast(string as double), cast(string as decimal), cast(string as time), cast(decimal as int), cast(decimal as string), cast(decimal as time), cast(time as int), cast(time as decimal), cast(time as string), cast(time as real)`
+-   Aggregate functions: `min, max, sum, count, avg, approx_count_distinct, group_concat`
+-   Miscellaneous functions: `inetntoa, inetaton, inet6ntoa, inet6aton`
 
-### その他の制限 {#other-restrictions}
+### Other restrictions {#other-restrictions}
 
--   Bit、Set、およびGeometryタイプを含む式は、TiFlashにプッシュダウンできません。
+-   Expressions that contain the Bit, Set, and Geometry types cannot be pushed down to TiFlash.
 
--   `date_add` 、 `subdate` `date_sub`は、次の間隔タイプのみをサポートし`adddate` 。他の間隔タイプが使用されている場合、TiFlashはエラーを報告します。
+-   The `date_add`, `date_sub`, `adddate`, and `subdate` functions support the following interval types only. If other interval types are used, TiFlash reports errors.
 
-    -   日
-    -   週
-    -   月
-    -   年
-    -   時間
-    -   分
-    -   2番目
+    -   DAY
+    -   WEEK
+    -   MONTH
+    -   YEAR
+    -   HOUR
+    -   MINUTE
+    -   SECOND
 
-クエリでサポートされていないプッシュダウン計算が発生した場合、TiDBは残りの計算を完了する必要があります。これは、TiFlashアクセラレーション効果に大きな影響を与える可能性があります。現在サポートされていない演算子と式は、将来のバージョンでサポートされる可能性があります。
+If a query encounters unsupported push-down calculations, TiDB needs to complete the remaining calculations, which might greatly affect the TiFlash acceleration effect. The currently unsupported operators and expressions might be supported in future versions.
 
-## MPPモードを使用する {#use-the-mpp-mode}
+## Use the MPP mode {#use-the-mpp-mode}
 
-TiFlashは、MPPモードを使用したクエリの実行をサポートします。これにより、ノード間のデータ交換（データシャッフルプロセス）が計算に導入されます。 TiDBは、オプティマイザのコスト見積もりを使用して、MPPモードを選択するかどうかを自動的に決定します。 [`tidb_allow_mpp`](/system-variables.md#tidb_allow_mpp-new-in-v50)と[`tidb_enforce_mpp`](/system-variables.md#tidb_enforce_mpp-new-in-v51)の値を変更することにより、選択戦略を変更できます。
+TiFlash supports using the MPP mode to execute queries, which introduces cross-node data exchange (data shuffle process) into the computation. TiDB automatically determines whether to select the MPP mode using the optimizer's cost estimation. You can change the selection strategy by modifying the values of [`tidb_allow_mpp`](/system-variables.md#tidb_allow_mpp-new-in-v50) and [`tidb_enforce_mpp`](/system-variables.md#tidb_enforce_mpp-new-in-v51).
 
-### MPPモードを選択するかどうかを制御します {#control-whether-to-select-the-mpp-mode}
+### Control whether to select the MPP mode {#control-whether-to-select-the-mpp-mode}
 
-`tidb_allow_mpp`変数は、TiDBがクエリを実行するためにMPPモードを選択できるかどうかを制御します。 `tidb_enforce_mpp`変数は、オプティマイザーのコスト見積もりを無視するかどうかを制御し、TiFlashのMPPモードを使用してクエリを強制的に実行します。
+The `tidb_allow_mpp` variable controls whether TiDB can select the MPP mode to execute queries. The `tidb_enforce_mpp` variable controls whether the optimizer's cost estimation is ignored and the MPP mode of TiFlash is forcibly used to execute queries.
 
-これら2つの変数のすべての値に対応する結果は次のとおりです。
+The results corresponding to all values of these two variables are as follows:
 
-|                               | tidb_allow_mpp = off | tidb_allow_mpp = on（デフォルト）                 |
-| ----------------------------- | -------------------- | ------------------------------------------ |
-| tidb_enforce_mpp = off（デフォルト） | MPPモードは使用されません。      | オプティマイザは、コスト見積もりに基づいてMPPモードを選択します。 （デフォルト） |
-| tidb_enforce_mpp = on         | MPPモードは使用されません。      | TiDBはコスト見積もりを無視し、MPPモードを選択します。             |
+|                                   | tidb_allow_mpp=off        | tidb_allow_mpp=on (by default)                                            |
+| --------------------------------- | ------------------------- | ------------------------------------------------------------------------- |
+| tidb_enforce_mpp=off (by default) | The MPP mode is not used. | The optimizer selects the MPP mode based on cost estimation. (by default) |
+| tidb_enforce_mpp=on               | The MPP mode is not used. | TiDB ignores the cost estimation and selects the MPP mode.                |
 
-たとえば、MPPモードを使用したくない場合は、次のステートメントを実行できます。
-
-{{< copyable "" >}}
-
-```sql
-set @@session.tidb_allow_mpp=1;
-set @@session.tidb_enforce_mpp=0;
-```
-
-TiDBのコストベースのオプティマイザでMPPモード（デフォルト）を使用するかどうかを自動的に決定する場合は、次のステートメントを実行できます。
+For example, if you do not want to use the MPP mode, you can execute the following statements:
 
 {{< copyable "" >}}
 
@@ -370,7 +425,16 @@ set @@session.tidb_allow_mpp=1;
 set @@session.tidb_enforce_mpp=0;
 ```
 
-TiDBでオプティマイザのコスト見積もりを無視し、MPPモードを強制的に選択する場合は、次のステートメントを実行できます。
+If you want TiDB's cost-based optimizer to automatically decide whether to use the MPP mode (by default), you can execute the following statements:
+
+{{< copyable "" >}}
+
+```sql
+set @@session.tidb_allow_mpp=1;
+set @@session.tidb_enforce_mpp=0;
+```
+
+If you want TiDB to ignore the optimizer's cost estimation and to forcibly select the MPP mode, you can execute the following statements:
 
 {{< copyable "" >}}
 
@@ -379,13 +443,13 @@ set @@session.tidb_allow_mpp=1;
 set @@session.tidb_enforce_mpp=1;
 ```
 
-`tidb_enforce_mpp`セッション変数の初期値は、このtidb-serverインスタンスの[`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp)構成値（デフォルトでは`false` ）と同じです。 TiDBクラスタの複数のtidb-serverインスタンスが分析クエリのみを実行し、これらのインスタンスでMPPモードが使用されていることを確認する場合は、 [`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp)の構成値を`true`に変更できます。
+The initial value of the `tidb_enforce_mpp` session variable is equal to the [`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp) configuration value of this tidb-server instance (which is `false` by default). If multiple tidb-server instances in a TiDB cluster only perform analytical queries and you want to make sure that the MPP mode is used on these instances, you can change their [`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp) configuration values to `true`.
 
-> **ノート：**
+> **Note:**
 >
-> `tidb_enforce_mpp=1`が有効になると、TiDBオプティマイザはコスト見積もりを無視してMPPモードを選択します。ただし、他の要因がMPPモードをブロックしている場合、TiDBはMPPモードを選択しません。これらの要因には、TiFlashレプリカの欠如、TiFlashレプリカの未完成の複製、およびMPPモードでサポートされていない演算子または関数を含むステートメントが含まれます。
+> When `tidb_enforce_mpp=1` takes effect, the TiDB optimizer will ignore the cost estimation to choose the MPP mode. However, if other factors block the MPP mode, TiDB will not select the MPP mode. These factors include the absence of TiFlash replica, unfinished replication of TiFlash replicas, and statements containing operators or functions that are not supported by the MPP mode.
 >
-> コスト見積もり以外の理由でTiDBオプティマイザがMPPモードを選択できない場合、 `EXPLAIN`ステートメントを使用して実行プランをチェックアウトすると、理由を説明する警告が返されます。例えば：
+> If TiDB optimizer cannot select the MPP mode due to reasons other than cost estimation, when you use the `EXPLAIN` statement to check out the execution plan, a warning is returned to explain the reason. For example:
 >
 > {{< copyable "" >}}
 >
@@ -404,11 +468,11 @@ set @@session.tidb_enforce_mpp=1;
 > +---------+------+-----------------------------------------------------------------------------+
 > ```
 
-### MPPモードのアルゴリズムサポート {#algorithm-support-for-the-mpp-mode}
+### Algorithm support for the MPP mode {#algorithm-support-for-the-mpp-mode}
 
-MPPモードは、ブロードキャストハッシュ結合、シャッフルハッシュ結合、シャッフルハッシュ集計、Union All、TopN、およびLimitの物理アルゴリズムをサポートします。オプティマイザは、クエリで使用するアルゴリズムを自動的に決定します。特定のクエリ実行プランを確認するには、 `EXPLAIN`ステートメントを実行します。 `EXPLAIN`ステートメントの結果にExchangeSenderおよびExchangeReceiver演算子が表示されている場合は、MPPモードが有効になっていることを示しています。
+The MPP mode supports these physical algorithms: Broadcast Hash Join, Shuffled Hash Join, Shuffled Hash Aggregation, Union All, TopN, and Limit. The optimizer automatically determines which algorithm to be used in a query. To check the specific query execution plan, you can execute the `EXPLAIN` statement. If the result of the `EXPLAIN` statement shows ExchangeSender and ExchangeReceiver operators, it indicates that the MPP mode has taken effect.
 
-次のステートメントは、TPC-Hテストセットのテーブル構造を例として取り上げています。
+The following statement takes the table structure in the TPC-H test set as an example:
 
 ```sql
 explain select count(*) from customer c join nation n on c.c_nationkey=n.n_nationkey;
@@ -428,62 +492,62 @@ explain select count(*) from customer c join nation n on c.c_nationkey=n.n_natio
 9 rows in set (0.00 sec)
 ```
 
-実行プランの例には、 `ExchangeReceiver`と`ExchangeSender`の演算子が含まれています。実行プランは、 `nation`テーブルが読み取られた後、 `ExchangeSender`オペレーターがテーブルを各ノードにブロードキャストし、 `HashJoin`および`HashAgg`操作が`nation`テーブルと`customer`テーブルで実行され、結果がTiDBに返されることを示しています。
+In the example execution plan, the `ExchangeReceiver` and `ExchangeSender` operators are included. The execution plan indicates that after the `nation` table is read, the `ExchangeSender` operator broadcasts the table to each node, the `HashJoin` and `HashAgg` operations are performed on the `nation` table and the `customer` table, and then the results are returned to TiDB.
 
-TiFlashは、ブロードキャストハッシュ結合を使用するかどうかを制御するために、次の2つのグローバル/セッション変数を提供します。
+TiFlash provides the following two global/session variables to control whether to use Broadcast Hash Join:
 
--   [`tidb_broadcast_join_threshold_size`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50) ：値の単位はバイトです。テーブルサイズ（バイト単位）が変数の値よりも小さい場合は、ブロードキャストハッシュ結合アルゴリズムが使用されます。それ以外の場合は、シャッフルハッシュ結合アルゴリズムが使用されます。
--   [`tidb_broadcast_join_threshold_count`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50) ：値の単位は行です。結合操作のオブジェクトがサブクエリに属している場合、オプティマイザはサブクエリ結果セットのサイズを推定できないため、サイズは結果セットの行数によって決定されます。サブクエリの推定行数がこの変数の値よりも少ない場合は、ブロードキャストハッシュ結合アルゴリズムが使用されます。それ以外の場合は、シャッフルハッシュ結合アルゴリズムが使用されます。
+-   [`tidb_broadcast_join_threshold_size`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is bytes. If the table size (in the unit of bytes) is less than the value of the variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
+-   [`tidb_broadcast_join_threshold_count`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is rows. If the objects of the join operation belong to a subquery, the optimizer cannot estimate the size of the subquery result set, so the size is determined by the number of rows in the result set. If the estimated number of rows in the subquery is less than the value of this variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
 
-## データ検証 {#data-validation}
+## Data validation {#data-validation}
 
-### ユーザーシナリオ {#user-scenarios}
+### User scenarios {#user-scenarios}
 
-データの破損は通常、深刻なハードウェア障害によって引き起こされます。このような場合、手動でデータを回復しようとしても、データの信頼性が低下します。
+Data corruptions are usually caused by serious hardware failures. In such cases, even if you attempt to manually recover data, your data become less reliable.
 
-データの整合性を確保するために、デフォルトでは、TiFlashは`City128`アルゴリズムを使用してデータファイルに対して基本的なデータ検証を実行します。データ検証に失敗した場合、TiFlashはすぐにエラーを報告して終了し、一貫性のないデータによって引き起こされる二次的な災害を回避します。このとき、TiFlashノードを復元する前に、手動で介入してデータを再度複製する必要があります。
+To ensure data integrity, by default, TiFlash performs basic data validation on data files, using the `City128` algorithm. In the event of any data validation failure, TiFlash immediately reports an error and exits, avoiding secondary disasters caused by inconsistent data. At this time, you need to manually intervene and replicate the data again before you can restore the TiFlash node.
 
-v5.4.0以降、TiFlashはより高度なデータ検証機能を導入しています。 TiFlashはデフォルトで`XXH3`アルゴリズムを使用し、検証フレームとアルゴリズムをカスタマイズできます。
+Starting from v5.4.0, TiFlash introduces more advanced data validation features. TiFlash uses the `XXH3` algorithm by default and allows you to customize the validation frame and algorithm.
 
-### 検証メカニズム {#validation-mechanism}
+### Validation mechanism {#validation-mechanism}
 
-検証メカニズムは、DeltaTreeファイル（DTFile）に基づいて構築されています。 DTFileは、TiFlashデータを保持するストレージファイルです。 DTFileには次の3つの形式があります。
+The validation mechanism builds upon the DeltaTree File (DTFile). DTFile is the storage file that persists TiFlash data. DTFile has three formats:
 
-| バージョン | 州        | 検証メカニズム                                                   | ノート                       |
-| :---- | :------- | :-------------------------------------------------------- | :------------------------ |
-| V1    | 非推奨      | ハッシュはデータファイルに埋め込まれています。                                   |                           |
-| V2    | デフォルト    | ハッシュはデータファイルに埋め込まれています。                                   | V1と比較して、V2は列データの統計を追加します。 |
-| V3    | 手動で有効にする | V3には、メタデータとトークンデータのチェックサムが含まれており、複数のハッシュアルゴリズムをサポートしています。 | v5.4.0の新機能。               |
+| Version | State           | Validation mechanism                                                                 | Notes                                              |
+| :------ | :-------------- | :----------------------------------------------------------------------------------- | :------------------------------------------------- |
+| V1      | Deprecated      | Hashes are embedded in data files.                                                   |                                                    |
+| V2      | Default         | Hashes are embedded in data files.                                                   | Compared to V1, V2 adds statistics of column data. |
+| V3      | Manually enable | V3 contains metadata and token data checksum, and supports multiple hash algorithms. | New in v5.4.0.                                     |
 
-DTFileは、データファイルディレクトリの`stable`フォルダに保存されます。現在有効になっているすべての形式はフォルダ形式です。つまり、データは`dmf_<file id>`のような名前のフォルダの下にある複数のファイルに保存されます。
+DTFile is stored in the `stable` folder in the data file directory. All formats currently enabled are in folder format, which means the data is stored in multiple files under a folder with a name like `dmf_<file id>`.
 
-#### データ検証を使用する {#use-data-validation}
+#### Use data validation {#use-data-validation}
 
-TiFlashは、自動データ検証と手動データ検証の両方をサポートしています。
+TiFlash supports both automatic and manual data validation:
 
--   自動データ検証：
-    -   TiFlashは、デフォルトでV2検証メカニズムを有効にします。
-    -   V3検証メカニズムを有効にするには、 [TiFlash構成ファイル](/tiflash/tiflash-configuration.md#configure-the-tiflashtoml-file)を参照してください。
--   手動データ検証。 [`DTTool inspect`](/tiflash/tiflash-command-line-flags.md#dttool-inspect)を参照してください。
+-   Automatic data validation:
+    -   TiFlash enables the V2 validation mechanism by default.
+    -   To enable V3 validation mechanism, refer to [TiFlash configuration file](/tiflash/tiflash-configuration.md#configure-the-tiflashtoml-file).
+-   Manual data validation. Refer to [`DTTool inspect`](/tiflash/tiflash-command-line-flags.md#dttool-inspect).
 
-> **警告：**
+> **Warning:**
 >
-> V3検証メカニズムを有効にすると、新しく生成されたDTFileをv5.4.0より前のTiFlashで直接読み取ることはできません。 v5.4.0以降、TiFlashはV2とV3の両方をサポートし、バージョンをアクティブにアップグレードまたはダウングレードしません。既存のファイルのバージョンをアップグレードまたはダウングレードする必要がある場合は、手動で[バージョンの切り替え](/tiflash/tiflash-command-line-flags.md#dttool-migrate)を実行する必要があります。
+> After you enable the V3 validation mechanism, the newly generated DTFile cannot be directly read by TiFlash earlier than v5.4.0. Since v5.4.0, TiFlash supports both V2 and V3 and does not actively upgrade or downgrade versions. If you need to upgrade or downgrade versions for existing files, you need to manually [switch versions](/tiflash/tiflash-command-line-flags.md#dttool-migrate).
 
-#### 検証ツール {#validation-tool}
+#### Validation tool {#validation-tool}
 
-TiFlashがデータを読み取るときに実行される自動データ検証に加えて、データの整合性を手動でチェックするためのツールがv5.4.0で導入されています。詳しくは[DTTool](/tiflash/tiflash-command-line-flags.md#dttool-inspect)をご覧ください。
+In addition to automatic data validation performed when TiFlash reads data, a tool for manually checking data integrity is introduced in v5.4.0. For details, refer to [DTTool](/tiflash/tiflash-command-line-flags.md#dttool-inspect).
 
-## ノート {#notes}
+## Notes {#notes}
 
-次の状況では、TiFlashはTiDBと互換性がありません。
+TiFlash is incompatible with TiDB in the following situations:
 
--   TiFlash計算レイヤー：
-    -   オーバーフローした数値のチェックはサポートされていません。たとえば、 `BIGINT`タイプ`9223372036854775807 + 9223372036854775807`の2つの最大値を追加します。 TiDBでのこの計算の予想される動作は、 `ERROR 1690 (22003): BIGINT value is out of range`エラーを返すことです。ただし、この計算をTiFlashで実行すると、オーバーフロー値`-2`がエラーなしで返されます。
-    -   ウィンドウ関数はサポートされていません。
-    -   TiKVからのデータの読み取りはサポートされていません。
-    -   現在、TiFlashの`sum`関数は文字列型引数をサポートしていません。ただし、TiDBは、コンパイル中に文字列型の引数が`sum`関数に渡されたかどうかを識別できません。したがって、 `select sum(string_col) from t`と同様のステートメントを実行すると、TiFlashは`[FLASH:Coprocessor:Unimplemented] CastStringAsReal is not supported.`エラーを返します。この場合のこのようなエラーを回避するには、このSQLステートメントを`select sum(cast(string_col as double)) from t`に変更する必要があります。
-    -   現在、TiFlashの小数除算の計算はTiDBの計算と互換性がありません。たとえば、小数を除算する場合、TiFlashは常にコンパイルから推測されたタイプを使用して計算を実行します。ただし、TiDBは、コンパイルから推測されるタイプよりも正確なタイプを使用してこの計算を実行します。したがって、10進数の除算を含む一部のSQLステートメントは、TiDB+TiKVとTiDB+TiFlashで実行されたときに異なる実行結果を返します。例えば：
+-   In the TiFlash computation layer:
+    -   Checking overflowed numerical values is not supported. For example, adding two maximum values of the `BIGINT` type `9223372036854775807 + 9223372036854775807`. The expected behavior of this calculation in TiDB is to return the `ERROR 1690 (22003): BIGINT value is out of range` error. However, if this calculation is performed in TiFlash, an overflow value of `-2` is returned without any error.
+    -   The window function is not supported.
+    -   Reading data from TiKV is not supported.
+    -   Currently, the `sum` function in TiFlash does not support the string-type argument. But TiDB cannot identify whether any string-type argument has been passed into the `sum` function during the compiling. Therefore, when you execute statements similar to `select sum(string_col) from t`, TiFlash returns the `[FLASH:Coprocessor:Unimplemented] CastStringAsReal is not supported.` error. To avoid such an error in this case, you need to modify this SQL statement to `select sum(cast(string_col as double)) from t`.
+    -   Currently, TiFlash's decimal division calculation is incompatible with that of TiDB. For example, when dividing decimal, TiFlash performs the calculation always using the type inferred from the compiling. However, TiDB performs this calculation using a type that is more precise than that inferred from the compiling. Therefore, some SQL statements involving the decimal division return different execution results when executed in TiDB + TiKV and in TiDB + TiFlash. For example:
 
         ```sql
         mysql> create table t (a decimal(3,0), b decimal(10, 0));
@@ -507,4 +571,4 @@ TiFlashがデータを読み取るときに実行される自動データ検証�
         Empty set (0.01 sec)
         ```
 
-        上記の例では、コンパイルから推測される`a/b`の型は、TiDBとTiFlashの両方で`Decimal(7,4)`です。 `Decimal(7,4)`によって制約され、 `a/b`の返されるタイプは`0.0000`である必要があります。 TiDBでは、 `a/b`の実行時精度は`Decimal(7,4)`よりも高いため、元のテーブルデータは`where a/b`条件によってフィルタリングされません。ただし、TiFlashでは、 `a/b`の計算では結果タイプとして`Decimal(7,4)`が使用されるため、元のテーブルデータは`where a/b`条件でフィルタリングされます。
+        In the example above, `a/b`'s inferred type from the compiling is `Decimal(7,4)` both in TiDB and in TiFlash. Constrained by `Decimal(7,4)`, `a/b`'s returned type should be `0.0000`. In TiDB, `a/b`'s runtime precision is higher than `Decimal(7,4)`, so the original table data is not filtered by the `where a/b` condition. However, in TiFlash, the calculation of `a/b` uses `Decimal(7,4)` as the result type, so the original table data is filtered by the `where a/b` condition.

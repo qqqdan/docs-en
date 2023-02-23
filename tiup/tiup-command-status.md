@@ -4,36 +4,52 @@ title: tiup status
 
 # tiup status {#tiup-status}
 
-`tiup status`コマンドは、 `tiup [flags] <component> [args...]`コマンドを使用してコンポーネントを実行した後、コンポーネントの動作情報を表示するために使用されます。
+The `tiup status` command is used to view the operation information of the components after you run the components using the `tiup [flags] <component> [args...]` command.
 
-> **ノート：**
+> **Note:**
 >
-> 次のコンポーネントの情報のみを確認できます。
+> You can only check the information of the following components:
 >
-> -   まだ稼働中のコンポーネント
-> -   `tiup -T/--tag`で指定されたタグを実行するコンポーネント
+> -   Components that are still in operation
+> -   Components that run through the tag specified by `tiup -T/--tag`
 
-## 構文 {#syntax}
+## Syntax {#syntax}
 
 ```shell
 tiup status [flags]
 ```
 
-## オプション {#option}
+## Option {#option}
 
-なし
+None
 
-## 出力 {#output}
+## Output {#output}
 
-次のフィールドで構成されるテーブル：
+A table consisting of the following fields:
 
--   `Name` ： `-T/--tag`で指定されたタグ名。指定しない場合は、ランダムな文字列です。
--   `Component` ：操作コンポーネント。
--   `PID` ：オペレーティングコンポーネントの対応するプロセスID。
--   `Status` ：動作中のコンポーネントのステータス。
--   `Created Time` ：コンポーネントの開始時刻。
--   `Directory` ：コンポーネントのデータディレクトリ。
--   `Binary` ：コンポーネントのバイナリファイルパス。
--   `Args` ：オペレーティングコンポーネントの開始引数。
+-   `Name`: The tag name specified by `-T/--tag`. If not specified, it is a random string.
+-   `Component`: The operating components.
+-   `PID`: The corresponding process ID of the operating components.
+-   `Status`: The status of the operating components.
+-   `Created Time`: The starting time of the components.
+-   `Directory`: The data directory of the components.
+-   `Binary`: The binary file path of the components.
+-   `Args`: The starting arguments of the operating components.
 
-[&lt;&lt;前のページに戻る-TiUPリファレンスコマンドリスト](/tiup/tiup-reference.md#command-list)
+### Component status {#component-status}
+
+A component can run in one of the following statuses:
+
+-   Up: The component is running normally.
+-   Down or Unreachable: The component is not running or a network problem exists on the corresponding host.
+-   Tombstone: The data on the component has been completely migrated out and the scaling-in is complete. This status exists only on TiKV or TiFlash.
+-   Pending Offline: The data on the component is being migrated out and the scaling-in is in process. This status exists only on TiKV or TiFlash.
+-   Unknown: The running status of the component is unknown.
+
+> **Note:**
+>
+> `Pending Offline` in TiUP, `Offline` returned by PD API, and `Leaving` in TiDB Dashboard indicate the same status.
+
+Component status derives from the PD scheduling information. For more details, see [Information collection](/tidb-scheduling.md#information-collection).
+
+[&#x3C;&#x3C; Back to the previous page - TiUP Reference command list](/tiup/tiup-reference.md#command-list)

@@ -3,9 +3,9 @@ title: Stress Test TiDB Using TiUP Bench Component
 summary: Learns how to stress test TiDB with TPC-C and TPC-H workloads using TiUP.
 ---
 
-# TiUPベンチコンポーネントを使用したTiDBのストレステスト {#stress-test-tidb-using-tiup-bench-component}
+# Stress Test TiDB Using TiUP Bench Component {#stress-test-tidb-using-tiup-bench-component}
 
-データベースのパフォーマンスをテストする場合、データベースのストレステストが必要になることがよくあります。これを容易にするために、TiUPはベンチコンポーネントを統合しました。これは、ストレステスト用の2つのワークロードを提供します： [TPC-C](http://www.tpc.org/tpcc/)と[TPC-H](http://www.tpc.org/tpch/) 。コマンドとフラグは次のとおりです。詳細については、 [TPC公式サイト](http://www.tpc.org)を参照してください。
+When you test the performance of a database, it is often required to stress test the database. To facilitate this, TiUP has integrated the bench component, which provides two workloads for stress testing: [TPC-C](http://www.tpc.org/tpcc/) and [TPC-H](http://www.tpc.org/tpch/). The commands and flags are as follows. For more information, see the [TPC official website](http://www.tpc.org).
 
 {{< copyable "" >}}
 
@@ -48,11 +48,11 @@ Flags:
   -U, --user string         Database user (default "root")
 ```
 
-次のセクションでは、TiUPを使用してTPC-CおよびTPC-Hテストを実行する方法について説明します。
+The following sections describe how to run TPC-C and TPC-H tests using TiUP.
 
-## TiUPを使用してTPC-Cテストを実行します {#run-tpc-c-test-using-tiup}
+## Run TPC-C test using TiUP {#run-tpc-c-test-using-tiup}
 
-TiUPベンチコンポーネントは、TPC-Cテストを実行するために次のコマンドとフラグをサポートしています。
+The TiUP bench component supports the following commands and flags to run the TPC-C test:
 
 ```bash
 Available Commands:
@@ -64,15 +64,13 @@ Available Commands:
 Flags:
       --check-all        Run all consistency checks
   -h, --help             help for tpcc
-      --output string    Output directory for generating csv file when preparing data
       --parts int        Number to partition warehouses (default 1)
-      --tables string    Specified tables for generating file, separated by ','. Valid only if output is set. If this flag is not set, generate all tables by default.
       --warehouses int   Number of warehouses (default 10)
 ```
 
-### テスト手順 {#test-procedures}
+### Test procedures {#test-procedures}
 
-1.  ハッシュを介して4つのパーティションを使用して4つのウェアハウスを作成します。
+1.  Create 4 warehouses using 4 partitions via hash:
 
     {{< copyable "" >}}
 
@@ -80,7 +78,7 @@ Flags:
     tiup bench tpcc --warehouses 4 --parts 4 prepare
     ```
 
-2.  TPC-Cテストを実行します。
+2.  Run the TPC-C test:
 
     {{< copyable "" >}}
 
@@ -88,7 +86,7 @@ Flags:
     tiup bench tpcc --warehouses 4 run
     ```
 
-3.  データのクリーンアップ：
+3.  Clean up data:
 
     {{< copyable "" >}}
 
@@ -96,7 +94,7 @@ Flags:
     tiup bench tpcc --warehouses 4 cleanup
     ```
 
-4.  一貫性を確認します。
+4.  Check the consistency:
 
     {{< copyable "" >}}
 
@@ -104,33 +102,25 @@ Flags:
     tiup bench tpcc --warehouses 4 check
     ```
 
-5.  CSVファイルを生成します。
+5.  Generate the CSV file:
 
     {{< copyable "" >}}
 
     ```shell
-    tiup bench tpcc --warehouses 4 prepare --output data
+    tiup bench tpcc --warehouses 4 prepare --output-dir data --output-type=csv
     ```
 
-6.  指定されたテーブルのCSVファイルを生成します。
+6.  Generate the CSV file for the specified table:
 
     {{< copyable "" >}}
 
     ```shell
-    tiup bench tpcc --warehouses 4 prepare --output data --tables history,orders
+    tiup bench tpcc --warehouses 4 prepare --output-dir data --output-type=csv --tables history,orders
     ```
 
-7.  pprofを有効にします。
+## Run TPC-H test using TiUP {#run-tpc-h-test-using-tiup}
 
-    {{< copyable "" >}}
-
-    ```shell
-    tiup bench tpcc --warehouses 4 prepare --output data --pprof :10111
-    ```
-
-## TiUPを使用してTPC-Hテストを実行します {#run-tpc-h-test-using-tiup}
-
-TiUPベンチコンポーネントは、TPC-Hテストを実行するために次のコマンドとパラメータをサポートしています。
+The TiUP bench component supports the following commands and parameters to run the TPC-H test:
 
 ```bash
 Available Commands:
@@ -145,9 +135,9 @@ Flags:
       --sf int           scale factor
 ```
 
-### テスト手順 {#test-procedures}
+### Test procedures {#test-procedures}
 
-1.  データを準備する：
+1.  Prepare data:
 
     {{< copyable "" >}}
 
@@ -155,9 +145,9 @@ Flags:
     tiup bench tpch --sf=1 prepare
     ```
 
-2.  次のいずれかのコマンドを実行して、TPC-Hテストを実行します。
+2.  Run the TPC-H test by executing one of the following commands:
 
-    -   結果を確認する場合は、次のコマンドを実行します。
+    -   If you check the result, run this command:
 
         {{< copyable "" >}}
 
@@ -165,7 +155,7 @@ Flags:
         tiup bench tpch --sf=1 --check=true run
         ```
 
-    -   結果を確認しない場合は、次のコマンドを実行します。
+    -   If you do not check the result, run this command:
 
         {{< copyable "" >}}
 
@@ -173,7 +163,7 @@ Flags:
         tiup bench tpch --sf=1 run
         ```
 
-3.  データのクリーンアップ：
+3.  Clean up data:
 
     {{< copyable "" >}}
 

@@ -3,84 +3,79 @@ title: JSON Functions
 summary: Learn about JSON functions.
 ---
 
-# JSON関数 {#json-functions}
+# JSON Functions {#json-functions}
 
-> **警告：**
+> **Warning:**
 >
-> これはまだ実験的機能です。実稼働環境で使用することはお勧めし**ません**。
+> This is still an experimental feature. It is **NOT** recommended that you use it in the production environment.
 
-TiDBは、MySQL5.7のGAリリースに付属しているほとんどのJSON関数をサポートしています。追加のJSON関数がリリース後にMySQL5.7に追加されましたが、すべてがTiDBで使用できるわけではありません（ [サポートされていない機能](#unsupported-functions)を参照）。
+TiDB supports most of the JSON functions that shipped with the GA release of MySQL 5.7.
 
-## JSON値を作成する関数 {#functions-that-create-json-values}
+## Functions that create JSON values {#functions-that-create-json-values}
 
-| 関数名                                                     | 説明                                               |
-| ------------------------------------------------------- | ------------------------------------------------ |
-| [JSON\_ARRAY(\[val\[, val\] ...\])][json_array]         | （おそらく空の）値のリストを評価し、それらの値を含むJSON配列を返します            |
-| [JSON\_OBJECT(key, val\[, key, val\] ...)][json_object] | キーと値のペアの（おそらく空の）リストを評価し、それらのペアを含むJSONオブジェクトを返します |
-| [JSON\_QUOTE(string)][json_quote]                       | 文字列を引用符付きのJSON値として返します                           |
+| Function Name                                           | Description                                                                                           |
+| ------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| [JSON\_ARRAY(\[val\[, val\] ...\])][json_array]         | Evaluates a (possibly empty) list of values and returns a JSON array containing those values          |
+| [JSON\_OBJECT(key, val\[, key, val\] ...)][json_object] | Evaluates a (possibly empty) list of key-value pairs and returns a JSON object containing those pairs |
+| [JSON\_QUOTE(string)][json_quote]                       | Returns a string as a JSON value with quotes                                                          |
 
-## JSON値を検索する関数 {#functions-that-search-json-values}
+## Functions that search JSON values {#functions-that-search-json-values}
 
-| 関数名                                                                                     | 説明                                                                                      |
-| --------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [JSON\_CONTAINS(target, candidate\[, path\])][json_contains]                            | 特定の候補JSONドキュメントがターゲットJSONドキュメント内に含まれているかどうかを1または0で返すことによって示します                          |
-| [JSON\_CONTAINS\_PATH(json\_doc, one\_or\_all, path\[, path\] ...)][json_contains_path] | 0または1を返し、JSONドキュメントに特定のパスにデータが含まれているかどうかを示します                                           |
-| [JSON\_EXTRACT(json\_doc, path\[, path\] ...)][json_extract]                            | `path`の引数に一致するドキュメントの部分から選択されたJSONドキュメントからデータを返します                                      |
-| [->][json_short_extract]                                                                | 評価パスの後のJSON列から値を返します。 `JSON_EXTRACT(doc, path_literal)`のエイリアス                           |
-| [->>][json_short_extract_unquote]                                                       | パスを評価し、結果の引用符を外した後、JSON列から値を返します。 `JSON_UNQUOTE(JSON_EXTRACT(doc, path_literal))`のエイリアス |
-| [JSON\_KEYS(json\_doc\[, path\])][json_keys]                                            | JSONオブジェクトのトップレベル値からのキーをJSON配列として返します。または、パス引数が指定されている場合は、選択したパスからのトップレベルキーを返します。       |
-| [JSON\_SEARCH(json\_doc, one\_or\_all, search\_string)][json_search]                    | 文字列の1つまたはすべての一致をJSONドキュメントで検索します                                                        |
+| Function Name                                                                           | Description                                                                                                                                            |
+| --------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [JSON\_CONTAINS(target, candidate\[, path\])][json_contains]                            | Indicates by returning 1 or 0 whether a given candidate JSON document is contained within a target JSON document                                       |
+| [JSON\_CONTAINS\_PATH(json\_doc, one\_or\_all, path\[, path\] ...)][json_contains_path] | Returns 0 or 1 to indicate whether a JSON document contains data at a given path or paths                                                              |
+| [JSON\_EXTRACT(json\_doc, path\[, path\] ...)][json_extract]                            | Returns data from a JSON document, selected from the parts of the document matched by the `path` arguments                                             |
+| [->][json_short_extract]                                                                | Returns the value from a JSON column after the evaluating path; an alias for `JSON_EXTRACT(doc, path_literal)`                                         |
+| [->>][json_short_extract_unquote]                                                       | Returns the value from a JSON column after the evaluating path and unquoting the result; an alias for `JSON_UNQUOTE(JSON_EXTRACT(doc, path_literal))`  |
+| [JSON\_KEYS(json\_doc\[, path\])][json_keys]                                            | Returns the keys from the top-level value of a JSON object as a JSON array, or, if a path argument is given, the top-level keys from the selected path |
+| [JSON\_SEARCH(json\_doc, one\_or\_all, search\_string)][json_search]                    | Search a JSON document for one or all matches of a string                                                                                              |
 
-## JSON値を変更する関数 {#functions-that-modify-json-values}
+## Functions that modify JSON values {#functions-that-modify-json-values}
 
-| 関数名                                                                                   | 説明                                   |
-| ------------------------------------------------------------------------------------- | ------------------------------------ |
-| [JSON\_APPEND(json\_doc, path, value)][json_append]                                   | `JSON_ARRAY_APPEND`のエイリアス            |
-| [JSON\_ARRAY\_APPEND(json\_doc, path, value)][json_array_append]                      | 指定されたパスのJSON配列の最後に値を追加します            |
-| [JSON\_ARRAY\_INSERT(json\_doc, path, val\[, path, val\] ...)][json_array_insert]     | jsonドキュメントに配列を挿入し、変更されたドキュメントを返します   |
-| [JSON\_INSERT(json\_doc, path, val\[, path, val\] ...)][json_insert]                  | JSONドキュメントにデータを挿入し、結果を返します           |
-| [JSON\_MERGE(json\_doc, json\_doc\[, json\_doc\] ...)][json_merge]                    | `JSON_MERGE_PRESERVE`の非推奨のエイリアス      |
-| [JSON\_MERGE\_PRESERVE(json\_doc, json\_doc\[, json\_doc\] ...)][json_merge_preserve] | 2つ以上のJSONドキュメントをマージし、マージされた結果を返します   |
-| [JSON\_REMOVE(json\_doc, path\[, path\] ...)][json_remove]                            | JSONドキュメントからデータを削除し、結果を返します          |
-| [JSON\_REPLACE(json\_doc, path, val\[, path, val\] ...)][json_replace]                | JSONドキュメントの既存の値を置き換えて、結果を返します        |
-| [JSON\_SET(json\_doc, path, val\[, path, val\] ...)][json_set]                        | JSONドキュメントにデータを挿入または更新し、結果を返します      |
-| [JSON\_UNQUOTE(json\_val)][json_unquote]                                              | JSON値の引用符を解除し、結果を文字列として返します          |
-| [JSON\_ARRAY\_APPEND(json\_doc, path, val\[, path, val\] ...)][json_array_append]     | JSONドキュメント内の指定された配列の最後に値を追加し、結果を返します |
-| [JSON\_ARRAY\_INSERT(json\_doc, path, val\[, path, val\] ...)][json_array_insert]     | JSONドキュメントの指定された場所に値を挿入し、結果を返します     |
+| Function Name                                                                         | Description                                                                                     |
+| ------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| [JSON\_APPEND(json\_doc, path, value)][json_append]                                   | An alias to `JSON_ARRAY_APPEND`                                                                 |
+| [JSON\_ARRAY\_APPEND(json\_doc, path, value)][json_array_append]                      | Appends a value to the end of a JSON array at a specified path                                  |
+| [JSON\_ARRAY\_INSERT(json\_doc, path, val\[, path, val\] ...)][json_array_insert]     | Inserts an array into the json document and returns the modified document                       |
+| [JSON\_INSERT(json\_doc, path, val\[, path, val\] ...)][json_insert]                  | Inserts data into a JSON document and returns the result                                        |
+| [JSON\_MERGE(json\_doc, json\_doc\[, json\_doc\] ...)][json_merge]                    | A deprecated alias for `JSON_MERGE_PRESERVE`                                                    |
+| [JSON\_MERGE\_PATCH(json\_doc, json\_doc\[, json\_doc\] ...)][json_merge_patch]       | Merge JSON documents                                                                            |
+| [JSON\_MERGE\_PRESERVE(json\_doc, json\_doc\[, json\_doc\] ...)][json_merge_preserve] | Merges two or more JSON documents and returns the merged result                                 |
+| [JSON\_REMOVE(json\_doc, path\[, path\] ...)][json_remove]                            | Removes data from a JSON document and returns the result                                        |
+| [JSON\_REPLACE(json\_doc, path, val\[, path, val\] ...)][json_replace]                | Replaces existing values in a JSON document and returns the result                              |
+| [JSON\_SET(json\_doc, path, val\[, path, val\] ...)][json_set]                        | Inserts or updates data in a JSON document and returns the result                               |
+| [JSON\_UNQUOTE(json\_val)][json_unquote]                                              | Unquotes a JSON value and returns the result as a string                                        |
+| [JSON\_ARRAY\_APPEND(json\_doc, path, val\[, path, val\] ...)][json_array_append]     | Appends values to the end of the indicated arrays within a JSON document and returns the result |
+| [JSON\_ARRAY\_INSERT(json\_doc, path, val\[, path, val\] ...)][json_array_insert]     | Insert values into the specified location of a JSON document and returns the result             |
 
-## JSON値属性を返す関数 {#functions-that-return-json-value-attributes}
+## Functions that return JSON value attributes {#functions-that-return-json-value-attributes}
 
-| 関数名                                              | 説明                                                         |
-| ------------------------------------------------ | ---------------------------------------------------------- |
-| [JSON\_DEPTH(json\_doc)][json_depth]             | JSONドキュメントの最大深度を返します                                       |
-| [JSON\_LENGTH(json\_doc\[, path\])][json_length] | JSONドキュメントの長さを返します。パス引数が指定されている場合は、パス内の値の長さを返します。          |
-| [JSON\_TYPE(json\_val)][json_type]               | JSON値のタイプを示す文字列を返します                                       |
-| [JSON\_VALID(json\_doc)][json_valid]             | json_docが有効なJSONであるかどうかを確認します。 json型に変換する前に列をチェックするのに便利です。 |
+| Function Name                                    | Description                                                                                                     |
+| ------------------------------------------------ | --------------------------------------------------------------------------------------------------------------- |
+| [JSON\_DEPTH(json\_doc)][json_depth]             | Returns the maximum depth of a JSON document                                                                    |
+| [JSON\_LENGTH(json\_doc\[, path\])][json_length] | Returns the length of a JSON document, or, if a path argument is given, the length of the value within the path |
+| [JSON\_TYPE(json\_val)][json_type]               | Returns a string indicating the type of a JSON value                                                            |
+| [JSON\_VALID(json\_doc)][json_valid]             | Checks if a json_doc is valid JSON. Useful for checking a column before converting it to the json type.         |
 
-## ユーティリティ関数 {#utility-functions}
+## Utility Functions {#utility-functions}
 
-| 関数名                                               | 説明                                                                                      |
-| ------------------------------------------------- | --------------------------------------------------------------------------------------- |
-| [JSON_STORAGE_SIZE（json_doc）] [json_storage_size] | json値を格納するために必要なバイトのおおよそのサイズを返します。サイズは圧縮を使用するTiKVを考慮していないため、この関数の出力はMySQLと厳密に互換性がありません。 |
+| Function Name                                       | Description                                                                                                                                                                                        |
+| --------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [JSON\_PRETTY(json\_doc)][json_pretty]              | Pretty formatting of a JSON document                                                                                                                                                               |
+| [JSON\_STORAGE\_SIZE(json\_doc)][json_storage_size] | Returns an approximate size of bytes required to store the json value. As the size does not account for TiKV using compression, the output of this function is not strictly compatible with MySQL. |
 
-## 集計関数 {#aggregate-functions}
+## Aggregate Functions {#aggregate-functions}
 
-| 関数名                                          | 説明                |
-| -------------------------------------------- | ----------------- |
-| [JSON_OBJECTAGG（key、value）] [json_objectagg] | 特定のキーの値の集計を提供します。 |
+| Function Name                                 | Description                                        |
+| --------------------------------------------- | -------------------------------------------------- |
+| [JSON\_ARRAYAGG(key)][json_arrayagg]          | Provides an aggregation of keys.                   |
+| [JSON\_OBJECTAGG(key, value)][json_objectagg] | Provides an aggregation of values for a given key. |
 
-## サポートされていない機能 {#unsupported-functions}
+## See also {#see-also}
 
-次のJSON関数はTiDBではサポートされていません。 [TiDB＃7546](https://github.com/pingcap/tidb/issues/7546)でそれらを追加する際の進捗状況を追跡できます：
-
--   `JSON_MERGE_PATCH`
--   `JSON_PRETTY`
--   `JSON_ARRAYAGG`
-
-## も参照してください {#see-also}
-
--   [JSON関数リファレンス](https://dev.mysql.com/doc/refman/5.7/en/json-function-reference.html)
--   [JSONデータ型](/data-type-json.md)
+-   [JSON Function Reference](https://dev.mysql.com/doc/refman/5.7/en/json-function-reference.html)
+-   [JSON Data Type](/data-type-json.md)
 
 [json_extract]: https://dev.mysql.com/doc/refman/5.7/en/json-search-functions.html#function_json-extract
 
@@ -101,6 +96,8 @@ TiDBは、MySQL5.7のGAリリースに付属しているほとんどのJSON関�
 [json_remove]: https://dev.mysql.com/doc/refman/5.7/en/json-modification-functions.html#function_json-remove
 
 [json_merge]: https://dev.mysql.com/doc/refman/5.7/en/json-modification-functions.html#function_json-merge
+
+[json_merge_patch]: https://dev.mysql.com/doc/refman/5.7/en/json-modification-functions.html#function_json-merge-patch
 
 [json_merge_preserve]: https://dev.mysql.com/doc/refman/5.7/en/json-modification-functions.html#function_json-merge-preserve
 
@@ -131,3 +128,11 @@ TiDBは、MySQL5.7のGAリリースに付属しているほとんどのJSON関�
 [json_array_append]: https://dev.mysql.com/doc/refman/5.7/en/json-modification-functions.html#function_json-array-append
 
 [json_array_insert]: https://dev.mysql.com/doc/refman/5.7/en/json-modification-functions.html#function_json-array-insert
+
+[json_arrayagg]: https://dev.mysql.com/doc/refman/5.7/en/aggregate-functions.html#function_json-arrayagg
+
+[json_objectagg]: https://dev.mysql.com/doc/refman/5.7/en/aggregate-functions.html#function_json-objectagg
+
+[json_pretty]: https://dev.mysql.com/doc/refman/5.7/en/json-utility-functions.html#function_json-pretty
+
+[json_storage_size]: https://dev.mysql.com/doc/refman/5.7/en/json-utility-functions.html#function_json-storage-size

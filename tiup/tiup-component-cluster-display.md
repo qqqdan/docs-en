@@ -4,64 +4,100 @@ title: tiup cluster display
 
 # tiup cluster display {#tiup-cluster-display}
 
-クラスタの各コンポーネントの動作ステータスを確認したい場合は、各マシンに1つずつログインするのは明らかに非効率的です。したがって、tiup-clusterは、このタスクを効率的に完了するための`tiup cluster display`のコマンドを提供します。
+If you want to see the operation status of each component in the cluster, it is obviously inefficient to log in to each machine one by one. Therefore, tiup-cluster provides the `tiup cluster display` command to efficiently complete this task.
 
-## 構文 {#syntax}
+## Syntax {#syntax}
 
 ```shell
 tiup cluster display <cluster-name> [flags]
 ```
 
-`<cluster-name>` ：操作するクラスタの名前。クラスタ名を忘れた場合は、 [クラスタリスト](/tiup/tiup-component-cluster-list.md)コマンドで確認できます。
+`<cluster-name>`: the name of the cluster to operate on. If you forget the cluster name, you can check it with the [cluster list](/tiup/tiup-component-cluster-list.md) command.
 
-## オプション {#options}
+## Options {#options}
 
-### -ダッシュボード {#dashboard}
+### --dashboard {#dashboard}
 
--   デフォルトでは、クラスタ全体のすべてのノード情報が表示されます。 `--dashboard`オプションでは、ダッシュボード情報のみが表示されます。
--   データ型： `BOOLEAN`
--   このオプションはデフォルトで無効になっており、デフォルト値は`false`です。このオプションを有効にするには、このオプションをコマンドに追加して、 `true`の値を渡すか、値を渡さないようにします。
+-   By default, all node information of the entire cluster is displayed. With the `--dashboard` option, only dashboard information is displayed.
+-   Data type: `BOOLEAN`
+-   This option is disabled by default and its default value is `false`. To enable this option, you can add this option to the command, and pass the `true` value or do not pass any value.
 
-### -N、-node {#n-node}
+### -N, --node {#n-node}
 
--   表示するノードを指定します。このオプションを指定しない場合、すべてのノードが表示されます。このオプションの値は、ノードIDのコンマ区切りのリストです。ノードのIDがわからない場合は、コマンドでこのオプションをスキップして、出力にすべてのノードのIDとステータスを表示できます。
--   データ型： `STRINGS`
--   このオプションがコマンドで指定されていない場合、デフォルトですべてのノードがチェックされます。
+-   Specifies the node to display. If this option is not specified, all nodes are displayed. The value of this option is a comma-separated list of node IDs. If you are not sure about the ID of a node, you can skip this option in the command to show the IDs and status of all nodes in the output.
+-   Data type: `STRINGS`
+-   If this option is not specified in the command, all nodes are checked by default.
 
-> **ノート：**
+> **Note:**
 >
-> `-R, --role`オプションを同時に指定すると、 `-N, --node`と`-R, --role`の両方の仕様に一致するサービスノードのみがチェックされます。
+> If the `-R, --role` option is specified at the same time, only the service nodes that match both the specifications of `-N, --node` and `-R, --role` are checked.
 
-### -R、-role {#r-role}
+### -R, --role {#r-role}
 
--   表示する役割を指定します。指定しない場合は、すべての役割が表示されます。このオプションの値は、ノードの役割のコンマ区切りのリストです。ノードにデプロイされている役割がわからない場合は、コマンドでこのオプションをスキップして、出力にすべてのノードの役割とステータスを表示できます。
--   データ型： `STRINGS`
--   コマンドでこのオプションが指定されていない場合、デフォルトですべての役割が表示されます。
+-   Specifies the role to display. If it is not specified, all roles are displayed. The value of this option is a comma-separated list of node roles. If you are not sure about the role deployed on a node, you can skip this option in the command to show the roles and status of all nodes in the output.
+-   Data type: `STRINGS`
+-   If this option is not specified in the command, all roles are displayed by default.
 
-> **ノート：**
+> **Note:**
 >
-> `-N, --node`オプションを同時に指定すると、 `-N, --node`と`-R, --role`の両方の仕様に一致するサービスノードのみが表示されます。
+> If the `-N, --node` option is specified at the same time, only the service nodes that match both the specifications of `-N, --node` and `-R, --role` are displayed.
 
-### -h、-help {#h-help}
+### --process {#process}
 
--   ヘルプ情報を出力します。
--   データ型： `BOOLEAN`
--   このオプションはデフォルトで無効になっており、デフォルト値は`false`です。このオプションを有効にするには、このオプションをコマンドに追加して、 `true`の値を渡すか、値を渡さないようにします。
+-   Displays the CPU and memory usage information of the node when this option is enabled. This option is disabled by default.
+-   Data type: `BOOLEAN`
+-   Default value: `false`
+-   To enable this option, you can add this option to the command, and pass the `true` value or do not pass any value.
 
-## 出力 {#outputs}
+### --uptime {#uptime}
 
--   クラスタ名
--   クラスタバージョン
--   SSHクライアントタイプ
--   ダッシュボードアドレス
--   次のフィールドを持つテーブル：
-    -   ID： `IP:PORT`で構成されるノードID
-    -   ロール：このノードにデプロイされたサービスロール（TiDB、TiKVなど）
-    -   ホスト：ノードに対応するマシンのIP
-    -   ポート：サービスが占有するポート番号
-    -   OS / Arch：このノードのオペレーティングシステムとマシンアーキテクチャ
-    -   ステータス：ノードサービスの現在のステータス
-    -   データディレクトリ：サービスのデータディレクトリ。 `-`はデータディレクトリがないことを意味します。
-    -   デプロイ Dir：サービスのデプロイメントディレクトリ
+-   Displays the `uptime` information of the node when this option is enabled. This option is disabled by default.
+-   Data type: `BOOLEAN`
+-   Default value: `false`
+-   To enable this option, you can add this option to the command, and pass the `true` value or do not pass any value.
 
-[&lt;&lt;前のページに戻る-TiUPクラスターコマンドリスト](/tiup/tiup-component-cluster.md#command-list)
+### --status-timeout {#status-timeout}
+
+-   Specifies the timeout period for obtaining the node status information.
+-   Data type: `INT`
+-   Default value: `10`, in the unit of second.
+
+### -h, --help {#h-help}
+
+-   Prints the help information.
+-   Data type: `BOOLEAN`
+-   This option is disabled by default and its default value is `false`. To enable this option, you can add this option to the command, and pass the `true` value or do not pass any value.
+
+## Outputs {#outputs}
+
+-   The cluster name
+-   The cluster version
+-   SSH Client Type
+-   Dashboard address
+-   The table with the following fields:
+    -   ID: the node ID, composed of `IP:PORT`
+    -   Role: the service role deployed on this node (such as TiDB, TiKV)
+    -   Host: the IP of the machine corresponding to the node
+    -   Ports: the port number occupied by the service
+    -   OS/Arch: the operating system and the machine architecture of this node
+    -   Status: the current status of the node service
+    -   Data Dir: the data directory of the service. `-` means no data directory.
+    -   Deploy Dir: the deployment directory of the service
+
+### Node service status {#node-service-status}
+
+A node service can run in one of the following statuses:
+
+-   Up: The node service is running normally.
+-   Down or Unreachable: The node service is not running or a network problem exists on the corresponding host.
+-   Tombstone: The data on the node service has been completely migrated out and the scaling-in is complete. This status exists only on TiKV or TiFlash.
+-   Pending Offline: The data on the node service is being migrated out and the scaling-in is in process. This status exists only on TiKV or TiFlash.
+-   Unknown: The running status of the node service is unknown.
+
+> **Note:**
+>
+> `Pending Offline` in TiUP, `Offline` returned by PD API, and `Leaving` in TiDB Dashboard indicate the same status.
+
+Node service status derives from the PD scheduling information. For more details, see [Information collection](/tidb-scheduling.md#information-collection).
+
+[&#x3C;&#x3C; Back to the previous page - TiUP Cluster command list](/tiup/tiup-component-cluster.md#command-list)

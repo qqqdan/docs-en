@@ -3,31 +3,31 @@ title: Migrate Data from Amazon Aurora to TiDB
 summary: Learn how to migrate data from Amazon Aurora to TiDB using DB snapshot.
 ---
 
-# AuroraからTiDBへのデータの移行 {#migrate-data-from-amazon-aurora-to-tidb}
+# Migrate Data from Amazon Aurora to TiDB {#migrate-data-from-amazon-aurora-to-tidb}
 
-このドキュメントでは、 AuroraからTiDBにデータを移行する方法について説明します。移行プロセスでは[DBスナップショット](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html)を使用するため、スペースと時間が大幅に節約されます。
+This document describes how to migrate data from Amazon Aurora to TiDB. The migration process uses [DB snapshot](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/Aurora.Managing.Backups.html), which saves a lot of space and time.
 
-移行全体には2つのプロセスがあります。
+The whole migration has two processes:
 
--   TiDBLightningを使用して完全なデータをTiDBにインポートする
--   DMを使用して増分データをTiDBに複製する（オプション）
+-   Import full data to TiDB using TiDB Lightning
+-   Replicate incremental data to TiDB using DM (optional)
 
-## 前提条件 {#prerequisites}
+## Prerequisites {#prerequisites}
 
--   [DumplingとTiDBLightningをインストールします](/migration-tools.md)
--   [TiDBLightningに必要なターゲットデータベース権限を取得します](/tidb-lightning/tidb-lightning-faq.md#what-are-the-privilege-requirements-for-the-target-database) 。
+-   [Install Dumpling and TiDB Lightning](/migration-tools.md)
+-   [Get the target database privileges required for TiDB Lightning](/tidb-lightning/tidb-lightning-faq.md#what-are-the-privilege-requirements-for-the-target-database).
 
-## 完全なデータをTiDBにインポートする {#import-full-data-to-tidb}
+## Import full data to TiDB {#import-full-data-to-tidb}
 
-### ステップAuroraスナップショットをAmazonS3にエクスポートします {#step-1-export-an-aurora-snapshot-to-amazon-s3}
+### Step 1. Export an Aurora snapshot to Amazon S3 {#step-1-export-an-aurora-snapshot-to-amazon-s3}
 
-1.  Auroraで、次のコマンドを実行して、現在のbinlogの位置を照会します。
+1.  In Aurora, query the current binlog position by running the following command:
 
     ```sql
     mysql> SHOW MASTER STATUS;
     ```
 
-    出力は次のようになります。後で使用するために、binlogの名前と位置を記録します。
+    The output is similar to the following. Record the binlog name and position for later use.
 
     ```
     +------------------+----------+--------------+------------------+-------------------+
@@ -38,20 +38,20 @@ summary: Learn how to migrate data from Amazon Aurora to TiDB using DB snapshot.
     1 row in set (0.012 sec)
     ```
 
-2.  Auroraスナップショットをエクスポートします。詳細な手順については、 [DBスナップショットデータをAmazonS3にエクスポートする](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_ExportSnapshot.html)を参照してください。
+2.  Export the Aurora snapshot. For detailed steps, refer to [Exporting DB snapshot data to Amazon S3](https://docs.aws.amazon.com/AmazonRDS/latest/AuroraUserGuide/USER_ExportSnapshot.html).
 
-binlogの位置を取得したら、5分以内にスナップショットをエクスポートします。そうしないと、記録されたbinlogの位置が古くなり、増分レプリケーション中にデータの競合が発生する可能性があります。
+After you obtain the binlog position, export the snapshot within 5 minutes. Otherwise, the recorded binlog position might be outdated and thus cause data conflict during the incremental replication.
 
-上記の2つの手順を実行した後、次の情報が用意されていることを確認してください。
+After the two steps above, make sure you have the following information ready:
 
--   スナップショット作成時のAuroraの名前と位置。
--   スナップショットが保存されているS3パス、およびS3パスにアクセスできるSecretKeyとAccessKey。
+-   The Aurora binlog name and position at the time of the snapshot creation.
+-   The S3 path where the snapshot is stored, and the SecretKey and AccessKey with access to the S3 path.
 
-### ステップ2.スキーマをエクスポートする {#step-2-export-schema}
+### Step 2. Export schema {#step-2-export-schema}
 
-AuroraのスナップショットファイルにはDDLステートメントが含まれていないため、 Dumplingを使用してスキーマをエクスポートし、TiDBLightningを使用してターゲットデータベースにスキーマを作成する必要があります。スキーマを手動で作成する場合は、この手順をスキップできます。
+Because the snapshot file from Aurora does not contain the DDL statements, you need to export the schema using Dumpling and create the schema in the target database using TiDB Lightning. If you want to manually create the schema, you can skip this step.
 
-次のコマンドを実行して、 Dumplingを使用してスキーマをエクスポートします。このコマンドには、目的のテーブルスキーマのみをエクスポートするための`--filter`つのパラメーターが含まれています。
+Export the schema using Dumpling by running the following command. The command includes the `--filter` parameter to only export the desired table schema:
 
 {{< copyable "" >}}
 
@@ -59,26 +59,26 @@ AuroraのスナップショットファイルにはDDLステートメントが�
 tiup dumpling --host ${host} --port 3306 --user root --password ${password} --filter 'my_db1.table[12]' --no-data --output 's3://my-bucket/schema-backup?region=us-west-2' --filter "mydb.*"
 ```
 
-上記のコマンドで使用されるパラメータは次のとおりです。その他のパラメータについては、 [Dumplingの概要](/dumpling-overview.md)を参照してください。
+The parameters used in the command above are as follows. For more parameters, refer to [Dumpling overview](/dumpling-overview.md).
 
-| パラメータ                  | 説明                                                                                              |
-| ---------------------- | ----------------------------------------------------------------------------------------------- |
-| `-u`または`--user`        | Auroraユーザー                                                                                      |
-| `-p`または`--password`    | MySQLユーザーパスワード                                                                                  |
-| `-P`または`--port`        | MySQLポート                                                                                        |
-| `-h`または`--host`        | MySQLIPアドレス                                                                                     |
-| `-t`または`--thread`      | エクスポートに使用されるスレッドの数                                                                              |
-| `-o`または`--output`      | エクスポートされたファイルを保存するディレクトリ。ローカルパスまたは[外部ストレージURL](/br/backup-and-restore-storages.md)をサポート         |
-| `-r`または`--row`         | 1つのファイルの最大行数                                                                                    |
-| `-F`                   | MiBでの単一ファイルの最大サイズ。推奨値：256MiB。                                                                   |
-| `-B`または`--database`    | エクスポートするデータベースを指定します                                                                            |
-| `-T`または`--tables-list` | 指定されたテーブルをエクスポートします                                                                             |
-| `-d`または`--no-data`     | データをエクスポートしません。スキーマのみをエクスポートします。                                                                |
-| `-f`または`--filter`      | パターンに一致するテーブルをエクスポートします。 `-f`と`-T`を同時に使用しないでください。構文については[テーブルフィルター](/table-filter.md)を参照してください。 |
+| Parameter               | Description                                                                                                                                 |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| `-u` or `--user`        | Aurora MySQL user                                                                                                                           |
+| `-p` or `--password`    | MySQL user password                                                                                                                         |
+| `-P` or `--port`        | MySQL port                                                                                                                                  |
+| `-h` or `--host`        | MySQL IP address                                                                                                                            |
+| `-t` or `--thread`      | The number of threads used for export                                                                                                       |
+| `-o` or `--output`      | The directory that stores the exported file. Supports local path or [external storage URL](/br/backup-and-restore-storages.md)              |
+| `-r` or `--row`         | The maximum number of rows in a single file                                                                                                 |
+| `-F`                    | The maximum size of a single file, in MiB. Recommended value: 256 MiB.                                                                      |
+| `-B` or `--database`    | Specifies a database to be exported                                                                                                         |
+| `-T` or `--tables-list` | Exports the specified tables                                                                                                                |
+| `-d` or `--no-data`     | Does not export data. Only exports schema.                                                                                                  |
+| `-f` or `--filter`      | Exports tables that match the pattern. Do not use `-f` and `-T` at the same time. Refer to [table-filter](/table-filter.md) for the syntax. |
 
-### 手順3.TiDBLightning構成ファイルを作成します {#step-3-create-the-tidb-lightning-configuration-file}
+### Step 3. Create the TiDB Lightning configuration file {#step-3-create-the-tidb-lightning-configuration-file}
 
-次のように`tidb-lightning.toml`の構成ファイルを作成します。
+Create the `tidb-lightning.toml` configuration file as follows:
 
 {{< copyable "" >}}
 
@@ -119,11 +119,11 @@ table = '$2'
 type = '$3'
 ```
 
-TiDBクラスタでTLSを有効にする必要がある場合は、 [TiDBLightningConfiguration / コンフィグレーション](/tidb-lightning/tidb-lightning-configuration.md)を参照してください。
+If you need to enable TLS in the TiDB cluster, refer to [TiDB Lightning Configuration](/tidb-lightning/tidb-lightning-configuration.md).
 
-### ステップ4.完全なデータをTiDBにインポートします {#step-4-import-full-data-to-tidb}
+### Step 4. Import full data to TiDB {#step-4-import-full-data-to-tidb}
 
-1.  TiDB Lightningを使用して、ターゲットデータベースにテーブルを作成します。
+1.  Create the tables in the target database using TiDB Lightning:
 
     {{< copyable "" >}}
 
@@ -131,9 +131,9 @@ TiDBクラスタでTLSを有効にする必要がある場合は、 [TiDBLightni
     tiup tidb-lightning -config tidb-lightning.toml -d ./schema -no-schema=false
     ```
 
-2.  `tidb-lightning`を実行してインポートを開始します。コマンドラインで直接プログラムを起動すると、SIGHUP信号を受信した後、プロセスが予期せず終了する場合があります。この場合、 `nohup`または`screen`ツールを使用してプログラムを実行することをお勧めします。例えば：
+2.  Start the import by running `tidb-lightning`. If you launch the program directly in the command line, the process might exit unexpectedly after receiving a SIGHUP signal. In this case, it is recommended to run the program using a `nohup` or `screen` tool. For example:
 
-    S3ストレージパスにアクセスできるSecretKeyとAccessKeyを環境変数としてDumplingノードに渡します。 `~/.aws/credentials`からクレデンシャルを読み取ることもできます。
+    Pass the SecretKey and AccessKey that have access to the S3 storage path as environment variables to the Dumpling node. You can also read the credentials from `~/.aws/credentials`.
 
     {{< copyable "" >}}
 
@@ -143,30 +143,30 @@ TiDBクラスタでTLSを有効にする必要がある場合は、 [TiDBLightni
     nohup tiup tidb-lightning -config tidb-lightning.toml -no-schema=true > nohup.out 2>&1 &
     ```
 
-3.  インポートの開始後、次のいずれかの方法でインポートの進行状況を確認できます。
+3.  After the import starts, you can check the progress of the import by either of the following methods:
 
-    -   `grep`ログのキーワード`progress` 。進行状況は、デフォルトで5分ごとに更新されます。
-    -   [監視ダッシュボード](/tidb-lightning/monitor-tidb-lightning.md)で進捗状況を確認します。
-    -   [TiDBLightningWebインターフェイス](/tidb-lightning/tidb-lightning-web-interface.md)で進捗状況を確認します。
+    -   `grep` the keyword `progress` in the log. The progress is updated every 5 minutes by default.
+    -   Check progress in [the monitoring dashboard](/tidb-lightning/monitor-tidb-lightning.md).
+    -   Check progress in [the TiDB Lightning web interface](/tidb-lightning/tidb-lightning-web-interface.md).
 
-4.  TiDB Lightningがインポートを完了すると、自動的に終了します。ログ印刷`the whole procedure completed`の最後の5行が見つかった場合、インポートは成功しています。
+4.  After TiDB Lightning completes the import, it exits automatically. If you find the last 5 lines of its log print `the whole procedure completed`, the import is successful.
 
-> **ノート：**
+> **Note:**
 >
-> インポートが成功したかどうかに関係なく、ログの最後の行には`tidb lightning exit`が表示されます。これは、TiDB Lightningが正常に終了することを意味しますが、必ずしもインポートが成功したことを意味するわけではありません。
+> Whether the import is successful or not, the last line of the log shows `tidb lightning exit`. It means that TiDB Lightning exits normally, but does not necessarily mean that the import is successful.
 
-インポート中に問題が発生した場合は、 [TiDB Lightning FAQ](/tidb-lightning/tidb-lightning-faq.md)を参照してトラブルシューティングを行ってください。
+If you encounter any problem during the import, refer to [TiDB Lightning FAQ](/tidb-lightning/tidb-lightning-faq.md) for troubleshooting.
 
-## インクリメンタルデータをTiDBに複製する（オプション） {#replicate-incremental-data-to-tidb-optional}
+## Replicate incremental data to TiDB (optional) {#replicate-incremental-data-to-tidb-optional}
 
-### 前提条件 {#prerequisites}
+### Prerequisites {#prerequisites}
 
--   [DMをインストールする](/dm/deploy-a-dm-cluster-using-tiup.md) 。
--   [DMに必要なソースデータベースとターゲットデータベースの権限を取得する](/dm/dm-worker-intro.md) 。
+-   [Install DM](/dm/deploy-a-dm-cluster-using-tiup.md).
+-   [Get the source database and target database privileges required for DM](/dm/dm-worker-intro.md).
 
-### ステップ1：データソースを作成する {#step-1-create-the-data-source}
+### Step 1: Create the data source {#step-1-create-the-data-source}
 
-1.  次のように`source1.yaml`のファイルを作成します。
+1.  Create the `source1.yaml` file as follows:
 
     {{< copyable "" >}}
 
@@ -183,7 +183,7 @@ TiDBクラスタでTLSを有効にする必要がある場合は、 [TiDBLightni
       port: 3306
     ```
 
-2.  次のコマンドを実行して、 `tiup dmctl`を使用してデータソース構成をDMクラスタにロードします。
+2.  Load the data source configuration to the DM cluster using `tiup dmctl` by running the following command:
 
     {{< copyable "" >}}
 
@@ -191,16 +191,16 @@ TiDBクラスタでTLSを有効にする必要がある場合は、 [TiDBLightni
     tiup dmctl --master-addr ${advertise-addr} operate-source create source1.yaml
     ```
 
-    上記のコマンドで使用されるパラメーターは、次のとおりです。
+    The parameters used in the command above are described as follows:
 
-    | パラメータ                   | 説明                                                                |
-    | ----------------------- | ----------------------------------------------------------------- |
-    | `--master-addr`         | `dmctl`が接続されるクラスタの任意のDMマスターの`{advertise-addr}`例：172.16.10.71：8261 |
-    | `operate-source create` | データソースをDMクラスタにロードします。                                             |
+    | Parameter               | Description                                                                                                      |
+    | ----------------------- | ---------------------------------------------------------------------------------------------------------------- |
+    | `--master-addr`         | The `{advertise-addr}` of any DM-master in the cluster where `dmctl` is to be connected, e.g.: 172.16.10.71:8261 |
+    | `operate-source create` | Loads the data source to the DM cluster.                                                                         |
 
-### ステップ2：移行タスクを作成する {#step-2-create-the-migration-task}
+### Step 2: Create the migration task {#step-2-create-the-migration-task}
 
-次のように`task1.yaml`のファイルを作成します。
+Create the `task1.yaml` file as follows:
 
 {{< copyable "" >}}
 
@@ -230,24 +230,24 @@ block-allow-list:                     # If the DM version is earlier than v2.0.0
 mysql-instances:
   - source-id: "mysql-01"               # Data source ID，i.e., source-id in source1.yaml
     block-allow-list: "listA"           # References the block-allow-list configuration above.
-#       syncer-config-name: "global"    # References the syncers incremental data configuration.
+#       syncer-config-name: "global"    # Name of the syncer configuration.
     meta:                               # When task-mode is "incremental" and the downstream database does not have a checkpoint, DM uses the binlog position as the starting point. If the downstream database has a checkpoint, DM uses the checkpoint as the starting point.
       binlog-name: "mysql-bin.000004"   # The binlog position recorded in "Step 1. Export an Aurora snapshot to Amazon S3". When the upstream database has source-replica switching, GTID mode is required.
       binlog-pos: 109227
       # binlog-gtid: "09bec856-ba95-11ea-850a-58f2b4af5188:1-9"
 
-   # (Optional) If you need to incrementally replicate data that has already been migrated in the full data migration, you need to enable the safe mode to avoid the incremental data replication error.
+# (Optional) If you need to incrementally replicate data that has already been migrated in the full data migration, you need to enable the safe mode to avoid the incremental data replication error.
    # This scenario is common in the following case: the full migration data does not belong to the data source's consistency snapshot, and after that, DM starts to replicate incremental data from a position earlier than the full migration.
    # syncers:            # The running configurations of the sync processing unit.
    #   global:            # Configuration name.
    #     safe-mode: true  # If this field is set to true, DM changes INSERT of the data source to REPLACE for the target database, and changes UPDATE of the data source to DELETE and REPLACE for the target database. This is to ensure that when the table schema contains a primary key or unique index, DML statements can be imported repeatedly. In the first minute of starting or resuming an incremental replication task, DM automatically enables the safe mode.
 ```
 
-上記のYAMLファイルは、移行タスクに必要な最小限の構成です。その他の設定項目については、 [DM高度なタスクConfiguration / コンフィグレーションファイル](/dm/task-configuration-file-full.md)を参照してください。
+The YAML file above is the minimum configuration required for the migration task. For more configuration items, refer to [DM Advanced Task Configuration File](/dm/task-configuration-file-full.md).
 
-### ステップ3.移行タスクを実行します {#step-3-run-the-migration-task}
+### Step 3. Run the migration task {#step-3-run-the-migration-task}
 
-移行タスクを開始する前に、エラーの可能性を減らすために、次の`check-task`コマンドを実行して、構成がDMの要件を満たしていることを確認することをお勧めします。
+Before you start the migration task, to reduce the probability of errors, it is recommended to confirm that the configuration meets the requirements of DM by running the `check-task` command:
 
 {{< copyable "" >}}
 
@@ -255,7 +255,7 @@ mysql-instances:
 tiup dmctl --master-addr ${advertise-addr} check-task task.yaml
 ```
 
-その後、 `tiup dmctl`を実行して移行タスクを開始します。
+After that, start the migration task by running `tiup dmctl`:
 
 {{< copyable "" >}}
 
@@ -263,20 +263,20 @@ tiup dmctl --master-addr ${advertise-addr} check-task task.yaml
 tiup dmctl --master-addr ${advertise-addr} start-task task.yaml
 ```
 
-上記のコマンドで使用されるパラメーターは、次のとおりです。
+The parameters used in the command above are described as follows:
 
-| パラメータ           | 説明                                                                |
-| --------------- | ----------------------------------------------------------------- |
-| `--master-addr` | `dmctl`が接続されるクラスタの任意のDMマスターの`{advertise-addr}`例：172.16.10.71：8261 |
-| `start-task`    | 移行タスクを開始します。                                                      |
+| Parameter       | Description                                                                                                      |
+| --------------- | ---------------------------------------------------------------------------------------------------------------- |
+| `--master-addr` | The `{advertise-addr}` of any DM-master in the cluster where `dmctl` is to be connected, e.g.: 172.16.10.71:8261 |
+| `start-task`    | Starts the migration task.                                                                                       |
 
-タスクの開始に失敗した場合は、プロンプトメッセージを確認し、構成を修正してください。その後、上記のコマンドを再実行してタスクを開始できます。
+If the task fails to start, check the prompt message and fix the configuration. After that, you can re-run the command above to start the task.
 
-問題が発生した場合は、 [DMエラー処理](/dm/dm-error-handling.md)と[DM FAQ](/dm/dm-faq.md)を参照してください。
+If you encounter any problem, refer to [DM error handling](/dm/dm-error-handling.md) and [DM FAQ](/dm/dm-faq.md).
 
-### 手順4.移行タスクのステータスを確認します {#step-4-check-the-migration-task-status}
+### Step 4. Check the migration task status {#step-4-check-the-migration-task-status}
 
-DMクラスタに進行中の移行タスクがあるかどうかとタスクのステータスを確認するには、 `tiup dmctl`を使用して`query-status`コマンドを実行します。
+To learn whether the DM cluster has an ongoing migration task and the task status, run the `query-status` command using `tiup dmctl`:
 
 {{< copyable "" >}}
 
@@ -284,23 +284,23 @@ DMクラスタに進行中の移行タスクがあるかどうかとタスクの
 tiup dmctl --master-addr ${advertise-addr} query-status ${task-name}
 ```
 
-結果の詳細な解釈については、 [クエリステータス](/dm/dm-query-status.md)を参照してください。
+For a detailed interpretation of the results, refer to [Query Status](/dm/dm-query-status.md).
 
-### 手順5.タスクを監視してログを表示する {#step-5-monitor-the-task-and-view-logs}
+### Step 5. Monitor the task and view logs {#step-5-monitor-the-task-and-view-logs}
 
-移行タスクの履歴ステータスおよびその他の内部メトリックを表示するには、次の手順を実行します。
+To view the history status of the migration task and other internal metrics, take the following steps.
 
-TiUPを使用してDMをデプロイしたときにPrometheus、Alertmanager、およびGrafanaをデプロイした場合は、デプロイメント中に指定されたIPアドレスとポートを使用してGrafanaにアクセスできます。次に、DMダッシュボードを選択して、DM関連の監視メトリックを表示できます。
+If you have deployed Prometheus, Alertmanager, and Grafana when you deployed DM using TiUP, you can access Grafana using the IP address and port specified during the deployment. You can then select DM dashboard to view DM-related monitoring metrics.
 
-DMの実行中、DM-worker、DM-master、およびdmctlは、関連情報をログに出力します。これらのコンポーネントのログディレクトリは次のとおりです。
+When DM is running, DM-worker, DM-master, and dmctl print the related information in logs. The log directories of these components are as follows:
 
--   DM-master：DM-masterプロセスパラメーター`--log-file`で指定されます。 TiUPを使用してDMを展開する場合、ログディレクトリはデフォルトで`/dm-deploy/dm-master-8261/log/`です。
--   DM-worker：DM-workerプロセスパラメーター`--log-file`で指定されます。 TiUPを使用してDMを展開する場合、ログディレクトリはデフォルトで`/dm-deploy/dm-worker-8262/log/`です。
+-   DM-master: specified by the DM-master process parameter `--log-file`. If you deploy DM using TiUP, the log directory is `/dm-deploy/dm-master-8261/log/` by default.
+-   DM-worker: specified by the DM-worker process parameter `--log-file`. If you deploy DM using TiUP, the log directory is `/dm-deploy/dm-worker-8262/log/` by default.
 
-## 次は何ですか {#what-s-next}
+## What's next {#what-s-next}
 
--   [移行タスクを一時停止します](/dm/dm-pause-task.md) 。
--   [移行タスクを再開します](/dm/dm-resume-task.md) 。
--   [移行タスクを停止します](/dm/dm-stop-task.md) 。
--   [クラスタデータソースとタスク構成をエクスポートおよびインポートします](/dm/dm-export-import-config.md) 。
--   [失敗したDDLステートメントを処理する](/dm/handle-failed-ddl-statements.md) 。
+-   [Pause the migration task](/dm/dm-pause-task.md).
+-   [Resume the migration task](/dm/dm-resume-task.md).
+-   [Stop the migration task](/dm/dm-stop-task.md).
+-   [Export and import the cluster data source and task configuration](/dm/dm-export-import-config.md).
+-   [Handle failed DDL statements](/dm/handle-failed-ddl-statements.md).

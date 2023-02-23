@@ -3,25 +3,25 @@ title: TiDB Environment and System Configuration Check
 summary: Learn the environment check operations before deploying TiDB.
 ---
 
-# TiDB環境とシステムConfiguration / コンフィグレーションのチェック {#tidb-environment-and-system-configuration-check}
+# TiDB Environment and System Configuration Check {#tidb-environment-and-system-configuration-check}
 
-このドキュメントでは、TiDBをデプロイする前の環境チェック操作について説明します。次の手順は優先順位順に並べられています。
+This document describes the environment check operations before deploying TiDB. The following steps are ordered by priorities.
 
-## TiKVをデプロイするターゲットマシンにオプションを使用してデータディスクext4ファイルシステムをマウントします {#mount-the-data-disk-ext4-filesystem-with-options-on-the-target-machines-that-deploy-tikv}
+## Mount the data disk ext4 filesystem with options on the target machines that deploy TiKV {#mount-the-data-disk-ext4-filesystem-with-options-on-the-target-machines-that-deploy-tikv}
 
-実稼働環境では、EXT4ファイルシステムのNVMeSSDを使用してTiKVデータを保存することをお勧めします。この構成はベストプラクティスであり、その信頼性、セキュリティ、および安定性は、多数のオンラインシナリオで証明されています。
+For production deployments, it is recommended to use NVMe SSD of EXT4 filesystem to store TiKV data. This configuration is the best practice, whose reliability, security, and stability have been proven in a large number of online scenarios.
 
-`root`ユーザーアカウントを使用してターゲットマシンにログインします。
+Log in to the target machines using the `root` user account.
 
-データディスクをext4ファイルシステムにフォーマットし、ファイルシステムに`nodelalloc`および`noatime`マウントオプションを追加します。 `nodelalloc`オプションを追加する必要があります。そうしないと、TiUPデプロイメントは事前チェックに合格できません。 `noatime`オプションはオプションです。
+Format your data disks to the ext4 filesystem and add the `nodelalloc` and `noatime` mount options to the filesystem. It is required to add the `nodelalloc` option, or else the TiUP deployment cannot pass the precheck. The `noatime` option is optional.
 
-> **ノート：**
+> **Note:**
 >
-> データディスクがext4にフォーマットされ、マウントオプションが追加されている場合は、 `umount /dev/nvme0n1p1`コマンドを実行してアンインストールし、以下の5番目の手順に直接スキップして`/etc/fstab`ファイルを編集し、ファイルシステムにオプションを再度追加できます。
+> If your data disks have been formatted to ext4 and have added the mount options, you can uninstall it by running the `umount /dev/nvme0n1p1` command, skip directly to the fifth step below to edit the `/etc/fstab` file, and add the options again to the filesystem.
 
-例として`/dev/nvme0n1`のデータディスクを取り上げます。
+Take the `/dev/nvme0n1` data disk as an example:
 
-1.  データディスクを表示します。
+1.  View the data disk.
 
     {{< copyable "" >}}
 
@@ -33,7 +33,7 @@ summary: Learn the environment check operations before deploying TiDB.
     Disk /dev/nvme0n1: 1000 GB
     ```
 
-2.  パーティションを作成します。
+2.  Create the partition.
 
     {{< copyable "" >}}
 
@@ -41,11 +41,11 @@ summary: Learn the environment check operations before deploying TiDB.
     parted -s -a optimal /dev/nvme0n1 mklabel gpt -- mkpart primary ext4 1 -1
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > `lsblk`コマンドを使用して、パーティションのデバイス番号を表示します。NVMeディスクの場合、生成されるデバイス番号は通常`nvme0n1p1`です。通常のディスク（たとえば、 `/dev/sdb` ）の場合、生成されるデバイス番号は通常`sdb1`です。
+    > Use the `lsblk` command to view the device number of the partition: for a NVMe disk, the generated device number is usually `nvme0n1p1`; for a regular disk (for example, `/dev/sdb`), the generated device number is usually `sdb1`.
 
-3.  データディスクをext4ファイルシステムにフォーマットします。
+3.  Format the data disk to the ext4 filesystem.
 
     {{< copyable "" >}}
 
@@ -53,9 +53,9 @@ summary: Learn the environment check operations before deploying TiDB.
     mkfs.ext4 /dev/nvme0n1p1
     ```
 
-4.  データディスクのパーティションUUIDを表示します。
+4.  View the partition UUID of the data disk.
 
-    この例では、nvme0n1p1のUUIDは`c51eb23b-195c-4061-92a9-3fad812cc12f`です。
+    In this example, the UUID of nvme0n1p1 is `c51eb23b-195c-4061-92a9-3fad812cc12f`.
 
     {{< copyable "" >}}
 
@@ -74,7 +74,7 @@ summary: Learn the environment check operations before deploying TiDB.
     └─nvme0n1p1 ext4         c51eb23b-195c-4061-92a9-3fad812cc12f
     ```
 
-5.  `/etc/fstab`のファイルを編集し、 `nodelalloc`のマウントオプションを追加します。
+5.  Edit the `/etc/fstab` file and add the `nodelalloc` mount options.
 
     {{< copyable "" >}}
 
@@ -86,7 +86,7 @@ summary: Learn the environment check operations before deploying TiDB.
     UUID=c51eb23b-195c-4061-92a9-3fad812cc12f /data1 ext4 defaults,nodelalloc,noatime 0 2
     ```
 
-6.  データディスクをマウントします。
+6.  Mount the data disk.
 
     {{< copyable "" >}}
 
@@ -95,7 +95,7 @@ summary: Learn the environment check operations before deploying TiDB.
     mount -a
     ```
 
-7.  次のコマンドで確認してください。
+7.  Check using the following command.
 
     {{< copyable "" >}}
 
@@ -107,11 +107,11 @@ summary: Learn the environment check operations before deploying TiDB.
     /dev/nvme0n1p1 on /data1 type ext4 (rw,noatime,nodelalloc,data=ordered)
     ```
 
-    ファイルシステムがext4であり、マウントオプションに`nodelalloc`が含まれている場合、ターゲットマシンにオプションを使用してデータディスクext4ファイルシステムを正常にマウントできています。
+    If the filesystem is ext4 and `nodelalloc` is included in the mount options, you have successfully mount the data disk ext4 filesystem with options on the target machines.
 
-## システムスワップを確認して無効にする {#check-and-disable-system-swap}
+## Check and disable system swap {#check-and-disable-system-swap}
 
-TiDBは、動作のために十分なメモリスペースを必要とします。メモリが不足している場合、スワップをバッファとして使用すると、パフォーマンスが低下する可能性があります。したがって、次のコマンドを実行して、システムスワップを永続的に無効にすることをお勧めします。
+TiDB needs sufficient memory space for operation. When memory is insufficient, using swap as a buffer might degrade performance. Therefore, it is recommended to disable the system swap permanently by executing the following commands:
 
 {{< copyable "" >}}
 
@@ -121,19 +121,19 @@ swapoff -a && swapon -a
 sysctl -p
 ```
 
-> **ノート：**
+> **Note:**
 >
-> -   `swapoff -a`を実行してから`swapon -a`を実行すると、データをメモリにダンプしてスワップをクリーンアップすることにより、スワップを更新します。スワップピネスの変更を削除して`swapoff -a`だけ実行すると、システムを再起動した後にスワップが再度有効になります。
+> -   Executing `swapoff -a` and then `swapon -a` is to refresh swap by dumping data to memory and cleaning up swap. If you drop the swappiness change and execute only `swapoff -a`, swap will be enabled again after you restart the system.
 >
-> -   `sysctl -p`は、システムを再起動せずに構成を有効にすることです。
+> -   `sysctl -p` is to make the configuration effective without restarting the system.
 
-## ターゲットマシンのファイアウォールサービスを確認して停止します {#check-and-stop-the-firewall-service-of-target-machines}
+## Check and stop the firewall service of target machines {#check-and-stop-the-firewall-service-of-target-machines}
 
-TiDBクラスターでは、読み取りおよび書き込み要求やデータハートビートなどの情報を確実に送信するために、ノード間のアクセスポートを開く必要があります。一般的なオンラインシナリオでは、データベースとアプリケーションサービス間、およびデータベースノード間のデータ相互作用はすべて安全なネットワーク内で行われます。したがって、特別なセキュリティ要件がない場合は、ターゲットマシンのファイアウォールを停止することをお勧めします。それ以外の場合は、 [ポートの使用法](/hardware-and-software-requirements.md#network-requirements)を参照して、必要なポート情報をファイアウォールサービスの許可リストに追加します。
+In TiDB clusters, the access ports between nodes must be open to ensure the transmission of information such as read and write requests and data heartbeats. In common online scenarios, the data interaction between the database and the application service and between the database nodes are all made within a secure network. Therefore, if there are no special security requirements, it is recommended to stop the firewall of the target machine. Otherwise, refer to [the port usage](/hardware-and-software-requirements.md#network-requirements) and add the needed port information to the allowlist of the firewall service.
 
-このセクションの残りの部分では、ターゲットマシンのファイアウォールサービスを停止する方法について説明します。
+The rest of this section describes how to stop the firewall service of a target machine.
 
-1.  ファイアウォールの状態を確認してください。例として、CentOS Linuxリリース7.7.1908（コア）を取り上げます。
+1.  Check the firewall status. Take CentOS Linux release 7.7.1908 (Core) as an example.
 
     {{< copyable "" >}}
 
@@ -142,7 +142,7 @@ TiDBクラスターでは、読み取りおよび書き込み要求やデータ�
     sudo systemctl status firewalld.service
     ```
 
-2.  ファイアウォールサービスを停止します。
+2.  Stop the firewall service.
 
     {{< copyable "" >}}
 
@@ -150,7 +150,7 @@ TiDBクラスターでは、読み取りおよび書き込み要求やデータ�
     sudo systemctl stop firewalld.service
     ```
 
-3.  ファイアウォールサービスの自動開始を無効にします。
+3.  Disable automatic start of the firewall service.
 
     {{< copyable "" >}}
 
@@ -158,7 +158,7 @@ TiDBクラスターでは、読み取りおよび書き込み要求やデータ�
     sudo systemctl disable firewalld.service
     ```
 
-4.  ファイアウォールの状態を確認してください。
+4.  Check the firewall status.
 
     {{< copyable "" >}}
 
@@ -166,15 +166,15 @@ TiDBクラスターでは、読み取りおよび書き込み要求やデータ�
     sudo systemctl status firewalld.service
     ```
 
-## NTPサービスを確認してインストールします {#check-and-install-the-ntp-service}
+## Check and install the NTP service {#check-and-install-the-ntp-service}
 
-TiDBは、ACIDモデルのトランザクションの線形整合性を保証するために、ノード間のクロック同期を必要とする分散データベースシステムです。
+TiDB is a distributed database system that requires clock synchronization between nodes to guarantee linear consistency of transactions in the ACID model.
 
-現在、クロック同期の一般的な解決策は、ネットワークタイムプロトコル（NTP）サービスを使用することです。インターネットで`pool.ntp.org`タイミングサービスを使用することも、オフライン環境で独自のNTPサービスを構築することもできます。
+At present, the common solution to clock synchronization is to use the Network Time Protocol (NTP) services. You can use the `pool.ntp.org` timing service on the Internet, or build your own NTP service in an offline environment.
 
-NTPサービスがインストールされているかどうか、およびNTPサーバーと正常に同期しているかどうかを確認するには、次の手順を実行します。
+To check whether the NTP service is installed and whether it synchronizes with the NTP server normally, take the following steps:
 
-1.  次のコマンドを実行します。 `running`が返される場合は、NTPサービスが実行されています。
+1.  Run the following command. If it returns `running`, then the NTP service is running.
 
     {{< copyable "" >}}
 
@@ -188,7 +188,7 @@ NTPサービスがインストールされているかどうか、およびNTP�
     Active: active (running) since 一 2017-12-18 13:13:19 CST; 3s ago
     ```
 
-    -   `Unit ntpd.service could not be found.`が返された場合は、次のコマンドを試して、システムがNTPとのクロック同期を実行するために`ntpd`ではなく`chronyd`を使用するように構成されているかどうかを確認します。
+    -   If it returns `Unit ntpd.service could not be found.`, then try the following command to see whether your system is configured to use `chronyd` instead of `ntpd` to perform clock synchronization with NTP:
 
         {{< copyable "" >}}
 
@@ -202,15 +202,15 @@ NTPサービスがインストールされているかどうか、およびNTP�
         Active: active (running) since Mon 2021-04-05 09:55:29 EDT; 3 days ago
         ```
 
-        結果が`chronyd`も`ntpd`も構成されていないことを示している場合は、どちらもシステムにインストールされていないことを意味します。最初に`chronyd`または`ntpd`をインストールし、自動的に開始できることを確認する必要があります。デフォルトでは、 `ntpd`が使用されます。
+        If the result shows that neither `chronyd` nor `ntpd` is configured, it means that neither of them is installed in your system. You should first install `chronyd` or `ntpd` and ensure that it can be automatically started. By default, `ntpd` is used.
 
-        システムが`chronyd`を使用するように構成されている場合は、ステップ3に進みます。
+        If your system is configured to use `chronyd`, proceed to step 3.
 
-2.  `ntpstat`コマンドを実行して、NTPサービスがNTPサーバーと同期しているかどうかを確認します。
+2.  Run the `ntpstat` command to check whether the NTP service synchronizes with the NTP server.
 
-    > **ノート：**
+    > **Note:**
     >
-    > Ubuntuシステムの場合、 `ntpstat`パッケージをインストールする必要があります。
+    > For the Ubuntu system, you need to install the `ntpstat` package.
 
     {{< copyable "" >}}
 
@@ -218,7 +218,7 @@ NTPサービスがインストールされているかどうか、およびNTP�
     ntpstat
     ```
 
-    -   `synchronised to NTP server` （NTPサーバーとの同期）を返す場合、同期プロセスは正常です。
+    -   If it returns `synchronised to NTP server` (synchronizing with the NTP server), then the synchronization process is normal.
 
         ```
         synchronised to NTP server (85.199.214.101) at stratum 2
@@ -226,23 +226,23 @@ NTPサービスがインストールされているかどうか、およびNTP�
         polling server every 1024 s
         ```
 
-    -   次の状況は、NTPサービスが正常に同期していないことを示しています。
+    -   The following situation indicates the NTP service is not synchronizing normally:
 
         ```
         unsynchronised
         ```
 
-    -   次の状況は、NTPサービスが正常に実行されていないことを示しています。
+    -   The following situation indicates the NTP service is not running normally:
 
         ```
         Unable to talk to NTP daemon. Is it running?
         ```
 
-3.  `chronyc tracking`コマンドを実行して、ChronyサービスがNTPサーバーと同期するかどうかを確認します。
+3.  Run the `chronyc tracking` command to check wheter the Chrony service synchronizes with the NTP server.
 
-    > **ノート：**
+    > **Note:**
     >
-    > これは、NTPdの代わりにChronyを使用するシステムにのみ適用されます。
+    > This only applies to systems that use Chrony instead of NTPd.
 
     {{< copyable "" >}}
 
@@ -250,7 +250,7 @@ NTPサービスがインストールされているかどうか、およびNTP�
     chronyc tracking
     ```
 
-    -   コマンドが`Leap status     : Normal`を返す場合、同期プロセスは正常です。
+    -   If the command returns `Leap status     : Normal`, the synchronization process is normal.
 
         ```
         Reference ID    : 5EC69F0A (ntp1.time.nl)
@@ -268,19 +268,19 @@ NTPサービスがインストールされているかどうか、およびNTP�
         Leap status     : Normal
         ```
 
-    -   コマンドが次の結果を返す場合、同期でエラーが発生します。
+    -   If the command returns the following result, an error occurs in the synchronization:
 
         ```
         Leap status    : Not synchronised
         ```
 
-    -   コマンドが次の結果を返す場合、 `chronyd`サービスは正常に実行されていません。
+    -   If the command returns the following result, the `chronyd` service is not running normally:
 
         ```
         506 Cannot talk to daemon
         ```
 
-NTPサービスの同期をできるだけ早く開始するには、次のコマンドを実行します。 `pool.ntp.org`をNTPサーバーに置き換えます。
+To make the NTP service start synchronizing as soon as possible, run the following command. Replace `pool.ntp.org` with your NTP server.
 
 {{< copyable "" >}}
 
@@ -290,7 +290,7 @@ sudo ntpdate pool.ntp.org && \
 sudo systemctl start ntpd.service
 ```
 
-CentOS 7システムにNTPサービスを手動でインストールするには、次のコマンドを実行します。
+To install the NTP service manually on the CentOS 7 system, run the following command:
 
 {{< copyable "" >}}
 
@@ -300,17 +300,17 @@ sudo systemctl start ntpd.service && \
 sudo systemctl enable ntpd.service
 ```
 
-## オペレーティングシステムの最適なパラメータを確認して構成します {#check-and-configure-the-optimal-parameters-of-the-operating-system}
+## Check and configure the optimal parameters of the operating system {#check-and-configure-the-optimal-parameters-of-the-operating-system}
 
-実稼働環境のTiDBの場合、次の方法でオペレーティングシステム構成を最適化することをお勧めします。
+For TiDB in the production environment, it is recommended to optimize the operating system configuration in the following ways:
 
-1.  THP（Transparent Huge Pages）を無効にします。データベースのメモリアクセスパターンは、連続的ではなくまばらになる傾向があります。高レベルのメモリの断片化が深刻な場合、THPページが割り当てられるときに待ち時間が長くなります。
-2.  ストレージメディアのI/Oスケジューラを`noop`に設定します。高速SSDストレージメディアの場合、カーネルのI/Oスケジューリング操作によってパフォーマンスが低下する可能性があります。スケジューラを`noop`に設定すると、カーネルが他の操作なしでI / O要求をハードウェアに直接送信するため、パフォーマンスが向上します。また、noopスケジューラの方が適しています。
-3.  CPU周波数を制御するcpufrequモジュールの`performance`モードを選択します。 CPU周波数が動的調整なしでサポートされている最高の動作周波数に固定されている場合、パフォーマンスは最大になります。
+1.  Disable THP (Transparent Huge Pages). The memory access pattern of databases tends to be sparse rather than consecutive. If the high-level memory fragmentation is serious, higher latency will occur when THP pages are allocated.
+2.  Set the I/O Scheduler of the storage media to `noop`. For the high-speed SSD storage media, the kernel's I/O scheduling operations can cause performance loss. After the Scheduler is set to `noop`, the performance is better because the kernel directly sends I/O requests to the hardware without other operations. Also, the noop Scheduler is better applicable.
+3.  Choose the `performance` mode for the cpufrequ module which controls the CPU frequency. The performance is maximized when the CPU frequency is fixed at its highest supported operating frequency without dynamic adjustment.
 
-次の手順を実行して、現在のオペレーティングシステムの構成を確認し、最適なパラメーターを構成します。
+Take the following steps to check the current operating system configuration and configure optimal parameters:
 
-1.  次のコマンドを実行して、THPが有効か無効かを確認します。
+1.  Execute the following command to see whether THP is enabled or disabled:
 
     {{< copyable "" >}}
 
@@ -322,11 +322,11 @@ sudo systemctl enable ntpd.service
     [always] madvise never
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > `[always] madvise never`が出力される場合、THPが有効になります。無効にする必要があります。
+    > If `[always] madvise never` is output, THP is enabled. You need to disable it.
 
-2.  次のコマンドを実行して、データディレクトリが配置されているディスクのI/Oスケジューラを確認します。 sdbディスクとsdcディスクの両方にデータディレクトリを作成するとします。
+2.  Execute the following command to see the I/O Scheduler of the disk where the data directory is located. Assume that you create data directories on both sdb and sdc disks:
 
     {{< copyable "" >}}
 
@@ -339,11 +339,11 @@ sudo systemctl enable ntpd.service
     noop [deadline] cfq
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > `noop [deadline] cfq`が出力された場合、ディスクのI/Oスケジューラは`deadline`モードになります。 `noop`に変更する必要があります。
+    > If `noop [deadline] cfq` is output, the I/O Scheduler for the disk is in the `deadline` mode. You need to change it to `noop`.
 
-3.  次のコマンドを実行して、ディスクの`ID_SERIAL`を確認します。
+3.  Execute the following command to see the `ID_SERIAL` of the disk:
 
     {{< copyable "" >}}
 
@@ -356,11 +356,11 @@ sudo systemctl enable ntpd.service
     E: ID_SERIAL_SHORT=6d0946606d79f90025f3e09a0c1f9e81
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > 複数のディスクにデータディレクトリが割り当てられている場合は、上記のコマンドを数回実行して、各ディスクの`ID_SERIAL`を記録する必要があります。
+    > If multiple disks are allocated with data directories, you need to execute the above command several times to record the `ID_SERIAL` of each disk.
 
-4.  次のコマンドを実行して、cpufreqモジュールの電源ポリシーを確認します。
+4.  Execute the following command to see the power policy of the cpufreq module:
 
     {{< copyable "" >}}
 
@@ -374,15 +374,15 @@ sudo systemctl enable ntpd.service
                   The governor "powersave" may decide which speed to use within this range.
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > `The governor "powersave"`が出力された場合、cpufreqモジュールの電源ポリシーは`powersave`です。 `performance`に変更する必要があります。仮想マシンまたはクラウドホストを使用する場合、出力は通常`Unable to determine current policy`であり、何も変更する必要はありません。
+    > If `The governor "powersave"` is output, the power policy of the cpufreq module is `powersave`. You need to modify it to `performance`. If you use a virtual machine or a cloud host, the output is usually `Unable to determine current policy`, and you do not need to change anything.
 
-5.  オペレーティングシステムの最適なパラメータを構成します。
+5.  Configure optimal parameters of the operating system:
 
-    -   方法1：調整済みを使用する（推奨）
+    -   Method one: Use tuned (Recommended)
 
-        1.  `tuned-adm list`コマンドを実行して、現在のオペレーティングシステムの調整済みプロファイルを確認します。
+        1.  Execute the `tuned-adm list` command to see the tuned profile of the current operating system:
 
             {{< copyable "" >}}
 
@@ -405,9 +405,9 @@ sudo systemctl enable ntpd.service
             Current active profile: balanced
             ```
 
-            出力`Current active profile: balanced`は、現在のオペレーティングシステムの調整されたプロファイルが`balanced`であることを意味します。現在のプロファイルに基づいて、オペレーティングシステムの構成を最適化することをお勧めします。
+            The output `Current active profile: balanced` means that the tuned profile of the current operating system is `balanced`. It is recommended to optimize the configuration of the operating system based on the current profile.
 
-        2.  新しい調整済みプロファイルを作成します。
+        2.  Create a new tuned profile:
 
             {{< copyable "" >}}
 
@@ -431,9 +431,9 @@ sudo systemctl enable ntpd.service
             elevator=noop
             ```
 
-            出力`include=balanced`は、オペレーティングシステムの最適化構成を現在の`balanced`プロファイルに追加することを意味します。
+            The output `include=balanced` means to add the optimization configuration of the operating system to the current `balanced` profile.
 
-        3.  新しい調整済みプロファイルを適用します。
+        3.  Apply the new tuned profile:
 
             {{< copyable "" >}}
 
@@ -441,13 +441,13 @@ sudo systemctl enable ntpd.service
             tuned-adm profile balanced-tidb-optimal
             ```
 
-    -   方法2：スクリプトを使用して構成します。すでに方法1を使用している場合は、この方法をスキップしてください。
+    -   Method two: Configure using scripts. Skip this method if you already use method one.
 
-        1.  `grubby`コマンドを実行して、デフォルトのカーネルバージョンを確認します。
+        1.  Execute the `grubby` command to see the default kernel version:
 
-            > **ノート：**
+            > **Note:**
             >
-            > `grubby`を実行する前に、最初に`grubby`のパッケージをインストールします。
+            > Install the `grubby` package first before you execute `grubby`.
 
             {{< copyable "" >}}
 
@@ -459,7 +459,7 @@ sudo systemctl enable ntpd.service
             /boot/vmlinuz-3.10.0-957.el7.x86_64
             ```
 
-        2.  `grubby --update-kernel`を実行して、カーネル構成を変更します。
+        2.  Execute `grubby --update-kernel` to modify the kernel configuration:
 
             {{< copyable "" >}}
 
@@ -467,11 +467,11 @@ sudo systemctl enable ntpd.service
             grubby --args="transparent_hugepage=never" --update-kernel /boot/vmlinuz-3.10.0-957.el7.x86_64
             ```
 
-            > **ノート：**
+            > **Note:**
             >
-            > `--update-kernel`の後に、実際のデフォルトのカーネルバージョンが続きます。
+            > `--update-kernel` is followed by the actual default kernel version.
 
-        3.  `grubby --info`を実行して、変更されたデフォルトのカーネル構成を確認します。
+        3.  Execute `grubby --info` to see the modified default kernel configuration:
 
             {{< copyable "" >}}
 
@@ -479,9 +479,9 @@ sudo systemctl enable ntpd.service
             grubby --info /boot/vmlinuz-3.10.0-957.el7.x86_64
             ```
 
-            > **ノート：**
+            > **Note:**
             >
-            > `--info`の後に、実際のデフォルトのカーネルバージョンが続きます。
+            > `--info` is followed by the actual default kernel version.
 
             ```
             index=0
@@ -492,7 +492,7 @@ sudo systemctl enable ntpd.service
             title=CentOS Linux (3.10.0-957.el7.x86_64) 7 (Core)
             ```
 
-        4.  現在のカーネル構成を変更して、THPをすぐに無効にします。
+        4.  Modify the current kernel configuration to immediately disable THP:
 
             {{< copyable "" >}}
 
@@ -501,7 +501,7 @@ sudo systemctl enable ntpd.service
             echo never > /sys/kernel/mm/transparent_hugepage/defrag
             ```
 
-        5.  udevスクリプトでI/Oスケジューラを構成します。
+        5.  Configure the I/O Scheduler in the udev script:
 
             {{< copyable "" >}}
 
@@ -515,7 +515,7 @@ sudo systemctl enable ntpd.service
 
             ```
 
-        6.  udevスクリプトを適用します。
+        6.  Apply the udev script:
 
             {{< copyable "" >}}
 
@@ -524,7 +524,7 @@ sudo systemctl enable ntpd.service
             udevadm trigger --type=devices --action=change
             ```
 
-        7.  CPU電源ポリシーを構成するサービスを作成します。
+        7.  Create a service to configure the CPU power policy:
 
             {{< copyable "" >}}
 
@@ -540,7 +540,7 @@ sudo systemctl enable ntpd.service
             EOF
             ```
 
-        8.  CPU電源ポリシー構成サービスを適用します。
+        8.  Apply the CPU power policy configuration service:
 
             {{< copyable "" >}}
 
@@ -550,7 +550,7 @@ sudo systemctl enable ntpd.service
             systemctl start cpupower.service
             ```
 
-6.  次のコマンドを実行して、THPステータスを確認します。
+6.  Execute the following command to verify the THP status:
 
     {{< copyable "" >}}
 
@@ -562,7 +562,7 @@ sudo systemctl enable ntpd.service
     always madvise [never]
     ```
 
-7.  次のコマンドを実行して、データディレクトリが配置されているディスクのI/Oスケジューラを確認します。
+7.  Execute the following command to verify the I/O Scheduler of the disk where the data directory is located:
 
     {{< copyable "" >}}
 
@@ -575,7 +575,7 @@ sudo systemctl enable ntpd.service
     [noop] deadline cfq
     ```
 
-8.  次のコマンドを実行して、cpufreqモジュールの電源ポリシーを確認します。
+8.  Execute the following command to see the power policy of the cpufreq module:
 
     {{< copyable "" >}}
 
@@ -589,7 +589,7 @@ sudo systemctl enable ntpd.service
                   The governor "performance" may decide which speed to use within this range.
     ```
 
-9.  次のコマンドを実行して、 `sysctl`つのパラメーターを変更します。
+9.  Execute the following commands to modify the `sysctl` parameters:
 
     {{< copyable "" >}}
 
@@ -602,7 +602,7 @@ sudo systemctl enable ntpd.service
     sysctl -p
     ```
 
-10. 次のコマンドを実行して、ユーザーの`limits.conf`ファイルを構成します。
+10. Execute the following command to configure the user's `limits.conf` file:
 
     {{< copyable "" >}}
 
@@ -615,11 +615,11 @@ sudo systemctl enable ntpd.service
     EOF
     ```
 
-## パスワードなしでSSH相互信頼とsudoを手動で構成する {#manually-configure-the-ssh-mutual-trust-and-sudo-without-password}
+## Manually configure the SSH mutual trust and sudo without password {#manually-configure-the-ssh-mutual-trust-and-sudo-without-password}
 
-このセクションでは、パスワードなしでSSH相互信頼とsudoを手動で構成する方法について説明します。展開にはTiUPを使用することをお勧めします。これにより、SSH相互信頼が自動的に構成され、パスワードなしでログインできます。 TiUPを使用してTiDBクラスターをデプロイする場合は、このセクションを無視してください。
+This section describes how to manually configure the SSH mutual trust and sudo without password. It is recommended to use TiUP for deployment, which automatically configure SSH mutual trust and login without password. If you deploy TiDB clusters using TiUP, ignore this section.
 
-1.  `root`ユーザーアカウントを使用してそれぞれターゲットマシンにログインし、 `tidb`ユーザーを作成して、ログインパスワードを設定します。
+1.  Log in to the target machine respectively using the `root` user account, create the `tidb` user and set the login password.
 
     {{< copyable "" >}}
 
@@ -628,7 +628,7 @@ sudo systemctl enable ntpd.service
     passwd tidb
     ```
 
-2.  パスワードなしでsudoを設定するには、次のコマンドを実行し、ファイルの最後に`tidb ALL=(ALL) NOPASSWD: ALL`を追加します。
+2.  To configure sudo without password, run the following command, and add `tidb ALL=(ALL) NOPASSWD: ALL` to the end of the file:
 
     {{< copyable "" >}}
 
@@ -640,7 +640,7 @@ sudo systemctl enable ntpd.service
     tidb ALL=(ALL) NOPASSWD: ALL
     ```
 
-3.  `tidb`人のユーザーを使用して制御マシンにログインし、次のコマンドを実行します。 `10.0.1.1`をターゲットマシンのIPに置き換え、プロンプトに従ってターゲットマシンの`tidb`ユーザーパスワードを入力します。コマンドの実行後、SSH相互信頼はすでに作成されています。これは他のマシンにも当てはまります。新しく作成された`tidb`人のユーザーには、 `.ssh`ディレクトリがありません。このようなディレクトリを作成するには、RSAキーを生成するコマンドを実行します。制御マシンにTiDBコンポーネントを展開するには、制御マシンと制御マシン自体の相互信頼を構成します。
+3.  Use the `tidb` user to log in to the control machine, and run the following command. Replace `10.0.1.1` with the IP of your target machine, and enter the `tidb` user password of the target machine as prompted. After the command is executed, SSH mutual trust is already created. This applies to other machines as well. Newly created `tidb` users do not have the `.ssh` directory. To create such a directory, execute the command that generates the RSA key. To deploy TiDB components on the control machine, configure mutual trust for the control machine and the control machine itself.
 
     {{< copyable "" >}}
 
@@ -649,7 +649,7 @@ sudo systemctl enable ntpd.service
     ssh-copy-id -i ~/.ssh/id_rsa.pub 10.0.1.1
     ```
 
-4.  `tidb`ユーザーアカウントを使用してコントロールマシンにログインし、 `ssh`を使用してターゲットマシンのIPにログインします。パスワードを入力する必要がなく、正常にログインできる場合は、SSH相互信頼が正常に構成されています。
+4.  Log in to the control machine using the `tidb` user account, and log in to the IP of the target machine using `ssh`. If you do not need to enter the password and can successfully log in, then the SSH mutual trust is successfully configured.
 
     {{< copyable "" >}}
 
@@ -661,7 +661,7 @@ sudo systemctl enable ntpd.service
     [tidb@10.0.1.1 ~]$
     ```
 
-5.  `tidb`ユーザーを使用してターゲットマシンにログインした後、次のコマンドを実行します。パスワードを入力する必要がなく、 `root`ユーザーに切り替えることができる場合は、 `tidb`ユーザーのパスワードなしのsudoが正常に構成されています。
+5.  After you log in to the target machine using the `tidb` user, run the following command. If you do not need to enter the password and can switch to the `root` user, then sudo without password of the `tidb` user is successfully configured.
 
     {{< copyable "" >}}
 
@@ -673,45 +673,35 @@ sudo systemctl enable ntpd.service
     [root@10.0.1.1 tidb]#
     ```
 
-## <code>numactl</code>ツールをインストールします {#install-the-code-numactl-code-tool}
+## Install the <code>numactl</code> tool {#install-the-code-numactl-code-tool}
 
-このセクションでは、NUMAツールをインストールする方法について説明します。オンライン環境では、ハードウェア構成は通常必要以上に高いため、ハードウェアリソースをより適切に計画するために、TiDBまたはTiKVの複数のインスタンスを単一のマシンに展開できます。このようなシナリオでは、NUMAツールを使用して、パフォーマンスの低下を引き起こす可能性のあるCPUリソースの競合を防ぐことができます。
+This section describes how to install the NUMA tool. In online environments, because the hardware configuration is usually higher than required, to better plan the hardware resources, multiple instances of TiDB or TiKV can be deployed on a single machine. In such scenarios, you can use NUMA tools to prevent the competition for CPU resources which might cause reduced performance.
 
-> **ノート：**
+> **Note:**
 >
-> -   NUMAを使用したコアのバインドは、CPUリソースを分離する方法であり、高度に構成された物理マシンに複数のインスタンスをデプロイするのに適しています。
-> -   `tiup cluster deploy`を使用して展開を完了した後、 `exec`コマンドを使用してクラスタレベルの管理操作を実行できます。
+> -   Binding cores using NUMA is a method to isolate CPU resources and is suitable for deploying multiple instances on highly configured physical machines.
+> -   After completing deployment using `tiup cluster deploy`, you can use the `exec` command to perform cluster level management operations.
 
-1.  ターゲットノードにログインしてインストールします。例として、CentOS Linuxリリース7.7.1908（コア）を取り上げます。
+To install the NUMA tool, take either of the following two methods:
 
-    {{< copyable "" >}}
+**Method 1**: Log in to the target node to install NUMA. Take CentOS Linux release 7.7.1908 (Core) as an example.
+
+```bash
+sudo yum -y install numactl
+```
+
+**Method 2**: Install NUMA on an existing cluster in batches by running the `tiup cluster exec` command.
+
+1.  Follow [Deploy a TiDB Cluster Using TiUP](/production-deployment-using-tiup.md) to deploy a cluster `tidb-test`. If you have installed a TiDB cluster, you can skip this step.
 
     ```bash
-    sudo yum -y install numactl
+    tiup cluster deploy tidb-test v5.4.3 ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
     ```
 
-2.  `tiup cluster`を使用して`exec`コマンドを実行し、バッチでインストールします。
-
-    {{< copyable "" >}}
-
-    ```bash
-    tiup cluster exec --help
-    ```
-
-    ```
-    Run shell command on host in the tidb cluster
-    Usage:
-    cluster exec <cluster-name> [flags]
-    Flags:
-        --command string   the command run on cluster host (default "ls")
-    -h, --help             help for exec
-        --sudo             use root permissions (default false)
-    ```
-
-    sudo権限を使用して、 `tidb-test`クラスタのすべてのターゲットマシンに対してインストールコマンドを実行するには、次のコマンドを実行します。
-
-    {{< copyable "" >}}
+2.  Run the `tiup cluster exec` command using the `sudo` privilege to install NUMA on all the target machines in the `tidb-test` cluster:
 
     ```bash
     tiup cluster exec tidb-test --sudo --command "yum -y install numactl"
     ```
+
+    To get help information of the `tiup cluster exec` command, run the `tiup cluster exec --help` command.

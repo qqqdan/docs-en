@@ -3,17 +3,17 @@ title: Use an HTAP Cluster
 summary: Learn how to use HTAP cluster in TiDB Cloud.
 ---
 
-# HTAPクラスターを使用する {#use-an-htap-cluster}
+# Use an HTAP Cluster {#use-an-htap-cluster}
 
-[HTAP](https://en.wikipedia.org/wiki/Hybrid_transactional/analytical_processing)は、ハイブリッドトランザクション/分析処理を意味します。 TiDB CloudのHTAPクラスタは、トランザクション処理用に設計された行ベースのストレージエンジンである[TiKV](https://tikv.org)と、分析処理用に設計された列型ストレージである[TiFlash](https://docs.pingcap.com/tidb/stable/tiflash-overview)<sup>ベータ</sup>で構成されています。アプリケーションデータは最初にTiKVに保存され、次にRaftコンセンサスアルゴリズムを介してTiFlash<sup>ベータ</sup>に複製されます。つまり、行ストアから列ストアへのリアルタイムレプリケーションです。
+[HTAP](https://en.wikipedia.org/wiki/Hybrid_transactional/analytical_processing) means Hybrid Transactional/Analytical Processing. The HTAP cluster in TiDB Cloud is composed of [TiKV](https://tikv.org), a row-based storage engine designed for transactional processing, and [TiFlash](https://docs.pingcap.com/tidb/stable/tiflash-overview), a columnar storage designed for analytical processing. Your application data is first stored in TiKV and then replicated to TiFlash via the Raft consensus algorithm. So it is real time replication from the row store to the columnar store.
 
-TiDB Cloudを使用すると、HTAPワークロードに応じて1つ以上のTiFlash<sup>ベータ</sup>ノードを指定することで、HTAPクラスタを簡単に作成できます。クラスタの作成時にTiFlash<sup>ベータ</sup>ノード数が指定されていない場合、またはTiFlash<sup>ベータ</sup>ノードをさらに追加する場合は、ノード数を[クラスタのスケーリング](/tidb-cloud/scale-tidb-cluster.md)ずつ変更できます。
+With TiDB Cloud, you can create an HTAP cluster easily by specifying one or more TiFlash nodes according to your HTAP workload. If the TiFlash node count is not specified when you create the cluster or you want to add more TiFlash nodes, you can change the node count by [scaling the cluster](/tidb-cloud/scale-tidb-cluster.md).
 
-> **ノート：**
+> **Note:**
 >
-> 開発者層クラスタには、デフォルトで1つのTiFlash<sup>ベータ</sup>ノードがあり、その数を変更することはできません。
+> A Developer Tier cluster has one TiFlash node by default and you cannot change the number.
 
-デフォルトでは、TiKVデータはTiFlash<sup>ベータ</sup>に複製されません。次のSQLステートメントを使用して、TiFlash<sup>ベータ</sup>に複製するテーブルを選択できます。
+TiKV data is not replicated to TiFlash by default. You can select which table to replicate to TiFlash using the following SQL statement:
 
 {{< copyable "" >}}
 
@@ -21,9 +21,9 @@ TiDB Cloudを使用すると、HTAPワークロードに応じて1つ以上のTi
 ALTER TABLE table_name SET TIFLASH REPLICA 1;
 ```
 
-レプリカ数は、TiFlash<sup>ベータ</sup>ノードの数よりも少なくする必要があります。レプリカの数を`0`に設定すると、TiFlash<sup>ベータ版</sup>のレプリカが削除されます。
+The number of replicas count must be no larger than the number of TiFlash nodes. Setting the number of replicas to `0` means deleting the replica in TiFlash.
 
-レプリケーションの進行状況を確認するには、次のコマンドを使用します。
+To check the replication progress, use the following command:
 
 {{< copyable "" >}}
 
@@ -31,13 +31,13 @@ ALTER TABLE table_name SET TIFLASH REPLICA 1;
 SELECT * FROM information_schema.tiflash_replica WHERE TABLE_SCHEMA = '<db_name>' and TABLE_NAME = '<table_name>';
 ```
 
-## TiDBを使用してTiFlash<sup>ベータ</sup>レプリカを読み取る {#use-tidb-to-read-tiflash-sup-beta-sup-replicas}
+## Use TiDB to read TiFlash replicas {#use-tidb-to-read-tiflash-replicas}
 
-データがTiFlash<sup>ベータ</sup>に複製された後、次の3つの方法のいずれかを使用してTiFlash<sup>ベータ</sup>レプリカを読み取り、分析コンピューティングを高速化できます。
+After data is replicated to TiFlash, you can use one of the following three ways to read TiFlash replicas to accelerate your analytical computing.
 
-### スマートセレクション {#smart-selection}
+### Smart selection {#smart-selection}
 
-TiFlash<sup>ベータ</sup>レプリカを含むテーブルの場合、TiDBオプティマイザは、コスト見積もりに基づいてTiFlash<sup>ベータ</sup>レプリカを使用するかどうかを自動的に決定します。例えば：
+For tables with TiFlash replicas, the TiDB optimizer automatically determines whether to use TiFlash replicas based on the cost estimation. For example:
 
 {{< copyable "" >}}
 
@@ -55,11 +55,11 @@ explain analyze select count(*) from test.t;
 +--------------------------+---------+---------+--------------+---------------+----------------------------------------------------------------------+--------------------------------+-----------+------+
 ```
 
-`cop[tiflash]`は、タスクが処理のためにTiFlash<sup>ベータ</sup>に送信されることを意味します。クエリでTiFlash<sup>ベータ</sup>レプリカが選択されていない場合は、 `analyze table`ステートメントを使用して統計を更新してから、 `explain analyze`ステートメントを使用して結果を確認してください。
+`cop[tiflash]` means that the task will be sent to TiFlash for processing. If your queries have not selected a TiFlash replica, try to update the statistics using the `analyze table` statement, and then check the result using the `explain analyze` statement.
 
-### エンジンの分離 {#engine-isolation}
+### Engine isolation {#engine-isolation}
 
-エンジンの分離とは、 `tidb_isolation_read_engines`の変数を構成することにより、すべてのクエリが指定されたエンジンのレプリカを使用するように指定することです。オプションのエンジンは、「tikv」、「tidb」（一部のTiDBシステムテーブルを格納し、ユーザーがアクティブに使用できないTiDBの内部メモリテーブル領域を示します）、および「tiflash」です。
+Engine isolation is to specify that all queries use a replica of the specified engine by configuring the `tidb_isolation_read_engines` variable. The optional engines are "tikv", "tidb" (indicates the internal memory table area of TiDB, which stores some TiDB system tables and cannot be actively used by users), and "tiflash".
 
 {{< copyable "" >}}
 
@@ -67,9 +67,9 @@ explain analyze select count(*) from test.t;
 set @@session.tidb_isolation_read_engines = "engine list separated by commas";
 ```
 
-### 手動ヒント {#manual-hint}
+### Manual hint {#manual-hint}
 
-手動のヒントにより、TiDBは、エンジンの分離を満たすことを前提として、1つ以上の特定のテーブルに指定されたレプリカを使用するように強制できます。手動ヒントの使用例を次に示します。
+Manual hint can force TiDB to use specified replicas for one or more specific tables on the premise of satisfying engine isolation. Here is an example of using the manual hint:
 
 {{< copyable "" >}}
 
@@ -77,4 +77,4 @@ set @@session.tidb_isolation_read_engines = "engine list separated by commas";
 select /*+ read_from_storage(tiflash[table_name]) */ ... from table_name;
 ```
 
-TiFlash<sup>ベータ</sup>の詳細については、ドキュメント[ここ](https://docs.pingcap.com/tidb/stable/tiflash-overview/)を参照してください。
+To learn more about TiFlash, refer to the documentation [here](https://docs.pingcap.com/tidb/stable/tiflash-overview/).

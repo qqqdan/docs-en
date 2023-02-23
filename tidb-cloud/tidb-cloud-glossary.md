@@ -5,106 +5,120 @@ category: glossary
 aliases: ['/tidbcloud/glossary']
 ---
 
-# TiDB Cloud用語集 {#tidb-cloud-glossary}
+# TiDB Cloud Glossary {#tidb-cloud-glossary}
+
+## A {#a}
+
+### ACID {#acid}
+
+ACID refers to the four key properties of a transaction: atomicity, consistency, isolation, and durability. Each of these properties is described below.
+
+-   **Atomicity** means that either all the changes of an operation are performed, or none of them are. TiDB ensures the atomicity of the [TiDB Region](#region) that stores the Primary Key to achieve the atomicity of transactions.
+
+-   **Consistency** means that transactions always bring the database from one consistent state to another. In TiDB, data consistency is ensured before writing data to the memory.
+
+-   **Isolation** means that a transaction in process is invisible to other transactions until it completes. This allows concurrent transactions to read and write data without sacrificing consistency. TiDB currently supports the isolation level of `REPEATABLE READ`.
+
+-   **Durability** means that once a transaction is committed, it remains committed even in the event of a system failure. TiKV uses persistent storage to ensure durability.
 
 ## C {#c}
 
-### クラスタ層 {#cluster-tier}
+### cluster tier {#cluster-tier}
 
-クラスタの機能と容量を決定します。クラスタ層が異なれば、クラスタ内のTiDB、TiKV、およびTiFlash<sup>ベータ</sup>ノードの数も異なります。
+Determines the functionality and capacity of your cluster. Different cluster tiers provide different numbers of TiDB, TiKV, and TiFlash nodes in your cluster.
 
 ## M {#m}
 
-### メンバー {#member}
+### member {#member}
 
-組織およびこの組織のクラスターにアクセスできる、組織に招待されたユーザー。
+A user that has been invited to an organization, with access to the organization and the clusters of this organization.
 
 ## N {#n}
 
-### ノード {#node}
+### node {#node}
 
-データインスタンス（TiKV）またはコンピューティングインスタンス（TiDB）または分析インスタンス（TiFlash<sup>ベータ</sup>）のいずれかを指します。
+Refers to either a data instance (TiKV) or a compute instance (TiDB) or an analytical instance (TiFlash).
 
 ## O {#o}
 
-### 組織 {#organization}
+### organization {#organization}
 
-TiDB Cloudアカウントを管理するために作成するエンティティ。これには、任意の数の複数のメンバーアカウントを持つ管理アカウントが含まれます。
+An entity that you create to manage your TiDB Cloud accounts, including a management account with any number of multiple member accounts.
 
-### 組織のメンバー {#organization-members}
+### organization members {#organization-members}
 
-組織のメンバーは、組織の所有者から組織に招待されたユーザーです。組織のメンバーは、組織のメンバーを表示したり、組織内のプロジェクトに招待したりできます。
+Organization members are users who are invited by the organization owner to join an organization. Organization members can view members of the organization and can be invited to projects within the organization.
 
 ## P {#p}
 
-### ポリシー {#policy}
+### policy {#policy}
 
-特定のアクションやリソースへのアクセスなど、役割、ユーザー、または組織に適用されるアクセス許可を定義するドキュメント。
+A document that defines permissions applying to a role, user, or organization, such as the access to specific actions or resources.
 
-### 事業 {#project}
+### project {#project}
 
-組織が作成したプロジェクトに基づいて、人員、インスタンス、ネットワークなどのリソースをプロジェクトごとに個別に管理でき、プロジェクト間のリソースが相互に干渉することはありません。
+Based on the projects created by the organization, resources such as personnel, instances, and networks can be managed separately according to projects, and resources between projects do not interfere with each other.
 
-### プロジェクトメンバー {#project-members}
+### project members {#project-members}
 
-プロジェクトメンバーは、組織の1つ以上のプロジェクトに招待されたユーザーです。プロジェクトメンバーは、クラスター、ネットワークアクセス、バックアップなどを管理できます。
+Project members are users who are invited to join one or more projects of the organization. Project members can manage clusters, network access, backups, etc.
 
 ## R {#r}
 
-### ごみ箱 {#recycle-bin}
+### Recycle Bin {#recycle-bin}
 
-有効なバックアップを持つ削除されたクラスターのデータが保存される場所。削除されたデータまたはバックアップファイルは、計画に基づいて一定期間ここに保持されます。データの損失を避けるために、時間内にデータを新しいクラスタに復元することを忘れないでください。クラスタにバックアップファイルがない場合、削除されたクラスタはここに表示されないことに注意してください。
+The place where the data of deleted clusters with valid backups is stored. Once a backed-up cluster is deleted, the existing backup files of the cluster are moved to the recycle bin. For backup files from automatic backups, the recycle bin will retain them for 7 days. For backup files from manual backups, there is no expiration date. To avoid data loss, remember to restore the data to a new cluster in time. Note that if a cluster **has no backup**, the deleted cluster will not be displayed here.
 
-### 領域 {#region}
+### region {#region}
 
--   TiDB Cloudリージョン
+-   TiDB Cloud region
 
-    同じ地理的領域に配置された[TiKV](https://docs.pingcap.com/tidb/stable/tidb-storage)のノードのセット。 TiKVノードのセットは、そのリージョン内の少なくとも3つの異なるアベイラビリティーゾーンに展開されます。
+    A set of [TiKV](https://docs.pingcap.com/tidb/stable/tidb-storage) nodes deployed in the same geographical area. The set of TiKV nodes will be deployed across at least three different Availability Zones within that region.
 
--   TiDBリージョン
+-   TiDB Region
 
-    TiDBのデータの基本単位。 TiKVは、Key-Valueスペースを一連の連続するキーセグメントに分割し、各セグメントはリージョンと呼ばれます。各リージョンのデフォルトのサイズ制限は96MBで、構成できます。
+    The basic unit of data in TiDB. TiKV divides the Key-Value space into a series of consecutive Key segments, and each segment is called a Region. The default size limit for each Region is 96 MB and can be configured.
 
-### レプリカ {#replica}
+### replica {#replica}
 
-同じまたは異なるリージョンに配置でき、同じデータを含む別のデータベース。レプリカは、多くの場合、災害復旧の目的またはパフォーマンスの向上のために使用されます。
+A separate database that can be located in the same or different region and contains the same data. A replica is often used for disaster recovery purposes or to improve performance.
 
 ## T {#t}
 
-### TiDBクラスタ {#tidb-cluster}
+### TiDB cluster {#tidb-cluster}
 
-機能的な作業データベースを形成する[TiDB](https://docs.pingcap.com/tidb/stable/tidb-computing) （ [配置ドライバー](https://docs.pingcap.com/tidb/stable/tidb-scheduling) ）、および[TiKV](https://docs.pingcap.com/tidb/stable/tidb-storage)の<sup>ベータ</sup>ノードの[TiFlash](https://docs.pingcap.com/tidb/stable/tiflash-overview) 。
+The collection of [TiDB](https://docs.pingcap.com/tidb/stable/tidb-computing), [TiKV](https://docs.pingcap.com/tidb/stable/tidb-storage), [the Placement Driver](https://docs.pingcap.com/tidb/stable/tidb-scheduling) (PD), and [TiFlash](https://docs.pingcap.com/tidb/stable/tiflash-overview) nodes that form a functional working database.
 
-### TiDBノード {#tidb-node}
+### TiDB node {#tidb-node}
 
-トランザクションストアまたは分析ストアから返されたクエリからのデータを集約するコンピューティングノード。 TiDBノードの数を増やすと、クラスタが処理できる同時クエリの数が増えます。
+The computing node that aggregates data from queries returned from transactional or analytical stores. Increasing the number of TiDB nodes will increase the number of concurrent queries that the cluster can handle.
 
-### TiFlash<sup>ベータ</sup>ノード {#tiflash-sup-beta-sup-node}
+### TiFlash node {#tiflash-node}
 
-TiKVからのデータをリアルタイムで複製し、リアルタイムの分析ワークロードをサポートする分析ストレージノード。
+The analytical storage node that replicates data from TiKV in real time and supports real-time analytical workloads.
 
-### TiKVノード {#tikv-node}
+### TiKV node {#tikv-node}
 
-オンライントランザクション処理（OLTP）データを格納するストレージノード。高可用性のために3ノードの倍数（たとえば、3、6、9）にスケーリングされ、2つのノードがレプリカとして機能します。 TiKVノードの数を増やすと、合計スループットが増加します。
+The storage node that stores the online transactional processing (OLTP) data. It is scaled in multiples of 3 nodes (for example, 3, 6, 9) for high availability, with two nodes acting as replicas. Increasing the number of TiKV nodes will increase the total throughput.
 
-### トラフィックフィルター {#traffic-filter}
+### traffic filter {#traffic-filter}
 
-SQLクライアントを介してTiDB CloudクラスタにアクセスできるIPアドレスとクラスレスドメイン間ルーティング（CIDR）アドレスのリスト。トラフィックフィルターはデフォルトで空です。
+A list of IP addresses and Classless Inter-Domain Routing (CIDR) addresses that are allowed to access the TiDB Cloud cluster via a SQL client. The traffic filter is empty by default.
 
 ## V {#v}
 
-### 仮想プライベートクラウド {#virtual-private-cloud}
+### Virtual Private Cloud {#virtual-private-cloud}
 
-リソースにマネージドネットワークサービスを提供する、論理的に分離された仮想ネットワークパーティション。
+A logically isolated virtual network partition that provides managed networking service for your resources.
 
 ### VPC {#vpc}
 
-VirtualPrivateCloudの略。
+Short for Virtual Private Cloud.
 
-### VPCピアリング {#vpc-peering}
+### VPC peering {#vpc-peering}
 
-仮想プライベートクラウド（ [VPC](#vpc) ）ネットワークを接続して、さまざまなVPCネットワークのワークロードがプライベートに通信できるようにします。
+Enables you to connect Virtual Private Cloud ([VPC](#vpc)) networks so that workloads in different VPC networks can communicate privately.
 
-### VPCピアリング接続 {#vpc-peering-connection}
+### VPC peering connection {#vpc-peering-connection}
 
-2つの仮想プライベートクラウド（VPC）間のネットワーク接続。これにより、プライベートIPアドレスを使用してそれらの間でトラフィックをルーティングし、データ転送を容易にすることができます。
+A networking connection between two Virtual Private Clouds (VPCs) that enables you to route traffic between them using private IP addresses and helps you to facilitate data transfer.

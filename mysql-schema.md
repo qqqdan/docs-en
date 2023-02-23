@@ -3,34 +3,59 @@ title: mysql Schema
 summary: Learn about the TiDB system tables.
 ---
 
-# <code>mysql</code>スキーマ {#code-mysql-code-schema}
+# <code>mysql</code> Schema {#code-mysql-code-schema}
 
-`mysql`スキーマには、TiDBシステムテーブルが含まれています。デザインはMySQLの`mysql`スキーマに似ており、 `mysql.user`などのテーブルを直接編集できます。また、MySQLの拡張機能であるいくつかのテーブルも含まれています。
+The `mysql` schema contains TiDB system tables. The design is similar to the `mysql` schema in MySQL, where tables such as `mysql.user` can be edited directly. It also contains a number of tables which are extensions to MySQL.
 
-## システムテーブルを付与する {#grant-system-tables}
+## Grant system tables {#grant-system-tables}
 
-これらのシステムテーブルには、ユーザーアカウントとその特権に関する付与情報が含まれています。
+These system tables contain grant information about user accounts and their privileges:
 
--   `user` ：ユーザーアカウント、グローバル特権、およびその他の非特権列
--   `db` ：データベースレベルの権限
--   `tables_priv` ：テーブルレベルの権限
--   `columns_priv` ：列レベルの特権
+-   `user`: user accounts, global privileges, and other non-privilege columns
+-   `db`: database-level privileges
+-   `tables_priv`: table-level privileges
+-   `columns_priv`: column-level privileges
+-   `default_roles`: the default roles for a user
+-   `global_grants`: dynamic privileges
+-   `global_priv`: the authentication information based on certificates
+-   `role_edges`: the relationship between roles
 
-## サーバー側のヘルプシステムテーブル {#server-side-help-system-tables}
+## Server-side help system tables {#server-side-help-system-tables}
 
-現在、 `help_topic`はNULLです。
+Currently, the `help_topic` is NULL.
 
-## 統計システムテーブル {#statistics-system-tables}
+## Statistics system tables {#statistics-system-tables}
 
--   `stats_buckets` ：統計のバケット
--   `stats_histograms` ：統計のヒストグラム
--   `stats_meta` ：行の総数や更新された行などのテーブルのメタ情報
+-   `stats_buckets`: the buckets of statistics
+-   `stats_histograms`: the histograms of statistics
+-   `stats_top_n`: the TopN of statistics
+-   `stats_meta`: the meta information of tables, such as the total number of rows and updated rows
+-   `stats_extended`: extended statistics, such as the order correlation between columns
+-   `stats_feedback`: the query feedback of statistics
+-   `stats_fm_sketch`: the FMSketch distribution of the histogram of the statistics column
+-   `analyze_options`: the default `analyze` options for each table
+-   `column_stats_usage`: the usage of column statistics
+-   `schema_index_usage`: the usage of indexes
 
-## GCワーカーシステムテーブル {#gc-worker-system-tables}
+## Execution plan-related system tables {#execution-plan-related-system-tables}
 
--   `gc_delete_range` ：削除するデータを記録します
+-   `bind_info`: the binding information of execution plans
+-   `capture_plan_baselines_blacklist`: the blocklist for the automatic binding of the execution plan
 
-## その他のシステムテーブル {#miscellaneous-system-tables}
+## GC worker system tables {#gc-worker-system-tables}
 
--   `GLOBAL_VARIABLES` ：グローバルシステム変数テーブル
--   `tidb` ：TiDB実行時のバージョン情報を記録します`bootstrap`
+-   `gc_delete_range`: the KV range to be deleted
+-   `gc_delete_range_done`: the deleted KV range
+
+## Miscellaneous system tables {#miscellaneous-system-tables}
+
+-   `GLOBAL_VARIABLES`: global system variable table
+
+<CustomContent platform="tidb">
+
+-   `tidb`: to record the version information when TiDB executes `bootstrap`
+-   `expr_pushdown_blacklist`: the blocklist for expression pushdown
+-   `opt_rule_blacklist`: the blocklist for logical optimization rules
+-   `table_cache_meta`: the metadata of cached tables
+
+</CustomContent>

@@ -3,17 +3,15 @@ title: Export Data from TiDB
 summary: This page has instructions for exporting data from your TiDB cluster in TiDB Cloud.
 ---
 
-# TiDBからデータをエクスポートする {#export-data-from-tidb}
+# Export Data from TiDB {#export-data-from-tidb}
 
-このページでは、 TiDB Cloudでクラスタからデータをエクスポートする方法について説明します。
+This page describes how to export data from your cluster in TiDB Cloud.
 
-毎日のバックアップは、 TiDB CloudのTiDBクラスターに対して自動的にスケジュールされます。バックアップスナップショットを選択して、いつでも新しいTiDBクラスタに復元できます。自動バックアップにより、極端な災害状況での損失を減らすことができます。
+TiDB does not lock in your data. Sometimes you still want to be able to migrate data from TiDB to other data platforms. Because TiDB is highly compatible with MySQL, any export tool suitable for MySQL can also be used for TiDB.
 
-TiDBはデータをロックインしません。それでも、TiDBから他のデータプラットフォームにデータを移行できるようにしたい場合があります。 TiDBはMySQLとの互換性が高いため、MySQLに適した任意のエクスポートツールをTiDBにも使用できます。
+You can use the tool [Dumpling](https://github.com/pingcap/dumpling) for data export.
 
-同じツール[Dumpling](https://github.com/pingcap/dumpling)をデータのエクスポートに使用できます。
-
-1.  TiUPをダウンロードしてインストールします。
+1.  Download and install TiUP:
 
     {{< copyable "" >}}
 
@@ -21,11 +19,11 @@ TiDBはデータをロックインしません。それでも、TiDBから他の
     curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
     ```
 
-2.  グローバル環境変数を宣言します。
+2.  Declare the global environment variable:
 
-    > **ノート：**
+    > **Note:**
     >
-    > インストール後、TiUPは対応する`profile`のファイルの絶対パスを表示します。次のコマンドで`.bash_profile`を`profile`ファイルのパスに変更する必要があります。
+    > After the installation, TiUP displays the absolute path of the corresponding `profile` file. You need to modify `.bash_profile` in following command to the path of your `profile` file.
 
     {{< copyable "" >}}
 
@@ -33,7 +31,7 @@ TiDBはデータをロックインしません。それでも、TiDBから他の
     source .bash_profile
     ```
 
-3.  Dumplingをインストールします。
+3.  Install Dumpling.
 
     {{< copyable "" >}}
 
@@ -41,7 +39,7 @@ TiDBはデータをロックインしません。それでも、TiDBから他の
     tiup install dumpling
     ```
 
-4.  TiDBからのDumplingを使用してデータをエクスポートします。
+4.  Export your data using Dumpling from TiDB.
 
     {{< copyable "" >}}
 
@@ -49,13 +47,13 @@ TiDBはデータをロックインしません。それでも、TiDBから他の
     tiup dumpling -h ${tidb-endpoint} -P 3306 -u ${user} -F 67108864 -t 4 -o /path/to/export/dir
     ```
 
-    指定したデータベースのみをエクスポートする場合は、 `-B`を使用してデータベース名のコンマ区切りリストを指定します。
+    If you want to export only the specified databases, use `-B` to specify a comma separated list of database names.
 
-    必要な最小権限は次のとおりです。
+    The minimum permissions required are as follows:
 
     -   `SELECT`
     -   `RELOAD`
     -   `LOCK TABLES`
     -   `REPLICATION CLIENT`
 
-    現在、 DumplingはMydumper形式の出力のみをサポートしており、 [TiDB Lightning](https://github.com/pingcap/tidb-lightning)を使用してMySQL互換データベースに簡単に復元できます。
+    Currently, Dumpling only supports the Mydumper format output, which can be easily restored into MySQL compatible databases by using [TiDB Lightning](https://github.com/pingcap/tidb-lightning).

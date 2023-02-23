@@ -3,25 +3,25 @@ title: Schedule Replicas by Topology Labels
 summary: Learn how to schedule replicas by topology labels.
 ---
 
-# トポロジラベルによるレプリカのスケジュール {#schedule-replicas-by-topology-labels}
+# Schedule Replicas by Topology Labels {#schedule-replicas-by-topology-labels}
 
-> **ノート：**
+> **Note:**
 >
-> TiDB v5.3.0では、 [SQLの配置ルール](/placement-rules-in-sql.md)の実験的サポートが導入されています。これにより、テーブルとパーティションの配置を構成するためのより便利な方法が提供されます。 SQLの配置ルールは、将来のリリースで配置構成をPDに置き換える可能性があります。
+> TiDB v5.3.0 introduces an experimental support for [Placement Rules in SQL](/placement-rules-in-sql.md). This offers a more convenient way to configure the placement of tables and partitions. Placement Rules in SQL might replace placement configuration with PD in future releases.
 
-TiDBクラスターの高可用性と障害復旧機能を向上させるために、TiKVノードを可能な限り物理的に分散させることをお勧めします。たとえば、TiKVノードは、さまざまなラックに分散したり、さまざまなデータセンターに分散したりすることができます。 TiKVのトポロジ情報に従って、PDスケジューラはバックグラウンドで自動的にスケジューリングを実行して、リージョンの各レプリカを可能な限り分離します。これにより、ディザスタリカバリの機能が最大化されます。
+To improve the high availability and disaster recovery capability of TiDB clusters, it is recommended that TiKV nodes are physically scattered as much as possible. For example, TiKV nodes can be distributed on different racks or even in different data centers. According to the topology information of TiKV, the PD scheduler automatically performs scheduling at the background to isolate each replica of a Region as much as possible, which maximizes the capability of disaster recovery.
 
-このメカニズムを有効にするには、TiKVとPDを適切に構成して、クラスタのトポロジー情報、特にTiKVロケーション情報が展開中にPDに報告されるようにする必要があります。始める前に、まず[TiUPを使用してTiDBをデプロイ](/production-deployment-using-tiup.md)を参照してください。
+To make this mechanism effective, you need to properly configure TiKV and PD so that the topology information of the cluster, especially the TiKV location information, is reported to PD during deployment. Before you begin, see [Deploy TiDB Using TiUP](/production-deployment-using-tiup.md) first.
 
-## クラスタトポロジに基づいて<code>labels</code>を構成する {#configure-code-labels-code-based-on-the-cluster-topology}
+## Configure <code>labels</code> based on the cluster topology {#configure-code-labels-code-based-on-the-cluster-topology}
 
-### TiKVの<code>labels</code>を構成する {#configure-code-labels-code-for-tikv}
+### Configure <code>labels</code> for TiKV {#configure-code-labels-code-for-tikv}
 
-コマンドラインフラグを使用するか、TiKV構成ファイルを設定して、キーと値のペアの形式でいくつかの属性をバインドできます。これらの属性は`labels`と呼ばれます。 TiKVが開始されると、その`labels`がPDに報告されるため、ユーザーはTiKVノードの場所を特定できます。
+You can use the command-line flag or set the TiKV configuration file to bind some attributes in the form of key-value pairs. These attributes are called `labels`. After TiKV is started, it reports its `labels` to PD so users can identify the location of TiKV nodes.
 
-トポロジにゾーン&gt;ラック&gt;ホストの3つの層があり、これらのラベル（ゾーン、ラック、ホスト）を使用して、次のいずれかの方法でTiKVの場所を設定できると想定します。
+Assume that the topology has three layers: zone > rack > host, and you can use these labels (zone, rack, host) to set the TiKV location in one of the following methods:
 
--   コマンドラインフラグを使用します。
+-   Use the command-line flag to start a TiKV instance:
 
     {{< copyable "" >}}
 
@@ -29,7 +29,7 @@ TiDBクラスターの高可用性と障害復旧機能を向上させるため�
     tikv-server --labels zone=<zone>,rack=<rack>,host=<host>
     ```
 
--   TiKV構成ファイルで構成します。
+-   Configure in the TiKV configuration file:
 
     {{< copyable "" >}}
 
@@ -38,21 +38,22 @@ TiDBクラスターの高可用性と障害復旧機能を向上させるため�
     labels = "zone=<zone>,rack=<rack>,host=<host>"
     ```
 
-### PD <code>location-labels</code>を設定する {#configure-code-location-labels-code-for-pd}
+### Configure <code>location-labels</code> for PD {#configure-code-location-labels-code-for-pd}
 
-上記の説明によると、ラベルはTiKV属性を説明するために使用される任意のキーと値のペアにすることができます。ただし、PDは、場所に関連するラベルとこれらのラベルのレイヤー関係を識別できません。したがって、PDがTiKVノードトポロジを理解するには、次の構成を行う必要があります。
+According to the description above, the label can be any key-value pair used to describe TiKV attributes. But PD cannot identify the location-related labels and the layer relationship of these labels. Therefore, you need to make the following configuration for PD to understand the TiKV node topology.
 
-文字列の配列として定義され、 `location-labels`はPDの構成です。この構成の各項目は、TiKV3のキーに対応してい`labels` 。さらに、各キーのシーケンスは、異なるラベルのレイヤー関係を表します（分離レベルは左から右に向かって減少します）。
+Defined as an array of strings, `location-labels` is the configuration for PD. Each item of this configuration corresponds to the key of TiKV `labels`. Besides, the sequence of each key represents the layer relationship of different labels (the isolation levels decrease from left to right).
 
-構成にはデフォルト値がない`host` 、 `zone`などの`location-labels`の値をカスタマイズでき`rack` 。また、この構成では、TiKVサーバーのラベルと一致する限り、ラベルレベルの数に制限はあり**ませ**ん（3レベルでは必須ではありません）。
+You can customize the value of `location-labels`, such as `zone`, `rack`, or `host`, because the configuration does not have default values. Also, this configuration has **no** restriction in the number of label levels (not mandatory for 3 levels) as long as they match with TiKV server labels.
 
-> **ノート：**
+> **Note:**
 >
-> 設定を有効にするには、PD用に`location-labels`つ、TiKV用に`labels`を同時に設定する必要があります。それ以外の場合、PDはトポロジに従ってスケジューリングを実行しません。
+> -   To make configurations take effect, you must configure `location-labels` for PD and `labels` for TiKV at the same time. Otherwise, PD does not perform scheduling according to the topology.
+> -   If you use Placement Rules in SQL, you only need to configure `labels` for TiKV. Currently, Placement Rules in SQL is incompatible with the `location-labels` configuration of PD and ignores this configuration. It is not recommended to use `location-labels` and Placement Rules in SQL at the same time; otherwise, unexpected results might occur.
 
-`location-labels`を構成するには、クラスタの状況に応じて次のいずれかの方法を選択します。
+To configure `location-labels`, choose one of the following methods according to your cluster situation:
 
--   PDクラスタが初期化されていない場合は、PD構成ファイルで`location-labels`を構成します。
+-   If the PD cluster is not initialized, configure `location-labels` in the PD configuration file:
 
     {{< copyable "" >}}
 
@@ -61,7 +62,7 @@ TiDBクラスターの高可用性と障害復旧機能を向上させるため�
     location-labels = ["zone", "rack", "host"]
     ```
 
--   PDクラスタがすでに初期化されている場合は、pd-ctlツールを使用してオンラインで変更を加えます。
+-   If the PD cluster is already initialized, use the pd-ctl tool to make online changes:
 
     {{< copyable "" >}}
 
@@ -69,11 +70,11 @@ TiDBクラスターの高可用性と障害復旧機能を向上させるため�
     pd-ctl config set location-labels zone,rack,host
     ```
 
-### PD <code>isolation-level</code>を構成する {#configure-code-isolation-level-code-for-pd}
+### Configure <code>isolation-level</code> for PD {#configure-code-isolation-level-code-for-pd}
 
-`location-labels`が構成されている場合は、PD構成ファイルで`isolation-level`を構成することにより、TiKVクラスターのトポロジー分離要件をさらに強化できます。
+If `location-labels` has been configured, you can further enhance the topological isolation requirements on TiKV clusters by configuring `isolation-level` in the PD configuration file.
 
-上記の手順に従って`location-labels`を構成することにより、3層クラスタトポロジーを作成したと想定します。ゾーン-&gt;ラック-&gt;ホスト、次のように`isolation-level`から`zone`を構成できます。
+Assume that you have made a three-layer cluster topology by configuring `location-labels` according to the instructions above: zone -> rack -> host, you can configure the `isolation-level` to `zone` as follows:
 
 {{< copyable "" >}}
 
@@ -82,7 +83,7 @@ TiDBクラスターの高可用性と障害復旧機能を向上させるため�
 isolation-level = "zone"
 ```
 
-PDクラスタがすでに初期化されている場合は、pd-ctlツールを使用してオンラインで変更を加える必要があります。
+If the PD cluster is already initialized, you need to use the pd-ctl tool to make online changes:
 
 {{< copyable "" >}}
 
@@ -90,17 +91,17 @@ PDクラスタがすでに初期化されている場合は、pd-ctlツールを
 pd-ctl config set isolation-level zone
 ```
 
-`location-level`構成は文字列の配列であり、 `location-labels`のキーに対応する必要があります。このパラメーターは、TiKVトポロジークラスターの最小および必須の分離レベル要件を制限します。
+The `location-level` configuration is an array of strings, which needs to correspond to a key of `location-labels`. This parameter limits the minimum and mandatory isolation level requirements on TiKV topology clusters.
 
-> **ノート：**
+> **Note:**
 >
-> デフォルトでは`isolation-level`は空です。これは、分離レベルに必須の制限がないことを意味します。これを設定するには、PD用に`location-labels`を構成し、 `isolation-level`の値が`location-labels`つの名前のいずれかであることを確認する必要があります。
+> `isolation-level` is empty by default, which means there is no mandatory restriction on the isolation level. To set it, you need to configure `location-labels` for PD and ensure that the value of `isolation-level` is one of `location-labels` names.
 
-### TiUPを使用してクラスタを構成する（推奨） {#configure-a-cluster-using-tiup-recommended}
+### Configure a cluster using TiUP (recommended) {#configure-a-cluster-using-tiup-recommended}
 
-TiUPを使用してクラスタをデプロイする場合、 [初期化構成ファイル](/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file)でTiKVの場所を構成できます。 TiUPは、展開中に対応するTiKVおよびPD構成ファイルを生成します。
+When using TiUP to deploy a cluster, you can configure the TiKV location in the [initialization configuration file](/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file). TiUP will generate the corresponding TiKV and PD configuration files during deployment.
 
-次の例では、 `zone/host`の2層トポロジが定義されています。クラスタのTiKVノードは3つのゾーンに分散されており、各ゾーンには2つのホストがあります。 z1では、ホストごとに2つのTiKVインスタンスがデプロイされます。 z2およびz3では、ホストごとに1つのTiKVインスタンスがデプロイされます。次の例では、 `tikv-n`は`n`番目のTiKVノードのIPアドレスを表します。
+In the following example, a two-layer topology of `zone/host` is defined. The TiKV nodes of the cluster are distributed among three zones, each zone with two hosts. In z1, two TiKV instances are deployed per host. In z2 and z3, one TiKV instance is deployed per host. In the following example, `tikv-n` represents the IP address of the `n`th TiKV node.
 
 ```
 server_configs:
@@ -153,22 +154,26 @@ tikv_servers:
         host: h2s
 ```
 
-詳細については、 [地理分散型デプロイメントトポロジ](/geo-distributed-deployment-topology.md)を参照してください。
+For details, see [Geo-distributed Deployment topology](/geo-distributed-deployment-topology.md).
 
-## トポロジーラベルに基づくPDスケジュール {#pd-schedules-based-on-topology-label}
+> **Note:**
+>
+> If you have not configured `replication.location-labels` in the configuration file, when you deploy a cluster using this topology file, an error might occur. It is recommended that you confirm `replication.location-labels` is configured in the configuration file before deploying a cluster.
 
-PDは、ラベルレイヤーに従ってレプリカをスケジュールし、同じデータの異なるレプリカが可能な限り分散されるようにします。
+## PD schedules based on topology label {#pd-schedules-based-on-topology-label}
 
-前のセクションのトポロジーを例として取り上げます。
+PD schedules replicas according to the label layer to make sure that different replicas of the same data are scattered as much as possible.
 
-クラスタレプリカの数が3（ `max-replicas=3` ）であると想定します。合計で3つのゾーンがあるため、PDは、各リージョンの3つのレプリカがそれぞれz1、z2、およびz3に配置されるようにします。このようにして、1つのデータセンターに障害が発生した場合でも、TiDBクラスタを使用できます。
+Take the topology in the previous section as an example.
 
-次に、クラスタレプリカの数が5（ `max-replicas=5` ）であると想定します。ゾーンは全部で3つしかないため、PDはゾーンレベルでの各レプリカの分離を保証できません。この状況では、PDスケジューラーはホストレベルでレプリカの分離を保証します。つまり、リージョンの複数のレプリカが同じゾーンに分散されている可能性がありますが、同じホストには分散されていない可能性があります。
+Assume that the number of cluster replicas is 3 (`max-replicas=3`). Because there are 3 zones in total, PD ensures that the 3 replicas of each Region are respectively placed in z1, z2, and z3. In this way, the TiDB cluster is still available when one data center fails.
 
-5レプリカ構成の場合、z3が失敗するか、全体として分離され、一定期間（ `max-store-down-time`で制御）後に回復できない場合、PDはスケジューリングによって5つのレプリカを構成します。現時点では、4つのホストのみが使用可能です。これは、ホストレベルの分離が保証されておらず、複数のレプリカが同じホストにスケジュールされている可能性があることを意味します。ただし、 `isolation-level`の値が空のままではなく`zone`に設定されている場合、これはリージョンレプリカの最小の物理的分離要件を指定します。つまり、PDは、同じリージョンのレプリカが異なるゾーンに分散していることを確認します。この分離制限に従うことが複数のレプリカの`max-replicas`の要件を満たさない場合でも、PDは対応するスケジューリングを実行しません。
+Then, assume that the number of cluster replicas is 5 (`max-replicas=5`). Because there are only 3 zones in total, PD cannot guarantee the isolation of each replica at the zone level. In this situation, the PD scheduler will ensure replica isolation at the host level. In other words, multiple replicas of a Region might be distributed in the same zone but not on the same host.
 
-たとえば、TiKVクラスタは3つのデータゾーンz1、z2、およびz3に分散されています。各リージョンには必要に応じて3つのレプリカがあり、PDは同じリージョンの3つのレプリカをこれらの3つのデータゾーンにそれぞれ配布します。 z1で停電が発生し、一定期間後に回復できない場合、PDは、z1のリージョンレプリカが使用できなくなったと判断します。ただし、 `isolation-level`が`zone`に設定されているため、PDは、同じリージョンの異なるレプリカが同じデータゾーンでスケジュールされないことを厳密に保証する必要があります。 z2とz3の両方にすでにレプリカがあるため、現時点でレプリカが2つしかない場合でも、PDは最小分離レベル制限`isolation-level`の下でスケジューリングを実行しません。
+In the case of the 5-replica configuration, if z3 fails or is isolated as a whole, and cannot be recovered after a period of time (controlled by `max-store-down-time`), PD will make up the 5 replicas through scheduling. At this time, only 4 hosts are available. This means that host-level isolation cannot be guaranteed and that multiple replicas might be scheduled to the same host. But if the `isolation-level` value is set to `zone` instead of being left empty, this specifies the minimum physical isolation requirements for Region replicas. That is to say, PD will ensure that replicas of the same Region are scattered among different zones. PD will not perform corresponding scheduling even if following this isolation restriction does not meet the requirement of `max-replicas` for multiple replicas.
 
-同様に、 `isolation-level`が`rack`に設定されている場合、最小分離レベルは同じデータセンター内の異なるラックに適用されます。この構成では、可能であれば、ゾーン層での分離が最初に保証されます。ゾーンレベルでの分離が保証できない場合、PDは、同じゾーン内の同じラックに異なるレプリカをスケジュールすることを回避しようとします。 `isolation-level`が`host`に設定されている場合、スケジューリングは同様に機能します。ここで、PDは最初にラックの分離レベルを保証し、次にホストのレベルを保証します。
+For example, a TiKV cluster is distributed across three data zones z1, z2, and z3. Each Region has three replicas as required, and PD distributes the three replicas of the same Region to these three data zones respectively. If a power outage occurs in z1 and cannot be recovered after a period of time (controlled by [`max-store-down-time`](/pd-configuration-file.md#max-store-down-time) and 30 minutes by default), PD determines that the Region replicas on z1 are no longer available. However, because `isolation-level` is set to `zone`, PD needs to strictly guarantee that different replicas of the same Region will not be scheduled on the same data zone. Because both z2 and z3 already have replicas, PD will not perform any scheduling under the minimum isolation level restriction of `isolation-level`, even if there are only two replicas at this moment.
 
-要約すると、PDは、現在のトポロジに従ってクラスタのディザスタリカバリを最大化します。したがって、一定レベルのディザスタリカバリを実現する場合は、トポロジに応じて、 `max-replicas`の数よりも多くのマシンをさまざまなサイトに展開します。 TiDBには、さまざまなシナリオに応じてデータのトポロジ分離レベルをより柔軟に制御するための`isolation-level`などの必須の構成項目も用意されています。
+Similarly, when `isolation-level` is set to `rack`, the minimum isolation level applies to different racks in the same data center. With this configuration, the isolation at the zone layer is guaranteed first if possible. When the isolation at the zone level cannot be guaranteed, PD tries to avoid scheduling different replicas to the same rack in the same zone. The scheduling works similarly when `isolation-level` is set to `host` where PD first guarantees the isolation level of rack, and then the level of host.
+
+In summary, PD maximizes the disaster recovery of the cluster according to the current topology. Therefore, if you want to achieve a certain level of disaster recovery, deploy more machines on different sites according to the topology than the number of `max-replicas`. TiDB also provides mandatory configuration items such as `isolation-level` for you to more flexibly control the topological isolation level of data according to different scenarios.

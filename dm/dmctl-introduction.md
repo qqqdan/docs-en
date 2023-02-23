@@ -3,21 +3,21 @@ title: Maintain DM Clusters Using dmctl
 summary: Learn how to maintain a DM cluster using dmctl.
 ---
 
-# dmctlを使用してDMクラスターを管理する {#maintain-dm-clusters-using-dmctl}
+# Maintain DM Clusters Using dmctl {#maintain-dm-clusters-using-dmctl}
 
-> **ノート：**
+> **Note:**
 >
-> TiUPを使用してデプロイされたDMクラスターの場合、クラスターを維持するために[`tiup dmctl`](/dm/maintain-dm-using-tiup.md#dmctl)を直接使用することをお勧めします。
+> For DM clusters deployed using TiUP, you are recommended to directly use [`tiup dmctl`](/dm/maintain-dm-using-tiup.md#dmctl) to maintain the clusters.
 
-dmctlは、DMクラスターを維持するために使用されるコマンドラインツールです。インタラクティブモードとコマンドモードの両方をサポートします。
+dmctl is a command line tool used to maintain DM clusters. It supports both the interactive mode and the command mode.
 
-## インタラクティブモード {#interactive-mode}
+## Interactive mode {#interactive-mode}
 
-DMマスターと対話するには、対話モードに入ります。
+Enter the interactive mode to interact with DM-master:
 
-> **ノート：**
+> **Note:**
 >
-> インタラクティブモードはBash機能をサポートしていません。たとえば、文字列フラグを引用符で囲むのではなく、直接渡す必要があります。
+> The interactive mode does not support Bash features. For example, you need to directly pass string flags instead of passing them in quotes.
 
 {{< copyable "" >}}
 
@@ -49,7 +49,7 @@ Available Commands:
   offline-member  Offlines member which has been closed.
   operate-leader  `evict`/`cancel-evict` the leader.
   operate-schema  `get`/`set`/`remove` the schema for an upstream table.
-  operate-source  `create`/`update`/`stop`/`show` upstream MySQL/MariaDB source.
+  operate-source  `create`/`stop`/`show` upstream MySQL/MariaDB source.
   pause-relay     Pauses DM-worker's relay unit.
   pause-task      Pauses a specified running task.
   purge-relay     Purges relay log files of the DM-worker according to the specified filename.
@@ -68,14 +68,14 @@ Flags:
 Use "dmctl [command] --help" for more information about a command.
 ```
 
-## コマンドモード {#command-mode}
+## Command mode {#command-mode}
 
-コマンドモードは、dmctlコマンドの直後にタスク操作を追加する必要があるという点でインタラクティブモードとは異なります。コマンドモードでのタスク操作のパラメータは、インタラクティブモードでのパラメータと同じです。
+The command mode differs from the interactive mode in that you need to append the task operation right after the dmctl command. The parameters of the task operation in the command mode are the same as those in the interactive mode.
 
-> **ノート：**
+> **Note:**
 >
-> -   dmctlコマンドの後には、1つのタスク操作のみを続ける必要があります。
-> -   v2.0.4以降、DMは環境変数`DM_MASTER_ADDR`からの`-master-addr`パラメーターの読み取りをサポートします。
+> -   A dmctl command must be followed by only one task operation.
+> -   Starting from v2.0.4, DM supports reading the `-master-addr` parameter from the environment variable `DM_MASTER_ADDR`.
 
 {{< copyable "" >}}
 

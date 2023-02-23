@@ -3,42 +3,42 @@ title: PD Recover User Guide
 summary: Use PD Recover to recover a PD cluster which cannot start or provide services normally.
 ---
 
-# PDRecoverユーザーガイド {#pd-recover-user-guide}
+# PD Recover User Guide {#pd-recover-user-guide}
 
-PD Recoverは、PDのディザスタリカバリツールであり、サービスを正常に開始または提供できないPDクラスタをリカバリするために使用されます。
+PD Recover is a disaster recovery tool of PD, used to recover the PD cluster which cannot start or provide services normally.
 
-## ソースコードからコンパイルする {#compile-from-source-code}
+## Compile from source code {#compile-from-source-code}
 
--   [行け](https://golang.org/) Goモジュールを使用するため、バージョン1.13以降が必要です。
--   [PDプロジェクト](https://github.com/pingcap/pd)のルートディレクトリで、 `make pd-recover`コマンドを使用して`bin/pd-recover`をコンパイルおよび生成します。
+-   [Go](https://golang.org/) Version 1.16 or later is required because the Go modules are used.
+-   In the root directory of the [PD project](https://github.com/pingcap/pd), use the `make pd-recover` command to compile and generate `bin/pd-recover`.
 
-> **ノート：**
+> **Note:**
 >
-> 通常、PD制御ツールはリリースされたバイナリまたはDockerにすでに存在するため、ソースコードをコンパイルする必要はありません。ただし、開発者ユーザーは、ソースコードのコンパイルについて上記の手順を参照できます。
+> Generally, you do not need to compile source code because the PD Control tool already exists in the released binary or Docker. However, developer users can refer to the instructions above for compiling source code.
 
-## TiDBインストールパッケージをダウンロードする {#download-tidb-installation-package}
+## Download TiDB installation package {#download-tidb-installation-package}
 
-PD RecoverはTiDBパッケージに含まれているため、最新バージョンのPD Recoverをダウンロードするには、TiDBパッケージを直接ダウンロードしてください。
+To download the latest version of PD Recover, directly download the TiDB package, because PD Recover is included in the TiDB package.
 
-| パッケージ名                                                                        | OS    | 建築    | SHA256チェックサム                                                     |
-| :---------------------------------------------------------------------------- | :---- | :---- | :--------------------------------------------------------------- |
-| `https://download.pingcap.org/tidb-{version}-linux-amd64.tar.gz` （pd-recover） | Linux | amd64 | `https://download.pingcap.org/tidb-{version}-linux-amd64.sha256` |
+| Package name                                                                  | OS    | Architecture | SHA256 checksum                                                  |
+| :---------------------------------------------------------------------------- | :---- | :----------- | :--------------------------------------------------------------- |
+| `https://download.pingcap.org/tidb-{version}-linux-amd64.tar.gz` (pd-recover) | Linux | amd64        | `https://download.pingcap.org/tidb-{version}-linux-amd64.sha256` |
 
-> **ノート：**
+> **Note:**
 >
-> `{version}`はTiDBのバージョン番号を示します。たとえば、 `{version}`が`v5.4.1`の場合、パッケージのダウンロードリンクは`https://download.pingcap.org/tidb-v5.4.1-linux-amd64.tar.gz`です。
+> `{version}` indicates the version number of TiDB. For example, if `{version}` is `v5.4.3`, the package download link is `https://download.pingcap.org/tidb-v5.4.3-linux-amd64.tar.gz`.
 
-## クイックスタート {#quick-start}
+## Quick Start {#quick-start}
 
-このセクションでは、PDリカバリを使用してPDクラスタをリカバリする方法について説明します。
+This section describes how to use PD Recover to recover a PD cluster.
 
-### クラスタIDを取得する {#get-cluster-id}
+### Get cluster ID {#get-cluster-id}
 
-クラスタIDは、PD、TiKV、またはTiDBのログから取得できます。クラスタIDを取得するには、サーバーでログを直接表示できます。
+The cluster ID can be obtained from the log of PD, TiKV or TiDB. To get the cluster ID, you can view the log directly on the server.
 
-#### PDログからクラスタIDを取得する（推奨） {#get-cluster-id-from-pd-log-recommended}
+#### Get cluster ID from PD log (recommended) {#get-cluster-id-from-pd-log-recommended}
 
-PDログからクラスタIDを取得するには、次のコマンドを実行します。
+To get the cluster ID from the PD log, run the following command:
 
 {{< copyable "" >}}
 
@@ -51,9 +51,9 @@ cat {{/path/to}}/pd.log | grep "init cluster id"
 ...
 ```
 
-#### TiDBログからクラスタIDを取得する {#get-cluster-id-from-tidb-log}
+#### Get cluster ID from TiDB log {#get-cluster-id-from-tidb-log}
 
-TiDBログからクラスタIDを取得するには、次のコマンドを実行します。
+To get the cluster ID from the TiDB log, run the following command:
 
 {{< copyable "" >}}
 
@@ -66,9 +66,9 @@ cat {{/path/to}}/tidb.log | grep "init cluster id"
 ...
 ```
 
-#### TiKVログからクラスタIDを取得する {#get-cluster-id-from-tikv-log}
+#### Get cluster ID from TiKV log {#get-cluster-id-from-tikv-log}
 
-TiKVログからクラスタIDを取得するには、次のコマンドを実行します。
+To get the cluster ID from the TiKV log, run the following command:
 
 {{< copyable "" >}}
 
@@ -81,17 +81,17 @@ cat {{/path/to}}/tikv.log | grep "connect to PD cluster"
 ...
 ```
 
-### 割り当てられたIDを取得します {#get-allocated-id}
+### Get allocated ID {#get-allocated-id}
 
-指定する割り当て済みID値は、現在最大の割り当て済みID値よりも大きくする必要があります。割り当てられたIDを取得するには、モニターから取得するか、サーバーで直接ログを表示します。
+The allocated ID value you specify must be larger than the currently largest allocated ID value. To get allocated ID, you can either get it from the monitor, or view the log directly on the server.
 
-#### モニターから割り当てられたIDを取得します（推奨） {#get-allocated-id-from-the-monitor-recommended}
+#### Get allocated ID from the monitor (recommended) {#get-allocated-id-from-the-monitor-recommended}
 
-モニターから割り当てられたIDを取得するには、表示しているメトリックが**最後のPDリーダー**のメトリックであることを確認する必要があります。また、PDダッシュボードの[<strong>現在のID割り当て</strong>]パネルから最大の割り当てIDを取得できます。
+To get allocated ID from the monitor, you need to make sure that the metrics you are viewing are the metrics of **the last PD leader**, and you can get the largest allocated ID from the <strong>Current ID allocation</strong> panel in PD dashboard.
 
-#### PDログから割り当てられたIDを取得します {#get-allocated-id-from-pd-log}
+#### Get allocated ID from PD log {#get-allocated-id-from-pd-log}
 
-PDログから割り当てられたIDを取得するには、表示しているログが**最後のPDリーダー**のログであることを確認する必要があります。次のコマンドを実行して、割り当てられた最大IDを取得できます。
+To get the allocated ID from the PD log, you need to make sure that the log you are viewing is the log of **the last PD leader**, and you can get the maximum allocated ID by running the following command:
 
 {{< copyable "" >}}
 
@@ -104,15 +104,15 @@ cat {{/path/to}}/pd*.log | grep "idAllocator allocates a new id" |  awk -F'=' '{
 ...
 ```
 
-または、すべてのPDサーバーで上記のコマンドを実行するだけで、最大のサーバーを見つけることができます。
+Or you can simply run the above command in all PD servers to find the largest one.
 
-### 新しいPDクラスタをデプロイします {#deploy-a-new-pd-cluster}
+### Deploy a new PD cluster {#deploy-a-new-pd-cluster}
 
-新しいPDクラスタをデプロイする前に、既存のPDクラスタを停止してから、前のデータディレクトリを削除するか、 `--data-dir`を使用して新しいデータディレクトリを指定する必要があります。
+Before deploying a new PD cluster, you need to stop the the existing PD cluster and then delete the previous data directory or specify a new data directory using `--data-dir`.
 
-### pd-recoverを使用する {#use-pd-recover}
+### Use pd-recover {#use-pd-recover}
 
-1つのPDノードで`pd-recover`つだけ実行する必要があります。
+You only need to run `pd-recover` on one PD node.
 
 {{< copyable "" >}}
 
@@ -120,16 +120,16 @@ cat {{/path/to}}/pd*.log | grep "idAllocator allocates a new id" |  awk -F'=' '{
 ./pd-recover -endpoints http://10.0.1.13:2379 -cluster-id 6747551640615446306 -alloc-id 10000
 ```
 
-### クラスタ全体を再起動します {#restart-the-whole-cluster}
+### Restart the whole cluster {#restart-the-whole-cluster}
 
-リカバリが成功したというプロンプト情報が表示されたら、クラスタ全体を再起動します。
+When you see the prompted information that the recovery is successful, restart the whole cluster.
 
 ## FAQ {#faq}
 
-### クラスタIDを取得すると、複数のクラスタIDが見つかります {#multiple-cluster-ids-are-found-when-getting-the-cluster-id}
+### Multiple cluster IDs are found when getting the cluster ID {#multiple-cluster-ids-are-found-when-getting-the-cluster-id}
 
-PDクラスタが作成されると、新しいクラスタIDが生成されます。ログを表示することで、古いクラスタのクラスタIDを確認できます。
+When a PD cluster is created, a new cluster ID is generated. You can determine the cluster ID of the old cluster by viewing the log.
 
-### エラー<code>dial tcp 10.0.1.13:2379: connect: connection refused</code> <code>pd-recover</code>実行時に接続が拒否されました {#the-error-code-dial-tcp-10-0-1-13-2379-connect-connection-refused-code-is-returned-when-executing-code-pd-recover-code}
+### The error <code>dial tcp 10.0.1.13:2379: connect: connection refused</code> is returned when executing <code>pd-recover</code> {#the-error-code-dial-tcp-10-0-1-13-2379-connect-connection-refused-code-is-returned-when-executing-code-pd-recover-code}
 
-`pd-recover`を実行する場合はPDサービスが必要です。 PDリカバリを使用する前に、PDクラスタをデプロイして開始します。
+The PD service is required when you execute `pd-recover`. Deploy and start the PD cluster before you use PD Recover.

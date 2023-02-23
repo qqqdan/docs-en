@@ -3,26 +3,36 @@ title: Certificate-Based Authentication for Login
 summary: Learn the certificate-based authentication used for login.
 ---
 
-# ログイン用の証明書ベースの認証 {#certificate-based-authentication-for-login}
+# Certificate-Based Authentication for Login {#certificate-based-authentication-for-login}
 
-TiDBは、ユーザーがTiDBにログインするための証明書ベースの認証方法をサポートしています。この方法では、TiDBはさまざまなユーザーに証明書を発行し、暗号化された接続を使用してデータを転送し、ユーザーがログインするときに証明書を検証します。このアプローチは、MySQLユーザーが一般的に使用する従来のパスワードベースの認証方法よりも安全であるため、ユーザー数の増加。
+TiDB supports a certificate-based authentication method for users to log into TiDB. With this method, TiDB issues certificates to different users, uses encrypted connections to transfer data, and verifies certificates when users log in. This approach is more secure than the traditional password-based authentication method commonly used by MySQL users and is thus adopted by an increasing number of users.
 
-証明書ベースの認証を使用するには、次の操作を実行する必要がある場合があります。
+To use certificate-based authentication, you might need to perform the following operations:
 
--   セキュリティキーと証明書を作成する
--   TiDBとクライアントの証明書を構成します
--   ユーザーがログインしたときに検証されるユーザー証明書情報を構成します
--   証明書の更新と置換
+-   Create security keys and certificates
+-   Configure certificates for TiDB and the client
+-   Configure the user certificate information to be verified when the user logs in
+-   Update and replace certificates
 
-ドキュメントの残りの部分では、これらの操作を実行する方法を詳しく紹介します。
+The rest of the document introduces in detail how to perform these operations.
 
-## セキュリティキーと証明書を作成する {#create-security-keys-and-certificates}
+## Create security keys and certificates {#create-security-keys-and-certificates}
 
-キーと証明書の作成には[OpenSSL](https://www.openssl.org/)を使用することをお勧めします。証明書の生成プロセスは、 [TiDBクライアントとサーバー間のTLSを有効にする](/enable-tls-between-clients-and-servers.md)で説明したプロセスと同様です。次の段落では、証明書で検証する必要のある属性フィールドをさらに構成する方法について説明します。
+<CustomContent platform="tidb">
 
-### CAキーと証明書を生成する {#generate-ca-key-and-certificate}
+It is recommended that you use [OpenSSL](https://www.openssl.org/) to create keys and certificates. The certificate generation process is similar to the process described in [Enable TLS Between TiDB Clients and Servers](/enable-tls-between-clients-and-servers.md). The following paragraphs demonstrate how to configure more attribute fields that need to be verified in the certificate.
 
-1.  次のコマンドを実行して、CAキーを生成します。
+</CustomContent>
+
+<CustomContent platform="tidb-cloud">
+
+It is recommended that you use [OpenSSL](https://www.openssl.org/) to create keys and certificates. The certificate generation process is similar to the process described in [Enable TLS Between TiDB Clients and Servers](https://docs.pingcap.com/tidb/stable/enable-tls-between-clients-and-servers). The following paragraphs demonstrate how to configure more attribute fields that need to be verified in the certificate.
+
+</CustomContent>
+
+### Generate CA key and certificate {#generate-ca-key-and-certificate}
+
+1.  Execute the following command to generate the CA key:
 
     {{< copyable "" >}}
 
@@ -30,7 +40,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl genrsa 2048 > ca-key.pem
     ```
 
-    上記のコマンドの出力：
+    The output of the above command:
 
     ```
     Generating RSA private key, 2048 bit long modulus (2 primes)
@@ -39,7 +49,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     e is 65537 (0x010001)
     ```
 
-2.  次のコマンドを実行して、CAキーに対応する証明書を生成します。
+2.  Execute the following command to generate the certificate corresponding to the CA key:
 
     {{< copyable "" >}}
 
@@ -47,7 +57,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl req -new -x509 -nodes -days 365000 -key ca-key.pem -out ca-cert.pem
     ```
 
-3.  詳細な証明書情報を入力します。例えば：
+3.  Enter detailed certificate information. For example:
 
     {{< copyable "" >}}
 
@@ -61,13 +71,13 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     Email Address []:s@pingcap.com
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > 上記の証明書の詳細では、 `:`の後のテキストが入力された情報です。
+    > In the above certificate details, texts after `:` are the entered information.
 
-### サーバーキーと証明書を生成する {#generate-server-key-and-certificate}
+### Generate server key and certificate {#generate-server-key-and-certificate}
 
-1.  次のコマンドを実行して、サーバーキーを生成します。
+1.  Execute the following command to generate the server key:
 
     {{< copyable "" >}}
 
@@ -75,7 +85,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl req -newkey rsa:2048 -days 365000 -nodes -keyout server-key.pem -out server-req.pem
     ```
 
-2.  詳細な証明書情報を入力します。例えば：
+2.  Enter detailed certificate information. For example:
 
     {{< copyable "" >}}
 
@@ -94,7 +104,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     An optional company name []:
     ```
 
-3.  次のコマンドを実行して、サーバーのRSAキーを生成します。
+3.  Execute the following command to generate the RSA key of the server:
 
     {{< copyable "" >}}
 
@@ -102,13 +112,13 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl rsa -in server-key.pem -out server-key.pem
     ```
 
-    上記のコマンドの出力：
+    The output of the above command:
 
     ```bash
     writing RSA key
     ```
 
-4.  CA証明書の署名を使用して、署名されたサーバー証明書を生成します。
+4.  Use the CA certificate signature to generate the signed server certificate:
 
     {{< copyable "" >}}
 
@@ -116,7 +126,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl x509 -req -in server-req.pem -days 365000 -CA ca-cert.pem -CAkey ca-key.pem -set_serial 01 -out server-cert.pem
     ```
 
-    上記のコマンドの出力（例）：
+    The output of the above command (for example):
 
     ```bash
     Signature ok
@@ -124,15 +134,15 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     Getting CA Private Key
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > ログインすると、TiDBは上記の出力の`subject`セクションの情報に一貫性があるかどうかを確認します。
+    > When you log in, TiDB checks whether the information in the `subject` section of the above output is consistent or not.
 
-### クライアントキーと証明書を生成する {#generate-client-key-and-certificate}
+### Generate client key and certificate {#generate-client-key-and-certificate}
 
-サーバーのキーと証明書を生成した後、クライアントのキーと証明書を生成する必要があります。多くの場合、ユーザーごとに異なるキーと証明書を生成する必要があります。
+After generating the server key and certificate, you need to generate the key and certificate for the client. It is often necessary to generate different keys and certificates for different users.
 
-1.  次のコマンドを実行して、クライアントキーを生成します。
+1.  Execute the following command to generate the client key:
 
     {{< copyable "" >}}
 
@@ -140,7 +150,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl req -newkey rsa:2048 -days 365000 -nodes -keyout client-key.pem -out client-req.pem
     ```
 
-2.  詳細な証明書情報を入力します。例えば：
+2.  Enter detailed certificate information. For example:
 
     {{< copyable "" >}}
 
@@ -159,7 +169,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     An optional company name []:
     ```
 
-3.  次のコマンドを実行して、クライアントのRSAキーを生成します。
+3.  Execute the following command to generate the RSA key of the client:
 
     {{< copyable "" >}}
 
@@ -167,13 +177,13 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl rsa -in client-key.pem -out client-key.pem
     ```
 
-    上記のコマンドの出力：
+    The output of the above command:
 
     ```bash
     writing RSA key
     ```
 
-4.  CA証明書の署名を使用して、クライアント証明書を生成します。
+4.  Use the CA certificate signature to generate the client certificate:
 
     {{< copyable "" >}}
 
@@ -181,7 +191,7 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     sudo openssl x509 -req -in client-req.pem -days 365000 -CA ca-cert.pem -CAkey ca-key.pem -set_serial 01 -out client-cert.pem
     ```
 
-    上記のコマンドの出力（例）：
+    The output of the above command (for example):
 
     ```bash
     Signature ok
@@ -189,13 +199,13 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
     Getting CA Private Key
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > 上記の出力の`subject`セクションの情報は、 `require`セクションの[ログイン検証用の証明書構成](#configure-the-user-certificate-information-for-login-verification)に使用されます。
+    > The information of the `subject` section in the above output is used for [certificate configuration for login verification](#configure-the-user-certificate-information-for-login-verification) in the `require` section.
 
-### 証明書を確認する {#verify-certificate}
+### Verify certificate {#verify-certificate}
 
-次のコマンドを実行して、証明書を確認します。
+Execute the following command to verify certificate:
 
 {{< copyable "" >}}
 
@@ -203,20 +213,20 @@ TiDBは、ユーザーがTiDBにログインするための証明書ベースの
 openssl verify -CAfile ca-cert.pem server-cert.pem client-cert.pem
 ```
 
-証明書が検証されると、次の結果が表示されます。
+If the certificate is verified, you will see the following result:
 
 ```
 server-cert.pem: OK
 client-cert.pem: OK
 ```
 
-## 証明書を使用するようにTiDBとクライアントを構成する {#configure-tidb-and-the-client-to-use-certificates}
+## Configure TiDB and the client to use certificates {#configure-tidb-and-the-client-to-use-certificates}
 
-証明書を生成した後、対応するサーバー証明書またはクライアント証明書を使用するようにTiDBサーバーとクライアントを構成する必要があります。
+After generating the certificates, you need to configure the TiDB server and the client to use the corresponding server certificate or client certificate.
 
-### サーバー証明書を使用するようにTiDBを構成する {#configure-tidb-to-use-server-certificate}
+### Configure TiDB to use server certificate {#configure-tidb-to-use-server-certificate}
 
-TiDB構成ファイルの`[security]`セクションを変更します。この手順では、CA証明書、サーバーキー、およびサーバー証明書が保存されているディレクトリを指定します。 `path/to/server-cert.pem`を独自のディレクトリに`path/to/ca-cert.pem`ことができ`path/to/server-key.pem` 。
+Modify the `[security]` section in the TiDB configuration file. This step specifies the directory in which the CA certificate, the server key, and the server certificate are stored. You can replace `path/to/server-cert.pem`, `path/to/server-key.pem`, `path/to/ca-cert.pem` with your own directory.
 
 {{< copyable "" >}}
 
@@ -227,17 +237,17 @@ ssl-key ="path/to/server-key.pem"
 ssl-ca="path/to/ca-cert.pem"
 ```
 
-TiDBを起動し、ログを確認します。次の情報がログに表示されている場合、構成は成功しています。
+Start TiDB and check logs. If the following information is displayed in the log, the configuration is successful:
 
 ```
 [INFO] [server.go:264] ["secure connection is enabled"] ["client verification enabled"=true]
 ```
 
-### クライアント証明書を使用するようにクライアントを構成する {#configure-the-client-to-use-client-certificate}
+### Configure the client to use client certificate {#configure-the-client-to-use-client-certificate}
 
-クライアントがログインにクライアントキーと証明書を使用するようにクライアントを構成します。
+Configure the client so that the client uses the client key and certificate for login.
 
-MySQLクライアントを例にとると、 `ssl-cert` 、および`ssl-key`を指定することで、新しく作成されたクライアント証明書、クライアントキー、およびCAを使用でき`ssl-ca` 。
+Taking the MySQL client as an example, you can use the newly created client certificate, client key and CA by specifying `ssl-cert`, `ssl-key`, and `ssl-ca`:
 
 {{< copyable "" >}}
 
@@ -245,21 +255,21 @@ MySQLクライアントを例にとると、 `ssl-cert` 、および`ssl-key`を
 mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key /path/to/client-key.new.pem --ssl-ca /path/to/ca-cert.pem
 ```
 
-> **ノート：**
+> **Note:**
 >
-> `/path/to/client-cert.new.pem` 、および`/path/to/client-key.new.pem`は、CA証明書、クライアントキー、およびクライアント証明書のディレクトリ`/path/to/ca-cert.pem` 。それらを独自のディレクトリに置き換えることができます。
+> `/path/to/client-cert.new.pem`, `/path/to/client-key.new.pem`, and `/path/to/ca-cert.pem` are the directory of the CA certificate, client key, and client certificate. You can replace them with your own directory.
 
-## ログイン検証用のユーザー証明書情報を構成する {#configure-the-user-certificate-information-for-login-verification}
+## Configure the user certificate information for login verification {#configure-the-user-certificate-information-for-login-verification}
 
-まず、クライアントを使用してTiDBに接続し、ログイン検証を構成します。次に、検証するユーザー証明書情報を取得して構成できます。
+First, connect TiDB using the client to configure the login verification. Then, you can get and configure the user certificate information to be verified.
 
-### ユーザー証明書情報を取得する {#get-user-certificate-information}
+### Get user certificate information {#get-user-certificate-information}
 
-ユーザー証明書情報は、X509証明書の属性を確認するために使用される`require subject` 、および`require issuer`で`require cipher`でき`require san` 。
+The user certificate information can be specified by `require subject`, `require issuer`, `require san`, and `require cipher`, which are used to check the X509 certificate attributes.
 
--   `require subject` ：ログイン時にクライアント証明書の`subject`の情報を指定します。このオプションを指定すると、 `require ssl`またはx509を構成する必要はありません。指定する情報は、 [クライアントキーと証明書を生成する](#generate-client-key-and-certificate)に入力した`subject`の情報と一致しています。
+-   `require subject`: Specifies the `subject` information of the client certificate when you log in. With this option specified, you do not need to configure `require ssl` or x509. The information to be specified is consistent with the entered `subject` information in [Generate client keys and certificates](#generate-client-key-and-certificate).
 
-    このオプションを取得するには、次のコマンドを実行します。
+    To get this option, execute the following command:
 
     {{< copyable "" >}}
 
@@ -267,9 +277,9 @@ mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key 
     openssl x509 -noout -subject -in client-cert.pem | sed 's/.\{8\}//'  | sed 's/, /\//g' | sed 's/ = /=/g' | sed 's/^/\//'
     ```
 
--   `require issuer` ：ユーザー証明書を発行するCA証明書の`subject`の情報を指定します。指定する情報は、 [CAキーと証明書を生成する](#generate-ca-key-and-certificate)に入力した`subject`の情報と一致しています。
+-   `require issuer`: Specifies the `subject` information of the CA certificate that issues the user certificate. The information to be specified is consistent with the entered `subject` information in [Generate CA key and certificate](#generate-ca-key-and-certificate).
 
-    このオプションを取得するには、次のコマンドを実行します。
+    To get this option, execute the following command:
 
     {{< copyable "" >}}
 
@@ -277,9 +287,9 @@ mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key 
     openssl x509 -noout -subject -in ca-cert.pem | sed 's/.\{8\}//'  | sed 's/, /\//g' | sed 's/ = /=/g' | sed 's/^/\//'
     ```
 
--   `require san` ：ユーザー証明書を発行するCA証明書の`Subject Alternative Name`の情報を指定します。指定する情報は、クライアント証明書の生成に使用される[`alt_names`構成ファイルの<code>openssl.cnf</code>](/generate-self-signed-certificates.md)と一致しています。
+-   `require san`: Specifies the `Subject Alternative Name` information of the CA certificate that issues the user certificate. The information to be specified is consistent with the [`alt_names` of the <code>openssl.cnf</code> configuration file](https://docs.pingcap.com/tidb/stable/generate-self-signed-certificates) used to generate the client certificate.
 
-    -   次のコマンドを実行して、生成された証明書の`require san`のアイテムの情報を取得します。
+    -   Execute the following command to get the information of the `require san` item in the generated certificate:
 
         {{< copyable "" >}}
 
@@ -287,23 +297,23 @@ mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key 
         openssl x509 -noout -extensions subjectAltName -in client.crt
         ```
 
-    -   `require san`は現在、次の`Subject Alternative Name`のチェック項目をサポートしています。
+    -   `require san` currently supports the following `Subject Alternative Name` check items:
 
         -   URI
         -   IP
         -   DNS
 
-    -   複数のチェック項目は、コンマで接続した後に設定できます。たとえば、 `u1`ユーザーに対して次のように`require san`を構成します。
+    -   Multiple check items can be configured after they are connected by commas. For example, configure `require san` as follows for the `u1` user:
 
         {{< copyable "" >}}
 
         ```sql
-        create user 'u1'@'%' require san 'DNS:d1,URI:spiffe://example.org/myservice1,URI:spiffe://example.org/myservice2'
+        create user 'u1'@'%' require san 'DNS:d1,URI:spiffe://example.org/myservice1,URI:spiffe://example.org/myservice2';
         ```
 
-        上記の構成では、 `u1`人のユーザーがURI項目`spiffe://example.org/myservice1`または`spiffe://example.org/myservice2`とDNS項目`d1`の証明書を使用してTiDBにログインすることのみが許可されています。
+        The above configuration only allows the `u1` user to log in to TiDB using the certificate with the URI item `spiffe://example.org/myservice1` or `spiffe://example.org/myservice2` and the DNS item `d1`.
 
--   `require cipher` ：クライアントがサポートしている暗号方式を確認します。次のステートメントを使用して、サポートされている暗号化方式のリストを確認します。
+-   `require cipher`: Checks the cipher method supported by the client. Use the following statement to check the list of supported cipher methods:
 
     {{< copyable "" >}}
 
@@ -311,13 +321,13 @@ mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key 
     SHOW SESSION STATUS LIKE 'Ssl_cipher_list';
     ```
 
-### ユーザー証明書情報を構成する {#configure-user-certificate-information}
+### Configure user certificate information {#configure-user-certificate-information}
 
-ユーザー証明書情報（ `require subject` ）を`require cipher`し`require san` 、ユーザーの作成、特権の付与、またはユーザーの変更時に検証されるようにこれらの情報を構成し`require issuer` 。 `<replaceable>`を次のステートメントの対応する情報に置き換えます。
+After getting the user certificate information (`require subject`, `require issuer`, `require san`, `require cipher`), configure these information to be verified when creating a user, granting privileges, or altering a user. Replace `<replaceable>` with the corresponding information in the following statements.
 
-スペースまたは`and`を区切り文字として使用して、1つまたは複数のオプションを構成できます。
+You can configure one option or multiple options using the space or `and` as the separator.
 
--   ユーザーを作成するときにユーザー証明書を構成します（ `create user` ）：
+-   Configure user certificate when creating a user (`create user`):
 
     {{< copyable "" >}}
 
@@ -325,7 +335,7 @@ mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key 
     create user 'u1'@'%' require issuer '<replaceable>' subject '<replaceable>' san '<replaceable>' cipher '<replaceable>';
     ```
 
--   特権を付与するときにユーザー証明書を構成します。
+-   Configure user certificate when granting privileges:
 
     {{< copyable "" >}}
 
@@ -333,7 +343,7 @@ mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key 
     grant all on *.* to 'u1'@'%' require issuer '<replaceable>' subject '<replaceable>' san '<replaceable>' cipher '<replaceable>';
     ```
 
--   ユーザーを変更するときにユーザー証明書を構成します。
+-   Configure user certificate when altering a user:
 
     {{< copyable "" >}}
 
@@ -341,16 +351,16 @@ mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key 
     alter user 'u1'@'%' require issuer '<replaceable>' subject '<replaceable>' san '<replaceable>' cipher '<replaceable>';
     ```
 
-上記の設定後、ログイン時に次の項目が確認されます。
+After the above configuration, the following items will be verified when you log in:
 
--   SSLが使用されます。クライアント証明書を発行するCAは、サーバで設定されているCAと一致しています。
--   クライアント証明書の`issuer`情報は、 `require issuer`で指定された情報と一致します。
--   クライアント証明書の`subject`情報は、 `require cipher`で指定された情報と一致します。
--   クライアント証明書の`Subject Alternative Name`情報は、 `require san`で指定された情報と一致します。
+-   SSL is used; the CA that issues the client certificate is consistent with the CA configured in the server.
+-   The `issuer` information of the client certificate matches the information specified in `require issuer`.
+-   The `subject` information of the client certificate matches the information specified in `require cipher`.
+-   The `Subject Alternative Name` information of the client certificate matches the information specified in `require san`.
 
-上記のすべての項目が確認された後にのみ、TiDBにログインできます。それ以外の場合は、 `ERROR 1045 (28000): Access denied`エラーが返されます。次のコマンドを使用して、TLSバージョン、暗号化アルゴリズム、および現在の接続がログインに証明書を使用しているかどうかを確認できます。
+You can log into TiDB only after all the above items are verified. Otherwise, the `ERROR 1045 (28000): Access denied` error is returned. You can use the following command to check the TLS version, the cipher algorithm and whether the current connection uses the certificate for the login.
 
-MySQLクライアントを接続し、次のステートメントを実行します。
+Connect the MySQL client and execute the following statement:
 
 {{< copyable "" >}}
 
@@ -358,7 +368,7 @@ MySQLクライアントを接続し、次のステートメントを実行しま
 \s
 ```
 
-出力：
+The output:
 
 ```
 --------------
@@ -370,7 +380,7 @@ Current user:        root@127.0.0.1
 SSL:                 Cipher in use is TLS_AES_256_GCM_SHA384
 ```
 
-次に、次のステートメントを実行します。
+Then execute the following statement:
 
 {{< copyable "" >}}
 
@@ -378,7 +388,7 @@ SSL:                 Cipher in use is TLS_AES_256_GCM_SHA384
 show variables like '%ssl%';
 ```
 
-出力：
+The output:
 
 ```
 +---------------+----------------------------------+
@@ -393,15 +403,15 @@ show variables like '%ssl%';
 6 rows in set (0.067 sec)
 ```
 
-## 証明書の更新と交換 {#update-and-replace-certificate}
+## Update and replace certificate {#update-and-replace-certificate}
 
-キーと証明書は定期的に更新されます。次のセクションでは、キーと証明書を更新する方法を紹介します。
+The key and certificate are updated regularly. The following sections introduce how to update the key and certificate.
 
-CA証明書は、クライアントとサーバー間の相互検証の基礎です。 CA証明書を置き換えるには、古い証明書と新しい証明書の両方の認証をサポートする結合証明書を生成します。クライアントとサーバーで、最初にCA証明書を置き換え、次にクライアント/サーバーキーと証明書を置き換えます。
+The CA certificate is the basis for mutual verification between the client and server. To replace the CA certificate, generate a combined certificate that supports the authentication for both old and new certificates. On the client and server, first replace the CA certificate, then replace the client/server key and certificate.
 
-### CAキーと証明書を更新します {#update-ca-key-and-certificate}
+### Update CA key and certificate {#update-ca-key-and-certificate}
 
-1.  古いCAキーと証明書をバックアップします（ `ca-key.pem`が盗まれたと仮定します）。
+1.  Back up the old CA key and certificate (suppose that `ca-key.pem` is stolen):
 
     {{< copyable "" >}}
 
@@ -410,7 +420,7 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     mv ca-cert.pem ca-cert.old.pem
     ```
 
-2.  新しいCAキーを生成します。
+2.  Generate the new CA key:
 
     {{< copyable "" >}}
 
@@ -418,7 +428,7 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     sudo openssl genrsa 2048 > ca-key.pem
     ```
 
-3.  新しく生成されたCAキーを使用して新しいCA証明書を生成します。
+3.  Generate the new CA certificate using the newly generated CA key:
 
     {{< copyable "" >}}
 
@@ -426,11 +436,11 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     sudo openssl req -new -x509 -nodes -days 365000 -key ca-key.pem -out ca-cert.new.pem
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > 新しいCA証明書を生成することは、クライアントとサーバーのキーと証明書を置き換え、オンラインユーザーが影響を受けないようにすることです。したがって、上記のコマンドに追加される情報は、 `require issuer`の情報と一致している必要があります。
+    > Generating the new CA certificate is to replace the keys and certificates on the client and server, and to ensure that online users are not affected. Therefore, the appended information in the above command must be consistent with the `require issuer` information.
 
-4.  結合されたCA証明書を生成します。
+4.  Generate the combined CA certificate:
 
     {{< copyable "" >}}
 
@@ -438,17 +448,17 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     cat ca-cert.new.pem ca-cert.old.pem > ca-cert.pem
     ```
 
-上記の操作の後、新しく作成された結合CA証明書を使用してTiDBサーバーを再起動します。次に、サーバーは新しいCA証明書と古いCA証明書の両方を受け入れます。
+After the above operations, restart the TiDB server with the newly created combined CA certificate. Then the server accepts both the new and old CA certificates.
 
-また、クライアントが古いCA証明書と新しいCA証明書の両方を受け入れるように、古いCA証明書を結合された証明書に置き換えます。
+Also replace the old CA certificate with the combined certificate so that the client accepts both the old and new CA certificates.
 
-### クライアントキーと証明書を更新する {#update-client-key-and-certificate}
+### Update client key and certificate {#update-client-key-and-certificate}
 
-> **ノート：**
+> **Note:**
 >
-> 次の手順は、クライアントとサーバーの古いCA証明書を結合されたCA証明書に置き換えた**後でのみ**実行してください。
+> Perform the following steps **only after** you have replaced the old CA certificate on the client and server with the combined CA certificate.
 
-1.  クライアントの新しいRSAキーを生成します。
+1.  Generate the new RSA key of the client:
 
     {{< copyable "" >}}
 
@@ -457,11 +467,11 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     sudo openssl rsa -in client-key.new.pem -out client-key.new.pem
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > 上記のコマンドは、クライアントキーと証明書を置き換え、オンラインユーザーが影響を受けないようにするためのものです。したがって、上記のコマンドに追加される情報は、 `require subject`の情報と一致している必要があります。
+    > The above command is to replace the client key and certificate, and to ensure that the online users are not affected. Therefore, the appended information in the above command must be consistent with the `require subject` information.
 
-2.  結合された証明書と新しいCAキーを使用して、新しいクライアント証明書を生成します。
+2.  Use the combined certificate and the new CA key to generate the new client certificate:
 
     {{< copyable "" >}}
 
@@ -469,7 +479,7 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     sudo openssl x509 -req -in client-req.new.pem -days 365000 -CA ca-cert.pem -CAkey ca-key.pem -set_serial 01 -out client-cert.new.pem
     ```
 
-3.  クライアント（たとえば、MySQL）がTiDBを新しいクライアントキーと証明書に接続するようにします。
+3.  Make the client (for example, MySQL) connect TiDB with the new client key and certificate:
 
     {{< copyable "" >}}
 
@@ -477,13 +487,13 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     mysql -utest -h0.0.0.0 -P4000 --ssl-cert /path/to/client-cert.new.pem --ssl-key /path/to/client-key.new.pem --ssl-ca /path/to/ca-cert.pem
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > `/path/to/client-cert.new.pem` 、および`/path/to/client-key.new.pem`は、CA証明書、クライアントキー、およびクライアント証明書のディレクトリを指定し`/path/to/ca-cert.pem` 。それらを独自のディレクトリに置き換えることができます。
+    > `/path/to/client-cert.new.pem`, `/path/to/client-key.new.pem`, and `/path/to/ca-cert.pem` specify the directory of the CA certificate, client key, and client certificate. You can replace them with your own directory.
 
-### サーバーキーと証明書を更新します {#update-the-server-key-and-certificate}
+### Update the server key and certificate {#update-the-server-key-and-certificate}
 
-1.  サーバーの新しいRSAキーを生成します。
+1.  Generate the new RSA key of the server:
 
     {{< copyable "" >}}
 
@@ -492,7 +502,7 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     sudo openssl rsa -in server-key.new.pem -out server-key.new.pem
     ```
 
-2.  結合されたCA証明書と新しいCAキーを使用して、新しいサーバー証明書を生成します。
+2.  Use the combined CA certificate and the new CA key to generate the new server certificate:
 
     {{< copyable "" >}}
 
@@ -500,4 +510,4 @@ CA証明書は、クライアントとサーバー間の相互検証の基礎で
     sudo openssl x509 -req -in server-req.new.pem -days 365000 -CA ca-cert.pem -CAkey ca-key.pem -set_serial 01 -out server-cert.new.pem
     ```
 
-3.  新しいサーバーキーと証明書を使用するようにTiDBサーバーを構成します。詳細については、 [TiDBサーバーを構成する](#configure-tidb-and-the-client-to-use-certificates)を参照してください。
+3.  Configure the TiDB server to use the new server key and certificate. See [Configure TiDB server](#configure-tidb-and-the-client-to-use-certificates) for details.

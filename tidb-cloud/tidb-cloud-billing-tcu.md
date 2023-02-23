@@ -3,34 +3,35 @@ title: Changefeed Billing
 summary: Learn about billing for changefeeds in TiDB Cloud.
 ---
 
-# チェンジフィード請求 {#changefeed-billing}
+# Changefeed Billing {#changefeed-billing}
 
-TiDB Cloudは、TiCDCキャパシティユニット（TCU）でチェンジフィードのキャパシティを測定します。クラスタの最初のチェンジフィードを作成すると、 TiDB Cloudは自動的にTiCDCキャパシティーユニット（TCU）をセットアップし、これらのTiCDCキャパシティーユニットの料金が請求されます。単一のクラスタで作成されたすべてのチェンジフィードは、同じTiCDCキャパシティーユニットを共有します。
+TiDB Cloud measures the capacity of changefeeds in TiCDC Capacity Units (TCUs). When you create the first changefeed for a cluster, TiDB Cloud automatically sets up TiCDC Capacity Units (TCUs) for you, and you will be charged for these TiCDC Capacity Units. All changefeeds that are created in a single cluster share the same TiCDC Capacity Units.
 
-## TiCDC容量ユニットの数 {#number-of-ticdc-capacity-units}
+## Number of TiCDC Capacity Units {#number-of-ticdc-capacity-units}
 
-TiDBクラスタごとに、TiCDCキャパシティーユニットの数は、クラスタのすべてのTiKVノードの合計vCPU数に応じて、次のようにTiDB Cloudによって設定されます。
+For each TiDB cluster, the number of TiCDC Capacity Units is set up by TiDB Cloud according to the total vCPU count of all TiKV nodes in your cluster as follows:
 
-| すべてのTiKVノードの合計vCPU | TCUの数 |
-| ------------------ | ----- |
-| &lt;48             | 16    |
-| = 48、および&lt;120    | 24    |
-| = 120、および&lt;= 168 | 32    |
-| 168                | 40    |
+| Total vCPUs of all TiKV nodes | Number of TCUs |
+| ----------------------------- | -------------- |
+| &#x3C; 48                     | 16             |
+| = 48, and &#x3C; 120          | 24             |
+| = 120, and &#x3C;= 168        | 32             |
+| 168                           | 40             |
 
-## 価格 {#price}
+## Price {#price}
 
-次の表に、各TiCDCキャパシティユニット（TCU）のTiDB Cloudの価格を示します。
+The following table lists the price of TiDB Cloud for each TiCDC Capacity Unit (TCU):
 
-| 領域                    | TCU価格（$ / hr） |
-| --------------------- | ------------- |
-| aws / us-west-2       | 0.1307ドル      |
-| aws / us-east-1       | 0.1307ドル      |
-| aws / ap-northeast-1  | 0.1669ドル      |
-| aws / ap-southeast-1  | 0.1623ドル      |
-| aws / eu-central-1    | 0.1564ドル      |
-| aws / ap-south-1      | 0.1393ドル      |
-| gcp / us-west1        | 0.1452ドル      |
-| gcp / us-central1     | 0.1452ドル      |
-| gcp / asia-northeast1 | 0.1868ドル      |
-| gcp / asia-southeast1 | 0.1746ドル      |
+| Region              | TCU Price ($/hr) |
+| ------------------- | ---------------- |
+| aws/us-west-2       | $0.1307          |
+| aws/us-east-1       | $0.1307          |
+| aws/ap-northeast-1  | $0.1669          |
+| aws/ap-southeast-1  | $0.1623          |
+| aws/eu-central-1    | $0.1564          |
+| aws/ap-south-1      | $0.1393          |
+| gcp/us-west1        | $0.1452          |
+| gcp/us-central1     | $0.1452          |
+| gcp/asia-northeast1 | $0.1868          |
+| gcp/asia-southeast1 | $0.1746          |
+| gcp/asia-east1      | $0.1628          |

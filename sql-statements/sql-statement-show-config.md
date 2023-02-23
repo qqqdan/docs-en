@@ -3,27 +3,23 @@ title: SHOW CONFIG
 summary: Overview of the use of SHOW CONFIG in the TiDB database
 ---
 
-# 設定を表示 {#show-config}
+# SHOW CONFIG {#show-config}
 
-> **警告：**
->
-> この機能は現在実験的機能です。この機能を実稼働環境で使用することはお勧めしません。
+The `SHOW CONFIG` statement is used to show the current configuration of various components of TiDB. Note that the configuration and system variables act on different dimensions and should not be mixed up. If you want to obtain the system variable information, use the [SHOW VARIABLES](/sql-statements/sql-statement-show-variables.md) syntax.
 
-`SHOW CONFIG`ステートメントは、TiDBのさまざまなコンポーネントの現在の構成を示すために使用されます。構成変数とシステム変数は異なる次元で機能するため、混同しないでください。システム変数情報を取得する場合は、 [変数を表示する](/sql-statements/sql-statement-show-variables.md)構文を使用します。
+## Synopsis {#synopsis}
 
-## あらすじ {#synopsis}
-
-**ShowStmt：**
+**ShowStmt:**
 
 ![ShowStmt](/media/sqlgram/ShowStmt.png)
 
-**ShowTargetFilterable：**
+**ShowTargetFilterable:**
 
 ![ShowTargetFilterable](/media/sqlgram/ShowTargetFilterable.png)
 
-## 例 {#examples}
+## Examples {#examples}
 
-すべての構成を表示：
+Show all configurations:
 
 {{< copyable "" >}}
 
@@ -42,7 +38,7 @@ SHOW CONFIG;
 120 rows in set (0.01 sec)
 ```
 
-`type`が`tidb`である構成を表示します。
+Show the configuration where the `type` is `tidb`:
 
 {{< copyable "" >}}
 
@@ -59,7 +55,7 @@ SHOW CONFIG WHERE type = 'tidb' AND name = 'advertise-address';
 1 row in set (0.05 sec)
 ```
 
-`LIKE`句を使用して、 `type`が`tidb`である構成を表示することもできます。
+You can also use the `LIKE` clause to show the configuration where the `type` is `tidb`:
 
 {{< copyable "" >}}
 
@@ -78,10 +74,10 @@ SHOW CONFIG LIKE 'tidb';
 40 rows in set (0.01 sec)
 ```
 
-## MySQLの互換性 {#mysql-compatibility}
+## MySQL compatibility {#mysql-compatibility}
 
-このステートメントは、MySQL構文のTiDB拡張です。
+This statement is a TiDB extension to MySQL syntax.
 
-## も参照してください {#see-also}
+## See also {#see-also}
 
--   [変数を表示する](/sql-statements/sql-statement-show-variables.md)
+-   [SHOW VARIABLES](/sql-statements/sql-statement-show-variables.md)

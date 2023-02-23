@@ -3,114 +3,114 @@ title: PD Control User Guide
 summary: Use PD Control to obtain the state information of a cluster and tune a cluster.
 ---
 
-# PD制御ユーザーガイド {#pd-control-user-guide}
+# PD Control User Guide {#pd-control-user-guide}
 
-PDのコマンドラインツールとして、PD Controlはクラスターの状態情報を取得し、クラスタを調整しクラスタ。
+As a command line tool of PD, PD Control obtains the state information of the cluster and tunes the cluster.
 
-## PD制御をインストールします {#install-pd-control}
+## Install PD Control {#install-pd-control}
 
-> **ノート：**
+> **Note:**
 >
-> 使用するコントロールツールのバージョンは、クラスタのバージョンと一致していることをお勧めします。
+> It is recommended that the version of the Control tool you use is consistent with the version of the cluster.
 
-### TiUPコマンドを使用する {#use-tiup-command}
+### Use TiUP command {#use-tiup-command}
 
-PD制御を使用するには、 `tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> [-i]`コマンドを実行します。
+To use PD Control, execute the `tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> [-i]` command.
 
-### TiDBインストールパッケージをダウンロードする {#download-tidb-installation-package}
+### Download TiDB installation package {#download-tidb-installation-package}
 
-`pd-ctl`の最新バージョンをダウンロードする場合は、TiDBパッケージに直接ダウンロードしてください`pd-ctl`はTiDBパッケージに含まれているためです。
+If you want to download the latest version of `pd-ctl`, directly download the TiDB package, because `pd-ctl` is included in the TiDB package.
 
-| パッケージダウンロードリンク                                                            | OS    | 建築    | SHA256チェックサム                                                     |
-| :------------------------------------------------------------------------ | :---- | :---- | :--------------------------------------------------------------- |
-| `https://download.pingcap.org/tidb-{version}-linux-amd64.tar.gz` （pd-ctl） | Linux | amd64 | `https://download.pingcap.org/tidb-{version}-linux-amd64.sha256` |
+| Package download link                                                     | OS    | Architecture | SHA256 checksum                                                  |
+| :------------------------------------------------------------------------ | :---- | :----------- | :--------------------------------------------------------------- |
+| `https://download.pingcap.org/tidb-{version}-linux-amd64.tar.gz` (pd-ctl) | Linux | amd64        | `https://download.pingcap.org/tidb-{version}-linux-amd64.sha256` |
 
-> **ノート：**
+> **Note:**
 >
-> `{version}`はTiDBのバージョン番号を示します。たとえば、 `{version}`が`v5.4.1`の場合、パッケージのダウンロードリンクは`https://download.pingcap.org/tidb-v5.4.1-linux-amd64.tar.gz`です。
+> `{version}` indicates the version number of TiDB. For example, if `{version}` is `v5.4.3`, the package download link is `https://download.pingcap.org/tidb-v5.4.3-linux-amd64.tar.gz`.
 
-### ソースコードからコンパイルする {#compile-from-source-code}
+### Compile from source code {#compile-from-source-code}
 
-1.  [行け](https://golang.org/) Goモジュールが使用されているため、バージョン1.13以降。
-2.  [PDプロジェクト](https://github.com/pingcap/pd)のルートディレクトリで、 `make`または`make pd-ctl`コマンドを使用して`bin/pd-ctl`をコンパイルおよび生成します。
+1.  [Go](https://golang.org/) Version 1.13 or later because the Go modules are used.
+2.  In the root directory of the [PD project](https://github.com/pingcap/pd), use the `make` or `make pd-ctl` command to compile and generate `bin/pd-ctl`.
 
-## 使用法 {#usage}
+## Usage {#usage}
 
-シングルコマンドモード：
+Single-command mode:
 
 ```bash
-tiup ctl pd store -u http://127.0.0.1:2379
+tiup ctl:<cluster-version> pd store -u http://127.0.0.1:2379
 ```
 
-インタラクティブモード：
+Interactive mode:
 
 ```bash
-tiup ctl pd -i -u http://127.0.0.1:2379
+tiup ctl:<cluster-version> pd -i -u http://127.0.0.1:2379
 ```
 
-環境変数を使用する：
+Use environment variables:
 
 ```bash
 export PD_ADDR=http://127.0.0.1:2379
-tiup ctl pd
+tiup ctl:<cluster-version> pd
 ```
 
-TLSを使用して暗号化します。
+Use TLS to encrypt:
 
 ```bash
-tiup ctl pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert" --key="path/to/key"
+tiup ctl:<cluster-version> pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert" --key="path/to/key"
 ```
 
-## コマンドラインフラグ {#command-line-flags}
+## Command line flags {#command-line-flags}
 
 ### <code>--cacert</code> {#code-cacert-code}
 
--   信頼できるCAの証明書ファイルへのパスをPEM形式で指定します
--   デフォルト： &quot;&quot;
+-   Specifies the path to the certificate file of the trusted CA in PEM format
+-   Default: ""
 
 ### <code>--cert</code> {#code-cert-code}
 
--   SSLの証明書へのパスをPEM形式で指定します
--   デフォルト： &quot;&quot;
+-   Specifies the path to the certificate of SSL in PEM format
+-   Default: ""
 
 ### <code>--detach</code> / <code>-d</code> {#code-detach-code-code-d-code}
 
--   シングルコマンドラインモードを使用します（readlineに入らない）
--   デフォルト：true
+-   Uses the single command line mode (not entering readline)
+-   Default: true
 
-### -- <code>--help</code> / <code>-h</code> {#code-help-code-code-h-code}
+### <code>--help</code> / <code>-h</code> {#code-help-code-code-h-code}
 
--   ヘルプ情報を出力します
--   デフォルト：false
+-   Outputs the help information
+-   Default: false
 
-### -- <code>--interact</code> / <code>-i</code> {#code-interact-code-code-i-code}
+### <code>--interact</code> / <code>-i</code> {#code-interact-code-code-i-code}
 
--   インタラクティブモードを使用します（readlineに入る）
--   デフォルト：false
+-   Uses the interactive mode (entering readline)
+-   Default: false
 
 ### <code>--key</code> {#code-key-code}
 
--   SSLの証明書キーファイルへのパスをPEM形式で指定します。これは、 `--cert`で指定された証明書の秘密キーです。
--   デフォルト： &quot;&quot;
+-   Specifies the path to the certificate key file of SSL in PEM format, which is the private key of the certificate specified by `--cert`
+-   Default: ""
 
 ### <code>--pd</code> / <code>-u</code> {#code-pd-code-code-u-code}
 
--   PDアドレスを指定します
--   デフォルトアドレス： `http://127.0.0.1:2379`
--   環境変数： `PD_ADDR`
+-   Specifies the PD address
+-   Default address: `http://127.0.0.1:2379`
+-   Environment variable: `PD_ADDR`
 
-### -- <code>--version</code> / <code>-V</code> {#code-version-code-code-v-code}
+### <code>--version</code> / <code>-V</code> {#code-version-code-code-v-code}
 
--   バージョン情報を出力して終了します
--   デフォルト：false
+-   Prints the version information and exit
+-   Default: false
 
-## 指示 {#command}
+## Command {#command}
 
 ### <code>cluster</code> {#code-cluster-code}
 
-このコマンドを使用して、クラスタの基本情報を表示します。
+Use this command to view the basic information of the cluster.
 
-使用法：
+Usage:
 
 ```bash
 >> cluster                                     // To show the cluster information
@@ -122,9 +122,9 @@ tiup ctl pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert
 
 ### <code>config [show | set &#x3C;option> &#x3C;value> | placement-rules]</code> {#code-config-show-set-x3c-option-x3c-value-placement-rules-code}
 
-このコマンドを使用して、構成情報を表示または変更します。
+Use this command to view or modify the configuration information.
 
-使用法：
+Usage:
 
 ```bash
 >> config show                                // Display the config information of the scheduling
@@ -173,158 +173,158 @@ tiup ctl pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert
 "5.2.2"
 ```
 
--   `max-snapshot-count`は、単一のストアが同時に受信または送信するスナップショットの最大数を制御します。スケジューラーは、通常のアプリケーションリソースを使用しないように、この構成によって制限されます。レプリカの追加やバランシングの速度を向上させる必要がある場合は、この値を増やしてください。
+-   `max-snapshot-count` controls the maximum number of snapshots that a single store receives or sends out at the same time. The scheduler is restricted by this configuration to avoid taking up normal application resources. When you need to improve the speed of adding replicas or balancing, increase this value.
 
     ```bash
-    >> config set max-snapshot-count 64  // Set the maximum number of snapshots to 64
+    config set max-snapshot-count 64  // Set the maximum number of snapshots to 64
     ```
 
--   `max-pending-peer-count`は、単一ストア内の保留中のピアの最大数を制御します。一部のノードで最新のログがない状態で多数のリージョンが生成されないように、スケジューラーはこの構成によって制限されます。レプリカの追加やバランシングの速度を向上させる必要がある場合は、この値を増やしてください。 0に設定すると、制限がないことを示します。
+-   `max-pending-peer-count` controls the maximum number of pending peers in a single store. The scheduler is restricted by this configuration to avoid producing a large number of Regions without the latest log in some nodes. When you need to improve the speed of adding replicas or balancing, increase this value. Setting it to 0 indicates no limit.
 
     ```bash
-    >> config set max-pending-peer-count 64  // Set the maximum number of pending peers to 64
+    config set max-pending-peer-count 64  // Set the maximum number of pending peers to 64
     ```
 
--   `max-merge-region-size`は、リージョンマージのサイズの上限を制御します（単位はMです）。 `regionSize`が指定された値を超えると、PDはそれを隣接するリージョンとマージしません。 0に設定すると、リージョンマージが無効になります。
+-   `max-merge-region-size` controls the upper limit on the size of Region Merge (the unit is MiB). When `regionSize` exceeds the specified value, PD does not merge it with the adjacent Region. Setting it to 0 indicates disabling Region Merge.
 
     ```bash
-    >> config set max-merge-region-size 16 // Set the upper limit on the size of Region Merge to 16M
+    config set max-merge-region-size 16 // Set the upper limit on the size of Region Merge to 16 MiB
     ```
 
--   `max-merge-region-keys`は、リージョンマージのキーカウントの上限を制御します。 `regionKeyCount`が指定された値を超えると、PDはそれを隣接するリージョンとマージしません。
+-   `max-merge-region-keys` controls the upper limit on the key count of Region Merge. When `regionKeyCount` exceeds the specified value, PD does not merge it with the adjacent Region.
 
     ```bash
-    >> config set max-merge-region-keys 50000 // Set the the upper limit on keyCount to 50000
+    config set max-merge-region-keys 50000 // Set the the upper limit on keyCount to 50000
     ```
 
--   `split-merge-interval`は、同じリージョンでの`split`つの操作と`merge`の操作の間の間隔を制御します。これは、新しく分割されたリージョンが一定期間内にマージされないことを意味します。
+-   `split-merge-interval` controls the interval between the `split` and `merge` operations on a same Region. This means the newly split Region won't be merged within a period of time.
 
     ```bash
-    >> config set split-merge-interval 24h  // Set the interval between `split` and `merge` to one day
+    config set split-merge-interval 24h  // Set the interval between `split` and `merge` to one day
     ```
 
--   `enable-one-way-merge`は、PDがリージョンを次のリージョンとマージすることのみを許可するかどうかを制御します。 `false`に設定すると、PDにより、リージョンを隣接する2つのリージョンとマージできます。
+-   `enable-one-way-merge` controls whether PD only allows a Region to merge with the next Region. When you set it to `false`, PD allows a Region to merge with the adjacent two Regions.
 
     ```bash
-    >> config set enable-one-way-merge true  // Enables one-way merging.
+    config set enable-one-way-merge true  // Enables one-way merging.
     ```
 
--   `enable-cross-table-merge`は、クロステーブルリージョンのマージを有効にするために使用されます。 `false`に設定すると、PDは異なるテーブルのリージョンをマージしません。このオプションは、キータイプが「テーブル」の場合にのみ機能します。
+-   `enable-cross-table-merge` is used to enable the merging of cross-table Regions. When you set it to `false`, PD does not merge the Regions from different tables. This option only works when key type is "table".
 
     ```bash
-    >> config set enable-cross-table-merge true  // Enable cross table merge.
+    config set enable-cross-table-merge true  // Enable cross table merge.
     ```
 
--   `key-type`は、クラスタに使用されるキーエンコードタイプを指定します。サポートされているオプションは[&quot;table&quot;、 &quot;raw&quot;、 &quot;txn&quot;]で、デフォルト値は&quot;table&quot;です。
+-   `key-type` specifies the key encoding type used for the cluster. The supported options are ["table", "raw", "txn"], and the default value is "table".
 
-    -   クラスタにTiDBインスタンスが存在しない場合、 `key-type`は「raw」または「txn」になり、PDは、 `enable-cross-table-merge`の設定に関係なく、テーブル間でリージョンをマージできます。
-    -   クラスタにTiDBインスタンスが存在する場合、 `key-type`は「テーブル」である必要があります。 PDがテーブル間でリージョンをマージできるかどうかは`enable-cross-table-merge`によって決定されます。 `key-type`が「生」の場合、配置ルールは機能しません。
+    -   If no TiDB instance exists in the cluster, `key-type` will be "raw" or "txn", and PD is allowed to merge Regions across tables regardless of the `enable-cross-table-merge` setting.
+    -   If any TiDB instance exists in the cluster, `key-type` should be "table". Whether PD can merge Regions across tables is determined by `enable-cross-table-merge`. If `key-type` is "raw", placement rules do not work.
 
     ```bash
-    >> config set key-type raw  // Enable cross table merge.
+    config set key-type raw  // Enable cross table merge.
     ```
 
--   `region-score-formula-version`は、リージョンスコア式のバージョンを制御します。値のオプションは`v1`と`v2`です。式のバージョン2は、TiKVノードをオンラインまたはオフラインにするなど、一部のシナリオで冗長バランス領域スケジューリングを削減するのに役立ちます。
+-   `region-score-formula-version` controls the version of the Region score formula. The value options are `v1` and `v2`. The version 2 of the formula helps to reduce redundant balance Region scheduling in some scenarios, such as taking TiKV nodes online or offline.
 
     {{< copyable "" >}}
 
     ```bash
-    >> config set region-score-formula-version v2
+    config set region-score-formula-version v2
     ```
 
--   `patrol-region-interval`は、 `replicaChecker`がリージョンのヘルスステータスをチェックする実行頻度を制御します。間隔が短いほど、実行頻度が高くなります。通常、調整する必要はありません。
+-   `patrol-region-interval` controls the execution frequency that `replicaChecker` checks the health status of Regions. A shorter interval indicates a higher execution frequency. Generally, you do not need to adjust it.
 
     ```bash
-    >> config set patrol-region-interval 10ms // Set the execution frequency of replicaChecker to 10ms
+    config set patrol-region-interval 10ms // Set the execution frequency of replicaChecker to 10ms
     ```
 
--   `max-store-down-time`は、PDが切断されたストアを超えた場合に復元できないと判断する時間を制御します。 PDが指定された期間内にストアからハートビートを受信しない場合、PDは他のノードにレプリカを追加します。
+-   `max-store-down-time` controls the time that PD decides the disconnected store cannot be restored if exceeded. If PD does not receive heartbeats from a store within the specified period of time, PD adds replicas in other nodes.
 
     ```bash
-    >> config set max-store-down-time 30m  // Set the time within which PD receives no heartbeats and after which PD starts to add replicas to 30 minutes
+    config set max-store-down-time 30m  // Set the time within which PD receives no heartbeats and after which PD starts to add replicas to 30 minutes
     ```
 
--   `leader-schedule-limit`は、リーダーを同時にスケジュールするタスクの数を制御します。この値は、リーダーのバランスの速度に影響します。値が大きいほど速度が速くなり、値を0に設定するとスケジューリングが終了します。通常、リーダースケジューリングの負荷は小さく、必要な値を増やすことができます。
+-   `leader-schedule-limit` controls the number of tasks scheduling the leader at the same time. This value affects the speed of leader balance. A larger value means a higher speed and setting the value to 0 closes the scheduling. Usually the leader scheduling has a small load, and you can increase the value in need.
 
     ```bash
-    >> config set leader-schedule-limit 4         // 4 tasks of leader scheduling at the same time at most
+    config set leader-schedule-limit 4         // 4 tasks of leader scheduling at the same time at most
     ```
 
--   `region-schedule-limit`は、同時にリージョンをスケジュールするタスクの数を制御します。この値は、作成されるリージョンバランス演算子が多すぎるのを防ぎます。デフォルト値は`2048`で、これはすべてのサイズのクラスターに十分です。値を`0`に設定すると、スケジューリングが終了します。通常、リージョンのスケジューリング速度は`store-limit`に制限されていますが、何をしているのかを正確に理解していない限り、この値をカスタマイズしないことをお勧めします。
+-   `region-schedule-limit` controls the number of tasks of scheduling Regions at the same time. This value avoids too many Region balance operators being created. The default value is `2048` which is enough for all sizes of clusters, and setting the value to `0` closes the scheduling. Usually, the Region scheduling speed is limited by `store-limit`, but it is recommended that you do not customize this value unless you know exactly what you are doing.
 
     ```bash
-    >> config set region-schedule-limit 2         // 2 tasks of Region scheduling at the same time at most
+    config set region-schedule-limit 2         // 2 tasks of Region scheduling at the same time at most
     ```
 
--   `replica-schedule-limit`は、レプリカを同時にスケジュールするタスクの数を制御します。この値は、ノードがダウンまたは削除されたときのスケジューリング速度に影響します。値が大きいほど速度が速くなり、値を0に設定するとスケジューリングが終了します。通常、レプリカスケジューリングには大きな負荷がかかるため、あまり大きな値を設定しないでください。
+-   `replica-schedule-limit` controls the number of tasks scheduling the replica at the same time. This value affects the scheduling speed when the node is down or removed. A larger value means a higher speed and setting the value to 0 closes the scheduling. Usually the replica scheduling has a large load, so do not set a too large value. Note that this configuration item is usually kept at the default value. If you want to change the value, you need to try a few values to see which one works best according to the real situation.
 
     ```bash
-    >> config set replica-schedule-limit 4        // 4 tasks of replica scheduling at the same time at most
+    config set replica-schedule-limit 4        // 4 tasks of replica scheduling at the same time at most
     ```
 
--   `merge-schedule-limit`は、リージョンマージスケジューリングタスクの数を制御します。値を0に設定すると、リージョンマージが閉じます。通常、マージスケジューリングには大きな負荷がかかるため、あまり大きな値を設定しないでください。
+-   `merge-schedule-limit` controls the number of Region Merge scheduling tasks. Setting the value to 0 closes Region Merge. Usually the Merge scheduling has a large load, so do not set a too large value. Note that this configuration item is usually kept at the default value. If you want to change the value, you need to try a few values to see which one works best according to the real situation.
 
     ```bash
-    >> config set merge-schedule-limit 16       // 16 tasks of Merge scheduling at the same time at most
+    config set merge-schedule-limit 16       // 16 tasks of Merge scheduling at the same time at most
     ```
 
--   `hot-region-schedule-limit`は、同時に実行されているホットリージョンスケジューリングタスクを制御します。その値を`0`に設定すると、スケジューリングが無効になります。大きすぎる値を設定することはお勧めしません。そうしないと、システムパフォーマンスに影響を与える可能性があります。
+-   `hot-region-schedule-limit` controls the hot Region scheduling tasks that are running at the same time. Setting its value to `0` means disabling the scheduling. It is not recommended to set a too large value. Otherwise, it might affect the system performance. Note that this configuration item is usually kept at the default value. If you want to change the value, you need to try a few values to see which one works best according to the real situation.
 
     ```bash
-    >> config set hot-region-schedule-limit 4       // 4 tasks of hot Region scheduling at the same time at most
+    config set hot-region-schedule-limit 4       // 4 tasks of hot Region scheduling at the same time at most
     ```
 
--   `hot-region-cache-hits-threshold`は、ホットリージョンを識別するために必要な分数を設定するために使用されます。 PDは、リージョンがこの分数を超えてホットスポット状態になった後でのみ、ホットスポットスケジューリングに参加できます。
+-   `hot-region-cache-hits-threshold` is used to set the number of minutes required to identify a hot Region. PD can participate in the hotspot scheduling only after the Region is in the hotspot state for more than this number of minutes.
 
--   `tolerant-size-ratio`は、バランスバッファ領域のサイズを制御します。 2つのストアのリーダーまたはリージョン間のスコアの差がリージョンサイズの指定された倍数よりも小さい場合、PDによってバランスが取れていると見なされます。
+-   `tolerant-size-ratio` controls the size of the balance buffer area. When the score difference between the leader or Region of the two stores is less than specified multiple times of the Region size, it is considered in balance by PD.
 
     ```bash
-    >> config set tolerant-size-ratio 20        // Set the size of the buffer area to about 20 times of the average Region Size
+    config set tolerant-size-ratio 20        // Set the size of the buffer area to about 20 times of the average Region Size
     ```
 
--   `low-space-ratio`は、不十分な保管スペースと見なされるしきい値を制御します。ノードが占めるスペースの比率が指定された値を超えると、PDはデータを対応するノードにできるだけ移行しないようにします。同時に、PDは主に残りのスペースをスケジュールして、対応するノードのディスクスペースを使い果たしないようにします。
+-   `low-space-ratio` controls the threshold value that is considered as insufficient store space. When the ratio of the space occupied by the node exceeds the specified value, PD tries to avoid migrating data to the corresponding node as much as possible. At the same time, PD mainly schedules the remaining space to avoid using up the disk space of the corresponding node.
 
     ```bash
     config set low-space-ratio 0.9              // Set the threshold value of insufficient space to 0.9
     ```
 
--   `high-space-ratio`は、十分な保管スペースと見なされるしきい値を制御します。この構成は、 `region-score-formula-version`が`v1`に設定されている場合にのみ有効になります。ノードが占めるスペースの比率が指定された値よりも小さい場合、PDは残りのスペースを無視し、主に実際のデータボリュームをスケジュールします。
+-   `high-space-ratio` controls the threshold value that is considered as sufficient store space. This configuration takes effect only when `region-score-formula-version` is set to `v1`. When the ratio of the space occupied by the node is less than the specified value, PD ignores the remaining space and mainly schedules the actual data volume.
 
     ```bash
     config set high-space-ratio 0.5             // Set the threshold value of sufficient space to 0.5
     ```
 
--   `cluster-version`はクラスタのバージョンであり、一部の機能を有効または無効にし、互換性の問題に対処するために使用されます。デフォルトでは、これはクラスタで通常実行されているすべてのTiKVノードの最小バージョンです。以前のバージョンにロールバックする必要がある場合にのみ、手動で設定できます。
+-   `cluster-version` is the version of the cluster, which is used to enable or disable some features and to deal with the compatibility issues. By default, it is the minimum version of all normally running TiKV nodes in the cluster. You can set it manually only when you need to roll it back to an earlier version.
 
     ```bash
     config set cluster-version 1.0.8              // Set the version of the cluster to 1.0.8
     ```
 
--   `replication-mode`は、デュアルデータセンターシナリオのリージョンのレプリケーションモードを制御します。詳細については、 [DR自動同期モードを有効にします](/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode)を参照してください。
+-   `replication-mode` controls the replication mode of Regions in the dual data center scenario. See [Enable the DR Auto-Sync mode](/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode) for details.
 
--   `leader-schedule-policy`は、リーダーのスケジューリング戦略を選択するために使用されます。 `size`または`count`に従ってリーダーをスケジュールできます。
+-   `leader-schedule-policy` is used to select the scheduling strategy for the leader. You can schedule the leader according to `size` or `count`.
 
--   `scheduler-max-waiting-operator`は、各スケジューラーで待機しているオペレーターの数を制御するために使用されます。
+-   `scheduler-max-waiting-operator` is used to control the number of waiting operators in each scheduler.
 
--   `enable-remove-down-replica`は、DownReplicaを自動的に削除する機能を有効にするために使用されます。 `false`に設定すると、PDはダウンタイムレプリカを自動的にクリーンアップしません。
+-   `enable-remove-down-replica` is used to enable the feature of automatically deleting DownReplica. When you set it to `false`, PD does not automatically clean up the downtime replicas.
 
--   `enable-replace-offline-replica`は、OfflineReplicaの移行機能を有効にするために使用されます。 `false`に設定すると、PDはオフラインレプリカを移行しません。
+-   `enable-replace-offline-replica` is used to enable the feature of migrating OfflineReplica. When you set it to `false`, PD does not migrate the offline replicas.
 
--   `enable-make-up-replica`は、レプリカを作成する機能を有効にするために使用されます。 `false`に設定すると、PDは十分なレプリカがないリージョンのレプリカを追加しません。
+-   `enable-make-up-replica` is used to enable the feature of making up replicas. When you set it to `false`, PD does not add replicas for Regions without sufficient replicas.
 
--   `enable-remove-extra-replica`は、余分なレプリカを削除する機能を有効にするために使用されます。 `false`に設定すると、PDは冗長レプリカを持つリージョンの余分なレプリカを削除しません。
+-   `enable-remove-extra-replica` is used to enable the feature of removing extra replicas. When you set it to `false`, PD does not remove extra replicas for Regions with redundant replicas.
 
--   `enable-location-replacement`は、分離レベルチェックを有効にするために使用されます。 `false`に設定すると、PDはスケジューリングによってリージョンレプリカの分離レベルを上げません。
+-   `enable-location-replacement` is used to enable the isolation level checking. When you set it to `false`, PD does not increase the isolation level of a Region replica through scheduling.
 
--   `enable-debug-metrics`は、デバッグ用のメトリックを有効にするために使用されます。 `true`に設定すると、PDは`balance-tolerant-size`などのいくつかのメトリックを有効にします。
+-   `enable-debug-metrics` is used to enable the metrics for debugging. When you set it to `true`, PD enables some metrics such as `balance-tolerant-size`.
 
--   `enable-placement-rules`は、配置ルールを有効にするために使用されます。これは、v5.0以降のバージョンではデフォルトで有効になっています。
+-   `enable-placement-rules` is used to enable placement rules, which is enabled by default in v5.0 and later versions.
 
--   `store-limit-mode`は、ストア速度を制限するモードを制御するために使用されます。オプションのモードは`auto`と`manual`です。 `auto`モードでは、店舗は負荷に応じて自動的にバランスが取られます（実験的）。
+-   `store-limit-mode` is used to control the mode of limiting the store speed. The optional modes are `auto` and `manual`. In `auto` mode, the stores are automatically balanced according to the load (experimental).
 
--   PDはフロー番号の最下位桁を丸めます。これにより、リージョンフロー情報の変更によって引き起こされる統計の更新が削減されます。この構成項目は、リージョンフロー情報を丸める最下位桁数を指定するために使用されます。たとえば、デフォルト値は`3`であるため、フロー`100512`は`101000`に丸められます。この構成は`trace-region-flow`を置き換えます。
+-   PD rounds the lowest digits of the flow number, which reduces the update of statistics caused by the changes of the Region flow information. This configuration item is used to specify the number of lowest digits to round for the Region flow information. For example, the flow `100512` will be rounded to `101000` because the default value is `3`. This configuration replaces `trace-region-flow`.
 
--   たとえば、値を`flow-round-by-digit`から`4`に設定します。
+-   For example, set the value of `flow-round-by-digit` to `4`:
 
     {{< copyable "" >}}
 
@@ -334,13 +334,13 @@ tiup ctl pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert
 
 #### <code>config placement-rules [disable | enable | load | save | show | rule-group]</code> {#code-config-placement-rules-disable-enable-load-save-show-rule-group-code}
 
-`config placement-rules [disable | enable | load | save | show | rule-group]`の使用法については、 [配置ルールを構成する](/configure-placement-rules.md#configure-rules)を参照してください。
+For the usage of `config placement-rules [disable | enable | load | save | show | rule-group]`, see [Configure placement rules](/configure-placement-rules.md#configure-rules).
 
 ### <code>health</code> {#code-health-code}
 
-このコマンドを使用して、クラスタのヘルス情報を表示します。
+Use this command to view the health information of the cluster.
 
-使用法：
+Usage:
 
 ```bash
 >> health                                // Display the health information
@@ -360,9 +360,9 @@ tiup ctl pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert
 
 ### <code>hot [read | write | store|  history &#x3C;start_time> &#x3C;end_time> [&#x3C;key> &#x3C;value>]]</code> {#code-hot-read-write-store-history-x3c-start-time-x3c-end-time-x3c-key-x3c-value-code}
 
-このコマンドを使用して、クラスタのホットスポット情報を表示します。
+Use this command to view the hot spot information of the cluster.
 
-使用法：
+Usage:
 
 ```bash
 >> hot read                                // Display hot spot for the read operation
@@ -414,9 +414,9 @@ tiup ctl pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert
 
 ### <code>label [store &#x3C;name> &#x3C;value>]</code> {#code-label-store-x3c-name-x3c-value-code}
 
-このコマンドを使用して、クラスタのラベル情報を表示します。
+Use this command to view the label information of the cluster.
 
-使用法：
+Usage:
 
 ```bash
 >> label                                // Display all labels
@@ -425,9 +425,9 @@ tiup ctl pd -u https://127.0.0.1:2379 --cacert="path/to/ca" --cert="path/to/cert
 
 ### <code>member [delete | leader_priority | leader [show | resign | transfer &#x3C;member_name>]]</code> {#code-member-delete-leader-priority-leader-show-resign-transfer-x3c-member-name-code}
 
-このコマンドを使用して、PDメンバーを表示したり、指定したメンバーを削除したり、リーダーの優先順位を設定したりします。
+Use this command to view the PD members, remove a specified member, or configure the priority of leader.
 
-使用法：
+Usage:
 
 ```bash
 >> member                               // Display the information of all members
@@ -456,9 +456,9 @@ Success!
 
 ### <code>operator [check | show | add | remove]</code> {#code-operator-check-show-add-remove-code}
 
-このコマンドを使用して、スケジューリング操作を表示および制御します。
+Use this command to view and control the scheduling operation.
 
-使用法：
+Usage:
 
 ```bash
 >> operator show                                        // Display all operators
@@ -478,13 +478,13 @@ Success!
 >> operator check 1                                     // Check the status of the operators related to Region 1
 ```
 
-リージョンの分割は、可能な限り中央に近い位置から開始されます。この位置は、「スキャン」と「概算」の2つの戦略を使用して見つけることができます。違いは、前者はリージョンをスキャンして中央のキーを決定し、後者はSSTファイルに記録されている統計をチェックしておおよその位置を取得することです。一般に、前者の方が正確ですが、後者の方がI / Oの消費量が少なく、より速く完了することができます。
+The splitting of Regions starts from the position as close as possible to the middle. You can locate this position using two strategies, namely "scan" and "approximate". The difference between them is that the former determines the middle key by scanning the Region, and the latter obtains the approximate position by checking the statistics recorded in the SST file. Generally, the former is more accurate, while the latter consumes less I/O and can be completed faster.
 
 ### <code>ping</code> {#code-ping-code}
 
-このコマンドを使用して、 `ping`のPDにかかる時間を表示します。
+Use this command to view the time that `ping` PD takes.
 
-使用法：
+Usage:
 
 ```bash
 >> ping
@@ -493,9 +493,9 @@ time: 43.12698ms
 
 ### <code>region &#x3C;region_id> [--jq="&#x3C;query string>"]</code> {#code-region-x3c-region-id-jq-x3c-query-string-code}
 
-このコマンドを使用して、リージョン情報を表示します。 jq形式の出力については、 [jq-formatted-json-output-usage](#jq-formatted-json-output-usage)を参照してください。
+Use this command to view the Region information. For a jq formatted output, see [jq-formatted-json-output-usage](#jq-formatted-json-output-usage).
 
-使用法：
+Usage:
 
 ```bash
 >> region                               //　Display the information of all Regions
@@ -534,9 +534,9 @@ time: 43.12698ms
 
 ### <code>region key [--format=raw|encode|hex] &#x3C;key></code> {#code-region-key-format-raw-encode-hex-x3c-key-code}
 
-このコマンドを使用して、特定のキーが存在するリージョンを照会します。これは、raw、encoding、およびhex形式をサポートします。また、キーがエンコード形式の場合は、キーを一重引用符で囲む必要があります。
+Use this command to query the Region that a specific key resides in. It supports the raw, encoding, and hex formats. And you need to use single quotes around the key when it is in the encoding format.
 
-16進形式の使用法（デフォルト）：
+Hex format usage (default):
 
 ```bash
 >> region key 7480000000000000FF1300000000000000F8
@@ -548,7 +548,7 @@ time: 43.12698ms
 }
 ```
 
-生のフォーマットの使用法：
+Raw format usage:
 
 ```bash
 >> region key --format=raw abc
@@ -560,7 +560,7 @@ time: 43.12698ms
 }
 ```
 
-エンコーディング形式の使用法：
+Encoding format usage:
 
 ```bash
 >> region key --format=encode 't\200\000\000\000\000\000\000\377\035_r\200\000\000\000\000\377\017U\320\000\000\000\000\000\372'
@@ -574,9 +574,9 @@ time: 43.12698ms
 
 ### <code>region scan</code> {#code-region-scan-code}
 
-このコマンドを使用して、すべてのリージョンを取得します。
+Use this command to get all Regions.
 
-使用法：
+Usage:
 
 ```bash
 >> region scan
@@ -588,9 +588,9 @@ time: 43.12698ms
 
 ### <code>region sibling &#x3C;region_id></code> {#code-region-sibling-x3c-region-id-code}
 
-このコマンドを使用して、特定のリージョンの隣接するリージョンを確認します。
+Use this command to check the adjacent Regions of a specific Region.
 
-使用法：
+Usage:
 
 ```bash
 >> region sibling 2
@@ -602,11 +602,11 @@ time: 43.12698ms
 
 ### <code>region keys [--format=raw|encode|hex] &#x3C;start_key> &#x3C;end_key> &#x3C;limit></code> {#code-region-keys-format-raw-encode-hex-x3c-start-key-x3c-end-key-x3c-limit-code}
 
-このコマンドを使用して、指定された範囲`[startkey, endkey)`のすべてのリージョンを照会します。 `endKey`秒のない範囲がサポートされています。
+Use this command to query all Regions in a given range `[startkey, endkey)`. Ranges without `endKey`s are supported.
 
-`limit`パラメーターは、キーの数を制限します。デフォルト値の`limit`は`16`で、値`-1`は無制限のキーを意味します。
+The `limit` parameter limits the number of keys. The default value of `limit` is `16`, and the value of `-1` means unlimited keys.
 
-使用法：
+Usage:
 
 ```bash
 >> region keys --format=raw a         // Display all Regions that start from the key a with a default limit count of 16
@@ -636,9 +636,9 @@ time: 43.12698ms
 
 ### <code>region store &#x3C;store_id></code> {#code-region-store-x3c-store-id-code}
 
-このコマンドを使用して、特定のストアのすべてのリージョンを一覧表示します。
+Use this command to list all Regions of a specific store.
 
-使用法：
+Usage:
 
 ```bash
 >> region store 2
@@ -650,9 +650,9 @@ time: 43.12698ms
 
 ### <code>region topread [limit]</code> {#code-region-topread-limit-code}
 
-このコマンドを使用して、読み取りフローが上位のリージョンを一覧表示します。制限のデフォルト値は16です。
+Use this command to list Regions with top read flow. The default value of the limit is 16.
 
-使用法：
+Usage:
 
 ```bash
 >> region topread
@@ -664,9 +664,9 @@ time: 43.12698ms
 
 ### <code>region topwrite [limit]</code> {#code-region-topwrite-limit-code}
 
-このコマンドを使用して、書き込みフローが上位のリージョンを一覧表示します。制限のデフォルト値は16です。
+Use this command to list Regions with top write flow. The default value of the limit is 16.
 
-使用法：
+Usage:
 
 ```bash
 >> region topwrite
@@ -678,9 +678,9 @@ time: 43.12698ms
 
 ### <code>region topconfver [limit]</code> {#code-region-topconfver-limit-code}
 
-このコマンドを使用して、上位confバージョンのリージョンを一覧表示します。制限のデフォルト値は16です。
+Use this command to list Regions with top conf version. The default value of the limit is 16.
 
-使用法：
+Usage:
 
 ```bash
 >> region topconfver
@@ -692,9 +692,9 @@ time: 43.12698ms
 
 ### <code>region topversion [limit]</code> {#code-region-topversion-limit-code}
 
-このコマンドを使用して、最上位バージョンのリージョンを一覧表示します。制限のデフォルト値は16です。
+Use this command to list Regions with top version. The default value of the limit is 16.
 
-使用法：
+Usage:
 
 ```bash
 >> region topversion
@@ -706,9 +706,9 @@ time: 43.12698ms
 
 ### <code>region topsize [limit]</code> {#code-region-topsize-limit-code}
 
-このコマンドを使用して、最上位のおおよそのサイズのリージョンを一覧表示します。制限のデフォルト値は16です。
+Use this command to list Regions with top approximate size. The default value of the limit is 16.
 
-使用法：
+Usage:
 
 ```bash
 >> region topsize
@@ -721,16 +721,16 @@ time: 43.12698ms
 
 ### <code>region check [miss-peer | extra-peer | down-peer | pending-peer | offline-peer | empty-region | hist-size | hist-keys]</code> {#code-region-check-miss-peer-extra-peer-down-peer-pending-peer-offline-peer-empty-region-hist-size-hist-keys-code}
 
-このコマンドを使用して、異常な状態のリージョンを確認します。
+Use this command to check the Regions in abnormal conditions.
 
-さまざまなタイプの説明：
+Description of various types:
 
--   ミスピア：十分なレプリカがない地域
--   エクストラピア：追加のレプリカがある地域
--   ダウンピア：一部のレプリカがダウンしているリージョン
--   保留中のピア：一部のレプリカが保留中のリージョン
+-   miss-peer: the Region without enough replicas
+-   extra-peer: the Region with extra replicas
+-   down-peer: the Region in which some replicas are Down
+-   pending-peer：the Region in which some replicas are Pending
 
-使用法：
+Usage:
 
 ```bash
 >> region check miss-peer
@@ -742,9 +742,9 @@ time: 43.12698ms
 
 ### <code>scheduler [show | add | remove | pause | resume | config]</code> {#code-scheduler-show-add-remove-pause-resume-config-code}
 
-このコマンドを使用して、スケジューリングポリシーを表示および制御します。
+Use this command to view and control the scheduling policy.
 
-使用法：
+Usage:
 
 ```bash
 >> scheduler show                                 // Display all schedulers
@@ -764,9 +764,9 @@ time: 43.12698ms
 
 #### <code>scheduler config balance-hot-region-scheduler</code> {#code-scheduler-config-balance-hot-region-scheduler-code}
 
-このコマンドを使用して、 `balance-hot-region-scheduler`のポリシーを表示および制御します。
+Use this command to view and control the `balance-hot-region-scheduler` policy.
 
-使用法：
+Usage:
 
 ```bash
 >> scheduler config balance-hot-region-scheduler  // Display all configuration of the balance-hot-region scheduler
@@ -801,79 +801,79 @@ time: 43.12698ms
 }
 ```
 
--   `min-hot-byte-rate`は、カウントされる最小のバイト数を意味し、通常は100です。
+-   `min-hot-byte-rate` means the smallest number of bytes to be counted, which is usually 100.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set min-hot-byte-rate 100
+    scheduler config balance-hot-region-scheduler set min-hot-byte-rate 100
     ```
 
--   `min-hot-key-rate`は、カウントされるキーの最小数を意味し、通常は10です。
+-   `min-hot-key-rate` means the smallest number of keys to be counted, which is usually 10.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set min-hot-key-rate 10
+    scheduler config balance-hot-region-scheduler set min-hot-key-rate 10
     ```
 
--   `min-hot-query-rate`は、カウントされるクエリの最小数を意味し、通常は10です。
+-   `min-hot-query-rate` means the smallest number of queries to be counted, which is usually 10.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set min-hot-query-rate 10
+    scheduler config balance-hot-region-scheduler set min-hot-query-rate 10
     ```
 
--   `max-zombie-rounds`は、オペレーターが保留中の影響と見なすことができるハートビートの最大数を意味します。これをより大きな値に設定すると、保留中の影響に含まれる演算子が増える可能性があります。通常、その値を調整する必要はありません。保留中の影響とは、スケジューリング中に生成されるが、それでも影響を与えるオペレーターの影響を指します。
+-   `max-zombie-rounds` means the maximum number of heartbeats with which an operator can be considered as the pending influence. If you set it to a larger value, more operators might be included in the pending influence. Usually, you do not need to adjust its value. Pending influence refers to the operator influence that is generated during scheduling but still has an effect.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set max-zombie-rounds 3
+    scheduler config balance-hot-region-scheduler set max-zombie-rounds 3
     ```
 
--   `max-peer-number`は、解決するピアの最大数を意味します。これにより、スケジューラーが遅くなりすぎるのを防ぎます。
+-   `max-peer-number` means the maximum number of peers to be solved, which prevents the scheduler from being too slow.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set max-peer-number 1000
+    scheduler config balance-hot-region-scheduler set max-peer-number 1000
     ```
 
--   `byte-rate-rank-step-ratio` 、および`key-rate-rank-step-ratio`は`query-rate-rank-step-ratio` 、バイト、キー、クエリ、およびカウントのステップランクを意味し`count-rank-step-ratio` 。ランクステップ比は、ランクが計算されるときのステップを決定します。 `great-dec-ratio`と`minor-dec-ratio`は、 `dec`ランクを決定するために使用されます。通常、これらのアイテムを変更する必要はありません。
+-   `byte-rate-rank-step-ratio`, `key-rate-rank-step-ratio`, `query-rate-rank-step-ratio`, and `count-rank-step-ratio` respectively mean the step ranks of byte, key, query, and count. The rank-step-ratio decides the step when the rank is calculated. `great-dec-ratio` and `minor-dec-ratio` are used to determine the `dec` rank. Usually, you do not need to modify these items.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set byte-rate-rank-step-ratio 0.05
+    scheduler config balance-hot-region-scheduler set byte-rate-rank-step-ratio 0.05
     ```
 
--   `src-tolerance-ratio`と`dst-tolerance-ratio`は、期待スケジューラの構成項目です。 `tolerance-ratio`が小さいほど、スケジューリングが容易になります。冗長なスケジューリングが発生した場合は、この値を適切に増やすことができます。
+-   `src-tolerance-ratio` and `dst-tolerance-ratio` are configuration items for the expectation scheduler. The smaller the `tolerance-ratio`, the easier it is for scheduling. When redundant scheduling occurs, you can appropriately increase this value.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set src-tolerance-ratio 1.1
+    scheduler config balance-hot-region-scheduler set src-tolerance-ratio 1.1
     ```
 
--   `read-priorities` 、および`write-leader-priorities`は、スケジューラがホットリージョンスケジューリングで優先するディメンションを制御し`write-peer-priorities` 。構成には2つの次元がサポートされています。
+-   `read-priorities`, `write-leader-priorities`, and `write-peer-priorities` control which dimension the scheduler prioritizes for hot Region scheduling. Two dimensions are supported for configuration.
 
-    -   `read-priorities`および`write-leader-priorities`は、読み取りおよび書き込みリーダータイプのホットリージョンをスケジュールするためにスケジューラーが優先するディメンションを制御します。寸法オプションは`query` 、および`byte` `key` 。
+    -   `read-priorities` and `write-leader-priorities` control which dimensions the scheduler prioritizes for scheduling hot Regions of the read and write-leader types. The dimension options are `query`, `byte`, and `key`.
 
-    -   `write-peer-priorities`は、書き込みピアタイプのホットリージョンをスケジュールするためにスケジューラが優先するディメンションを制御します。寸法オプションは`byte`と`key`です。
+    -   `write-peer-priorities` controls which dimensions the scheduler prioritizes for scheduling hot Regions of the write-peer type. The dimension options are `byte` and `key`.
 
-    > **ノート：**
+    > **Note:**
     >
-    > クラスタコンポーネントがv5.2より前の場合、 `query`次元の構成は有効になりません。一部のコンポーネントがv5.2以降にアップグレードされた場合でも、デフォルトでは`byte`次元と`key`次元がホットリージョンスケジューリングの優先順位を持ちます。クラスタのすべてのコンポーネントがv5.2以降にアップグレードされた後も、互換性のためにそのような構成が有効になります。 `pd-ctl`コマンドを使用して、リアルタイム構成を表示できます。通常、これらの構成を変更する必要はありません。
+    > If a cluster component is earlier than v5.2, the configuration of `query` dimension does not take effect. If some components are upgraded to v5.2 or later, the `byte` and `key` dimensions still by default have the priority for hot Region scheduling. After all components of the cluster are upgraded to v5.2 or later, such a configuration still takes effect for compatibility. You can view the real-time configuration using the `pd-ctl` command. Usually, you do not need to modify these configurations.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set read-priorities query,byte
+    scheduler config balance-hot-region-scheduler set read-priorities query,byte
     ```
 
--   `strict-picking-store`は、ホットリージョンスケジューリングの検索スペースを制御します。通常は有効になっています。有効にすると、ホットリージョンスケジューリングにより、構成された2つのディメンションでホットスポットのバランスが確保されます。無効にすると、ホットリージョンスケジューリングでは、最優先のディメンションのバランスのみが保証され、他のディメンションのバランスが低下する可能性があります。通常、この構成を変更する必要はありません。
+-   `strict-picking-store` controls the search space of hot Region scheduling. Usually, it is enabled. When it is enabled, hot Region scheduling ensures hotspot balance on the two configured dimensions. When it is disabled, hot Region scheduling only ensures the balance on the dimension with the first priority, which might reduce balance on other dimensions. Usually, you do not need to modify this configuration.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set strict-picking-store true
+    scheduler config balance-hot-region-scheduler set strict-picking-store true
     ```
 
--   `enable-for-tiflash`は、ホットリージョンスケジューリングをTiFlashインスタンスに対して有効にするかどうかを制御します。通常は有効になっています。無効にすると、TiFlashインスタンス間のホットリージョンスケジューリングは実行されません。
+-   `enable-for-tiflash` controls whether hot Region scheduling takes effect for TiFlash instances. Usually, it is enabled. When it is disabled, the hot Region scheduling between TiFlash instances is not performed.
 
     ```bash
-    >> scheduler config balance-hot-region-scheduler set enable-for-tiflash true
+    scheduler config balance-hot-region-scheduler set enable-for-tiflash true
     ```
 
 ### <code>store [delete | label | weight | remove-tombstone | limit ] &#x3C;store_id>  [--jq="&#x3C;query string>"]</code> {#code-store-delete-label-weight-remove-tombstone-limit-x3c-store-id-jq-x3c-query-string-code}
 
-このコマンドを使用して、ストア情報を表示するか、指定したストアを削除します。 jq形式の出力については、 [jq-formatted-json-output-usage](#jq-formatted-json-output-usage)を参照してください。
+Use this command to view the store information or remove a specified store. For a jq formatted output, see [jq-formatted-json-output-usage](#jq-formatted-json-output-usage).
 
-使用法：
+Usage:
 
 ```bash
 >> store                               // Display information of all stores
@@ -899,26 +899,25 @@ time: 43.12698ms
 >> store limit all 5 remove-peer       // Set the limit of removing-peer operations to 5 per minute for all stores
 ```
 
-> **ノート：**
+> **Note:**
 >
-> -   `store limit`コマンドの元の`region-add`および`region-remove`パラメーターは廃止され、 `add-peer`および`remove-peer`に置き換えられました。
-> -   `pd-ctl`を使用して、TiKVストアのステータス（アップ、切断、オフライン、ダウン、またはトゥームストーン）を確認できます。各ステータスの関係については、 [TiKVストアの各ステータス間の関係](/tidb-scheduling.md#information-collection)を参照してください。
+> You can use `pd-ctl` to check the status (Up, Disconnect, Offline, Down, or Tombstone) of a TiKV store. For the relationship between each status, refer to [Relationship between each status of a TiKV store](/tidb-scheduling.md#information-collection).
 
 ### <code>log [fatal | error | warn | info | debug]</code> {#code-log-fatal-error-warn-info-debug-code}
 
-このコマンドを使用して、PDリーダーのログレベルを設定します。
+Use this command to set the log level of the PD leader.
 
-使用法：
+Usage:
 
 ```bash
->> log warn
+log warn
 ```
 
 ### <code>tso</code> {#code-tso-code}
 
-このコマンドを使用して、TSOの物理的および論理的な時間を解析します。
+Use this command to parse the physical and logical time of TSO.
 
-使用法：
+Usage:
 
 ```bash
 >> tso 395181938313123110        // Parse TSO
@@ -928,28 +927,28 @@ logic:  120102
 
 ### <code>unsafe remove-failed-stores [store-ids | show | history]</code> {#code-unsafe-remove-failed-stores-store-ids-show-history-code}
 
-> **警告：**
+> **Warning:**
 >
-> -   この機能は不可逆リカバリであるため、TiKVは、この機能の使用後にデータの整合性とデータインデックスの整合性を保証できません。
-> -   Online Unsafe Recoveryは実験的機能であり、実稼働環境で使用することはお勧めし**ません**。この機能のインターフェース、戦略、および内部実装は、一般提供（GA）になると変更される可能性があります。この機能はいくつかのシナリオでテストされていますが、完全には検証されておらず、システムが使用できなくなる可能性があります。
-> -   TiDBチームのサポートを受けて、機能関連の操作を実行することをお勧めします。誤操作が発生した場合、クラスタの復旧が困難になる場合があります。
+> -   This feature is a lossy recovery, so TiKV cannot guarantee data integrity and data indexes integrity after using the feature.
+> -   Online Unsafe Recovery is an experimental feature, and it is **NOT** recommended to use it in the production environment. The interface, strategy, and internal implementation of this feature might change when it becomes generally available (GA). Although this feature has been tested in some scenarios, it is not thoroughly validated and might cause system unavailability.
+> -   It is recommended to perform the feature-related operations with the support from the TiDB team. If any misoperation is performed, it might be hard to recover the cluster.
 
-このコマンドを使用して、永続的に損傷したレプリカが原因でデータが使用できなくなった場合に、損失の多いリカバリ操作を実行します。例えば：
+Use this command to perform lossy recovery operations when permanently damaged replicas cause data to be unavailable. For example:
 
-Online Unsafe Recoveryを実行して、恒久的に損傷したストアを削除します。
+Execute Online Unsafe Recovery to remove permanently damaged stores:
 
 ```bash
->> unsafe remove-failed-stores 101,102,103
+unsafe remove-failed-stores 101,102,103
 ```
 
 ```bash
 Success!
 ```
 
-オンラインの安全でないリカバリの現在または過去の状態を表示します。
+Show the current or historical state of Online Unsafe Recovery:
 
 ```bash
->> unsafe remove-failed-stores show
+unsafe remove-failed-stores show
 ```
 
 ```bash
@@ -981,9 +980,9 @@ Success!
 ]
 ```
 
-## Jq形式のJSON出力の使用法 {#jq-formatted-json-output-usage}
+## Jq formatted JSON output usage {#jq-formatted-json-output-usage}
 
-### <code>store</code>の出力を簡素化する {#simplify-the-output-of-code-store-code}
+### Simplify the output of <code>store</code> {#simplify-the-output-of-code-store-code}
 
 ```bash
 >> store --jq=".stores[].store | { id, address, state_name}"
@@ -992,7 +991,7 @@ Success!
 ...
 ```
 
-### ノードの残りのスペースを照会します {#query-the-remaining-space-of-the-node}
+### Query the remaining space of the node {#query-the-remaining-space-of-the-node}
 
 ```bash
 >> store --jq=".stores[] | {id: .store.id, available: .status.available}"
@@ -1001,12 +1000,12 @@ Success!
 ...
 ```
 
-### ステータスが<code>Up</code>ではないすべてのノードをクエリします {#query-all-nodes-whose-status-is-not-code-up-code}
+### Query all nodes whose status is not <code>Up</code> {#query-all-nodes-whose-status-is-not-code-up-code}
 
 {{< copyable "" >}}
 
 ```bash
->> store --jq='.stores[].store | select(.state_name!="Up") | { id, address, state_name}'
+store --jq='.stores[].store | select(.state_name!="Up") | { id, address, state_name}'
 ```
 
 ```
@@ -1015,12 +1014,12 @@ Success!
 ...
 ```
 
-### すべてのTiFlashノードをクエリします {#query-all-tiflash-nodes}
+### Query all TiFlash nodes {#query-all-tiflash-nodes}
 
 {{< copyable "" >}}
 
 ```bash
->> store --jq='.stores[].store | select(.labels | length>0 and contains([{"key":"engine","value":"tiflash"}])) | { id, address, state_name}'
+store --jq='.stores[].store | select(.labels | length>0 and contains([{"key":"engine","value":"tiflash"}])) | { id, address, state_name}'
 ```
 
 ```
@@ -1029,7 +1028,7 @@ Success!
 ...
 ```
 
-### リージョンレプリカの配布ステータスを照会します {#query-the-distribution-status-of-the-region-replicas}
+### Query the distribution status of the Region replicas {#query-the-distribution-status-of-the-region-replicas}
 
 ```bash
 >> region --jq=".regions[] | {id: .id, peer_stores: [.peers[].store_id]}"
@@ -1038,9 +1037,9 @@ Success!
 ...
 ```
 
-### レプリカの数に応じてリージョンをフィルタリングする {#filter-regions-according-to-the-number-of-replicas}
+### Filter Regions according to the number of replicas {#filter-regions-according-to-the-number-of-replicas}
 
-たとえば、レプリカの数が3ではないすべてのリージョンを除外するには。
+For example, to filter out all Regions whose number of replicas is not 3:
 
 ```bash
 >> region --jq=".regions[] | {id: .id, peer_stores: [.peers[].store_id] | select(length != 3)}"
@@ -1048,9 +1047,9 @@ Success!
 {"id":2,"peer_stores":[1,30,31,32]}
 ```
 
-### レプリカのストアIDに従ってリージョンをフィルタリングします {#filter-regions-according-to-the-store-id-of-replicas}
+### Filter Regions according to the store ID of replicas {#filter-regions-according-to-the-store-id-of-replicas}
 
-たとえば、store30にレプリカがあるすべてのリージョンを除外するには、次のようにします。
+For example, to filter out all Regions that have a replica on store30:
 
 ```bash
 >> region --jq=".regions[] | {id: .id, peer_stores: [.peers[].store_id] | select(any(.==30))}"
@@ -1059,7 +1058,7 @@ Success!
 ...
 ```
 
-同様に、store30またはstore31にレプリカがあるすべてのリージョンを見つけることもできます。
+You can also find out all Regions that have a replica on store30 or store31 in the same way:
 
 ```bash
 >> region --jq=".regions[] | {id: .id, peer_stores: [.peers[].store_id] | select(any(.==(30,31)))}"
@@ -1069,9 +1068,9 @@ Success!
 ...
 ```
 
-### データを復元するときに関連するリージョンを探す {#look-for-relevant-regions-when-restoring-data}
+### Look for relevant Regions when restoring data {#look-for-relevant-regions-when-restoring-data}
 
-たとえば、[store1、store30、store31]がダウンタイムで利用できない場合、ダウンレプリカが通常のレプリカよりも多いすべてのリージョンを見つけることができます。
+For example, when [store1, store30, store31] is unavailable at its downtime, you can find all Regions whose Down replicas are more than normal replicas:
 
 ```bash
 >> region --jq=".regions[] | {id: .id, peer_stores: [.peers[].store_id] | select(length as $total | map(if .==(1,30,31) then . else empty end) | length>=$total-length) }"
@@ -1081,14 +1080,14 @@ Success!
 ...
 ```
 
-または、[store1、store30、store31]の開始に失敗した場合、store1でデータを手動で安全に削除できるリージョンを見つけることができます。このようにして、store1にレプリカがあり、他のDownPeerがないすべてのリージョンを除外できます。
+Or when [store1, store30, store31] fails to start, you can find Regions where the data can be manually removed safely on store1. In this way, you can filter out all Regions that have a replica on store1 but don't have other DownPeers:
 
 ```bash
 >> region --jq=".regions[] | {id: .id, peer_stores: [.peers[].store_id] | select(length>1 and any(.==1) and all(.!=(30,31)))}"
 {"id":24,"peer_stores":[1,32,33]}
 ```
 
-[store30、store31]がダウンしているときに、 `remove-peer`の演算子を作成することで安全に処理できるすべてのリージョン、つまり、唯一のDownPeerを持つリージョンを見つけます。
+When [store30, store31] is down, find out all Regions that can be safely processed by creating the `remove-peer` Operator, that is, Regions with one and only DownPeer:
 
 ```bash
 >> region --jq=".regions[] | {id: .id, remove_peer: [.peers[].store_id] | select(length>1) | map(if .==(30,31) then . else empty end) | select(length==1)}"

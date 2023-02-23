@@ -3,34 +3,44 @@ title: TiDB Transaction Isolation Levels
 summary: Learn about the transaction isolation levels in TiDB.
 ---
 
-# TiDBトランザクション分離レベル {#tidb-transaction-isolation-levels}
+# TiDB Transaction Isolation Levels {#tidb-transaction-isolation-levels}
 
-トランザクション分離は、データベーストランザクション処理の基盤の1つです。分離は、トランザクションの4つの主要なプロパティの1つです（一般に[酸](/glossary.md#acid)と呼ばれます）。
+<CustomContent platform="tidb">
 
-SQL-92標準では、トランザクション分離の4つのレベルが定義されています。コミットされていない読み取り、コミットされた読み取り、繰り返し可能な読み取り、およびシリアル化可能です。詳細については、次の表を参照してください。
+Transaction isolation is one of the foundations of database transaction processing. Isolation is one of the four key properties of a transaction (commonly referred as [ACID](/glossary.md#acid)).
 
-| 分離レベル          | ダーティライト | ダーティリード | ファジーリード | ファントム |
-| :------------- | :------ | :------ | :------ | :---- |
-| コミットされていない読み取り | ありえない   | 可能      | 可能      | 可能    |
-| コミット済みを読む      | ありえない   | ありえない   | 可能      | 可能    |
-| 繰り返し読む         | ありえない   | ありえない   | ありえない   | 可能    |
-| シリアル化可能        | ありえない   | ありえない   | ありえない   | ありえない |
+</CustomContent>
 
-TiDBは、MySQLとの互換性のために`REPEATABLE-READ`としてアドバタイズするスナップショットアイソレーション（SI）整合性を実装します。これは、 [ANSI反復可能読み取り分離レベル](#difference-between-tidb-and-ansi-repeatable-read)および[MySQLの繰り返し可能な読み取りレベル](#difference-between-tidb-and-mysql-repeatable-read)とは異なります。
+<CustomContent platform="tidb-cloud">
 
-> **ノート：**
+Transaction isolation is one of the foundations of database transaction processing. Isolation is one of the four key properties of a transaction (commonly referred as [ACID](/tidb-cloud/tidb-cloud-glossary.md#acid)).
+
+</CustomContent>
+
+The SQL-92 standard defines four levels of transaction isolation: Read Uncommitted, Read Committed, Repeatable Read, and Serializable. See the following table for details:
+
+| Isolation Level  | Dirty Write  | Dirty Read   | Fuzzy Read   | Phantom      |
+| :--------------- | :----------- | :----------- | :----------- | :----------- |
+| READ UNCOMMITTED | Not Possible | Possible     | Possible     | Possible     |
+| READ COMMITTED   | Not Possible | Not possible | Possible     | Possible     |
+| REPEATABLE READ  | Not Possible | Not possible | Not possible | Possible     |
+| SERIALIZABLE     | Not Possible | Not possible | Not possible | Not possible |
+
+TiDB implements Snapshot Isolation (SI) consistency, which it advertises as `REPEATABLE-READ` for compatibility with MySQL. This differs from the [ANSI Repeatable Read isolation level](#difference-between-tidb-and-ansi-repeatable-read) and the [MySQL Repeatable Read level](#difference-between-tidb-and-mysql-repeatable-read).
+
+> **Note:**
 >
-> TiDB v3.0では、トランザクションの自動再試行はデフォルトで無効になっています。自動再試行を有効にすると**、トランザクション分離レベル**が損なわれる可能性があるため、お勧めしません。詳細は[トランザクションの再試行](/optimistic-transaction.md#automatic-retry)を参照してください。
+> Starting from TiDB v3.0, the automatic retry of transactions is disabled by default. It is not recommended to enable the automatic retry because it might **break the transaction isolation level**. Refer to [Transaction Retry](/optimistic-transaction.md#automatic-retry) for details.
 >
-> TiDB [v3.0.8](/releases/release-3.0.8.md#tidb)から、新しく作成されたTiDBクラスターはデフォルトで[悲観的なトランザクションモード](/pessimistic-transaction.md)を使用します。現在の読み取り（ `for update`読み取り）は**繰り返し不可の読み取り**です。詳細は[悲観的なトランザクションモード](/pessimistic-transaction.md)を参照してください。
+> Starting from TiDB v3.0.8, newly created TiDB clusters use the [pessimistic transaction mode](/pessimistic-transaction.md) by default. The current read (`for update` read) is **non-repeatable read**. Refer to [pessimistic transaction mode](/pessimistic-transaction.md) for details.
 
-## 繰り返し可能な読み取り分離レベル {#repeatable-read-isolation-level}
+## Repeatable Read isolation level {#repeatable-read-isolation-level}
 
-繰り返し可能読み取り分離レベルは、トランザクションが開始する前にコミットされたデータのみを確認し、コミットされていないデータや、同時トランザクションによるトランザクション実行中にコミットされた変更を確認することはありません。ただし、トランザクションステートメントは、まだコミットされていなくても、自身のトランザクション内で実行された以前の更新の影響を確認します。
+The Repeatable Read isolation level only sees data committed before the transaction begins, and it never sees either uncommitted data or changes committed during transaction execution by concurrent transactions. However, the transaction statement does see the effects of previous updates executed within its own transaction, even though they are not yet committed.
 
-異なるノードで実行されているトランザクションの場合、開始とコミットの順序は、タイムスタンプがPDから取得される順序によって異なります。
+For transactions running on different nodes, the start and commit order depends on the order that the timestamp is obtained from PD.
 
-繰り返し可能読み取り分離レベルのトランザクションは、同じ行を同時に更新することはできません。コミット時に、トランザクションが開始後に別のトランザクションによって行が更新されていることをトランザクションが検出した場合、トランザクションはロールバックします。例えば：
+Transactions of the Repeatable Read isolation level cannot concurrently update a same row. When committing, if the transaction finds that the row has been updated by another transaction after it starts, then the transaction rolls back. For example:
 
 ```sql
 create table t1(id int);
@@ -43,24 +53,24 @@ commit;                         |
                                 |               commit; -- The transaction commit fails and rolls back. Pessimistic transactions can commit successfully.
 ```
 
-### TiDBとANSIの繰り返し可能な読み取りの違い {#difference-between-tidb-and-ansi-repeatable-read}
+### Difference between TiDB and ANSI Repeatable Read {#difference-between-tidb-and-ansi-repeatable-read}
 
-TiDBの反復可能読み取り分離レベルはANSI反復可能読み取り分離レベルとは異なりますが、同じ名前を共有しています。 [ANSISQL分離レベルの批評](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-95-51.pdf)のペーパーで説明されている標準に従って、TiDBはスナップショット分離レベルを実装します。この分離レベルでは、厳密なファントム（A3）は許可されませんが、広いファントム（P3）と書き込みスキューは許可されます。対照的に、ANSI反復可能読み取り分離レベルでは、ファントム読み取りは許可されますが、書き込みスキューは許可されません。
+The Repeatable Read isolation level in TiDB differs from ANSI Repeatable Read isolation level, though they sharing the same name. According to the standard described in the [A Critique of ANSI SQL Isolation Levels](https://www.microsoft.com/en-us/research/wp-content/uploads/2016/02/tr-95-51.pdf) paper, TiDB implements the Snapshot Isolation level. This isolation level does not allow strict phantoms (A3) but allows broad phantoms (P3) and write skews. In contrast, the ANSI Repeatable Read isolation level allows phantom reads but does not allow write skews.
 
-### TiDBとMySQLの繰り返し可能な読み取りの違い {#difference-between-tidb-and-mysql-repeatable-read}
+### Difference between TiDB and MySQL Repeatable Read {#difference-between-tidb-and-mysql-repeatable-read}
 
-TiDBのRepeatableRead分離レベルは、MySQLのそれとは異なります。 MySQLのRepeatableRead分離レベルは、更新時に現在のバージョンが表示されているかどうかをチェックしません。つまり、トランザクションの開始後に行が更新された場合でも、更新を続行できます。対照的に、トランザクションの開始後に行が更新された場合、TiDBオプティミスティックトランザクションはロールバックされて再試行されます。 TiDBの楽観的同時実行制御でのトランザクションの再試行が失敗し、トランザクションの最終的な失敗につながる可能性がありますが、TiDBの悲観的同時実行制御とMySQLでは、トランザクションの更新が成功する可能性があります。
+The Repeatable Read isolation level in TiDB differs from that in MySQL. The MySQL Repeatable Read isolation level does not check whether the current version is visible when updating, which means it can continue to update even if the row has been updated after the transaction starts. In contrast, if the row has been updated after the transaction starts, the TiDB optimistic transaction is rolled back and retried. Transaction retries in TiDB's optimistic concurrency control might fail, leading to a final failure of the transaction, while in TiDB's pessimistic concurrency control and MySQL, the updating transaction can be successful.
 
-## コミットされた分離レベルを読み取る {#read-committed-isolation-level}
+## Read Committed isolation level {#read-committed-isolation-level}
 
-TiDB [v4.0.0-ベータ版](/releases/release-4.0.0-beta.md#tidb)以降、TiDBはReadCommitted分離レベルをサポートしています。
+Starting from TiDB v4.0.0-beta, TiDB supports the Read Committed isolation level.
 
-歴史的な理由から、現在の主流データベースの読み取りコミット分離レベルは基本的に[Oracleによって定義された一貫性のある読み取り分離レベル](https://docs.oracle.com/cd/B19306_01/server.102/b14220/consist.htm)です。この状況に適応するために、TiDBペシミスティックトランザクションの読み取りコミット分離レベルも、本質的に一貫した読み取り動作です。
+For historical reasons, the Read Committed isolation level of current mainstream databases is essentially the [Consistent Read isolation level defined by Oracle](https://docs.oracle.com/cd/B19306_01/server.102/b14220/consist.htm). In order to adapt to this situation, the Read Committed isolation level in TiDB pessimistic transactions is also a consistent read behavior in essence.
 
-> **ノート：**
+> **Note:**
 >
-> 読み取りコミット分離レベルは、 [悲観的なトランザクションモード](/pessimistic-transaction.md)でのみ有効です。 [楽観的なトランザクションモード](/optimistic-transaction.md)では、トランザクション分離レベルを`Read Committed`に設定しても有効にならず、トランザクションは引き続き繰り返し可能読み取り分離レベルを使用します。
+> The Read Committed isolation level only takes effect in the [pessimistic transaction mode](/pessimistic-transaction.md). In the [optimistic transaction mode](/optimistic-transaction.md), setting the transaction isolation level to `Read Committed` does not take effect and transactions still use the Repeatable Read isolation level.
 
-## TiDBとMySQLReadCommittedの違い {#difference-between-tidb-and-mysql-read-committed}
+## Difference between TiDB and MySQL Read Committed {#difference-between-tidb-and-mysql-read-committed}
 
-MySQL Read Committed分離レベルは、ほとんどの場合、一貫性のある読み取り機能と一致しています。 [半一貫性のある読み取り](https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html)などの例外もあります。この特別な動作は、TiDBではサポートされていません。
+The MySQL Read Committed isolation level is in line with the Consistent Read features in most cases. There are also exceptions, such as [semi-consistent read](https://dev.mysql.com/doc/refman/8.0/en/innodb-transaction-isolation-levels.html). This special behavior is not supported in TiDB.

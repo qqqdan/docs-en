@@ -3,21 +3,21 @@ title: SHOW ENGINES | TiDB SQL Statement Reference
 summary: An overview of the usage of SHOW ENGINES for the TiDB database.
 ---
 
-# エンジンを表示 {#show-engines}
+# SHOW ENGINES {#show-engines}
 
-このステートメントは、サポートされているすべてのストレージエンジンを一覧表示するために使用されます。構文は、MySQLとの互換性のためにのみ含まれています。
+This statement is used to list all supported storage engines. The syntax is included only for compatibility with MySQL.
 
-## あらすじ {#synopsis}
+## Synopsis {#synopsis}
 
-**ShowEnginesStmt：**
+**ShowEnginesStmt:**
 
 ![ShowEnginesStmt](/media/sqlgram/ShowEnginesStmt.png)
 
 ```sql
-SHOW ENGINES
+SHOW ENGINES;
 ```
 
-## 例 {#examples}
+## Examples {#examples}
 
 ```sql
 mysql> SHOW ENGINES;
@@ -29,6 +29,6 @@ mysql> SHOW ENGINES;
 1 row in set (0.00 sec)
 ```
 
-## MySQLの互換性 {#mysql-compatibility}
+## MySQL compatibility {#mysql-compatibility}
 
--   このステートメントは、サポートされているエンジンとして常にInnoDBのみを返します。内部的には、TiDBは通常TiKVをストレージエンジンとして使用します。
+-   This statement will always only return InnoDB as the supported engine. Internally, TiDB will typically use TiKV as the storage engine.
