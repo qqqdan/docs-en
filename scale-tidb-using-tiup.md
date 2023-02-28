@@ -1,43 +1,43 @@
 ---
-title: Scale the TiDB Cluster Using TiUP
+title: Scale a TiDB Cluster Using TiUP
 summary: Learn how to scale the TiDB cluster using TiUP.
 ---
 
-# TiUPを使用してTiDBクラスターをスケーリングする {#scale-the-tidb-cluster-using-tiup}
+# Scale a TiDB Cluster Using TiUP {#scale-a-tidb-cluster-using-tiup}
 
-TiDBクラスタの容量は、オンラインサービスを中断することなく増減できます。
+The capacity of a TiDB cluster can be increased or decreased without interrupting the online services.
 
-このドキュメントでは、TiUPを使用してTiDB、TiKV、PD、TiCDC、またはTiFlashクラスタをスケーリングする方法について説明します。 TiUPをインストールしていない場合は、 [制御マシンにTiUPをインストールします](/production-deployment-using-tiup.md#step-2-install-tiup-on-the-control-machine)の手順を参照してください。
+This document describes how to scale the TiDB, TiKV, PD, TiCDC, or TiFlash cluster using TiUP. If you have not installed TiUP, refer to the steps in [Step 2. Deploy TiUP on the control machine](/production-deployment-using-tiup.md#step-2-deploy-tiup-on-the-control-machine).
 
-現在のクラスタ名リストを表示するには、 `tiup cluster list`を実行します。
+To view the current cluster name list, run `tiup cluster list`.
 
-たとえば、クラスタの元のトポロジが次の場合です。
+For example, if the original topology of the cluster is as follows:
 
-| ホストIP    | サービス           |
+| Host IP  | Service        |
 | :------- | :------------- |
 | 10.0.1.3 | TiDB + TiFlash |
 | 10.0.1.4 | TiDB + PD      |
-| 10.0.1.5 | TiKV+モニター      |
+| 10.0.1.5 | TiKV + Monitor |
 | 10.0.1.1 | TiKV           |
 | 10.0.1.2 | TiKV           |
 
-## TiDB / PD/TiKVクラスタをスケールアウトする {#scale-out-a-tidb-pd-tikv-cluster}
+## Scale out a TiDB/PD/TiKV cluster {#scale-out-a-tidb-pd-tikv-cluster}
 
-`10.0.1.5`のホストにTiDBノードを追加する場合は、次の手順を実行します。
+This section exemplifies how to add a TiDB node to the `10.0.1.5` host.
 
-> **ノート：**
+> **Note:**
 >
-> 同様の手順でPDノードを追加できます。 TiKVノードを追加する前に、クラスタの負荷に応じてPDスケジューリングパラメーターを事前に調整することをお勧めします。
+> You can take similar steps to add a PD node. Before you add a TiKV node, it is recommended that you adjust the PD scheduling parameters in advance according to the cluster load.
 
-1.  スケールアウトトポロジを構成します。
+1.  Configure the scale-out topology:
 
-    > **ノート：**
+    > **Note:**
     >
-    > -   デフォルトでは、ポートとディレクトリの情報は必要ありません。
-    > -   1台のマシンに複数のインスタンスがデプロイされている場合は、それらに異なるポートとディレクトリを割り当てる必要があります。ポートまたはディレクトリに競合がある場合は、展開またはスケーリング中に通知を受け取ります。
-    > -   TiUP v1.0.0以降、スケールアウト構成は元のクラスタのグローバル構成を継承します。
+    > -   The port and directory information is not required by default.
+    > -   If multiple instances are deployed on a single machine, you need to allocate different ports and directories for them. If the ports or directories have conflicts, you will receive a notification during deployment or scaling.
+    > -   Since TiUP v1.0.0, the scale-out configuration inherits the global configuration of the original cluster.
 
-    `scale-out.yaml`のファイルにスケールアウトトポロジ構成を追加します。
+    Add the scale-out topology configuration in the `scale-out.yaml` file:
 
     {{< copyable "" >}}
 
@@ -57,7 +57,7 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
       log_dir: /data/deploy/install/log/tidb-4000
     ```
 
-    TiKV構成ファイルテンプレートは次のとおりです。
+    Here is a TiKV configuration file template:
 
     {{< copyable "" >}}
 
@@ -72,7 +72,7 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
       log_dir: /data/deploy/install/log/tikv-20160
     ```
 
-    PD構成ファイルテンプレートは次のとおりです。
+    Here is a PD configuration file template:
 
     {{< copyable "" >}}
 
@@ -88,33 +88,45 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
       log_dir: /data/deploy/install/log/pd-2379
     ```
 
-    現在のクラスタの構成を表示するには、 `tiup cluster edit-config <cluster-name>`を実行します。 `global`と`server_configs`のパラメータ設定は`scale-out.yaml`に継承され、 `scale-out.yaml`でも有効になるためです。
+    To view the configuration of the current cluster, run `tiup cluster edit-config <cluster-name>`. Because the parameter configuration of `global` and `server_configs` is inherited by `scale-out.yaml` and thus also takes effect in `scale-out.yaml`.
 
-    構成後、クラスタの現在のトポロジーは次のようになります。
+2.  Run the scale-out command:
 
-    | ホストIP    | サービス                |
-    | :------- | :------------------ |
-    | 10.0.1.3 | TiDB + TiFlash      |
-    | 10.0.1.4 | TiDB + PD           |
-    | 10.0.1.5 | **TiDB** +TiKV+モニター |
-    | 10.0.1.1 | TiKV                |
-    | 10.0.1.2 | TiKV                |
+    Before you run the `scale-out` command, use the `check` and `check --apply` commands to detect and automatically repair potential risks in the cluster:
 
-2.  scale-outコマンドを実行します。
+    1.  Check for potential risks:
 
-    {{< copyable "" >}}
+        {{< copyable "" >}}
 
-    ```shell
-    tiup cluster scale-out <cluster-name> scale-out.yaml
-    ```
+        ```shell
+        tiup cluster check <cluster-name> scale-out.yaml --cluster --user root [-p] [-i /home/root/.ssh/gcp_rsa]
+        ```
 
-    > **ノート：**
-    >
-    > 上記のコマンドは、ユーザーがコマンドと新しいマシンを実行するための相互信頼が構成されていることを前提としています。相互信頼を設定できない場合は、 `-p`オプションを使用して新しいマシンのパスワードを入力するか、 `-i`オプションを使用して秘密鍵ファイルを指定します。
+    2.  Enable automatic repair:
 
-    `Scaled cluster <cluster-name> out successfully`が表示されている場合、スケールアウト操作は正常に完了しています。
+        {{< copyable "" >}}
 
-3.  クラスタのステータスを確認します。
+        ```shell
+        tiup cluster check <cluster-name> scale-out.yaml --cluster --apply --user root [-p] [-i /home/root/.ssh/gcp_rsa]
+        ```
+
+    3.  Run the `scale-out` command:
+
+        {{< copyable "" >}}
+
+        ```shell
+        tiup cluster scale-out <cluster-name> scale-out.yaml [-p] [-i /home/root/.ssh/gcp_rsa]
+        ```
+
+    In the preceding commands:
+
+    -   `scale-out.yaml` is the scale-out configuration file.
+    -   `--user root` indicates logging in to the target machine as the `root` user to complete the cluster scale out. The `root` user is expected to have `ssh` and `sudo` privileges to the target machine. Alternatively, you can use other users with `ssh` and `sudo` privileges to complete the deployment.
+    -   `[-i]` and `[-p]` are optional. If you have configured login to the target machine without password, these parameters are not required. If not, choose one of the two parameters. `[-i]` is the private key of the root user (or other users specified by `--user`) that has access to the target machine. `[-p]` is used to input the user password interactively.
+
+    If you see `Scaled cluster <cluster-name> out successfully`, the scale-out operation succeeds.
+
+3.  Check the cluster status:
 
     {{< copyable "" >}}
 
@@ -122,43 +134,43 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster display <cluster-name>
     ```
 
-    ブラウザを使用して監視プラットフォーム[http://10.0.1.5:3000](http://10.0.1.5:3000)にアクセスし、クラスタと新しいノードのステータスを監視します。
+    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser to monitor the status of the cluster and the new node.
 
-スケールアウト後のクラスタトポロジは次のとおりです。
+After the scale-out, the cluster topology is as follows:
 
-| ホストIP    | サービス                |
-| :------- | :------------------ |
-| 10.0.1.3 | TiDB + TiFlash      |
-| 10.0.1.4 | TiDB + PD           |
-| 10.0.1.5 | **TiDB** +TiKV+モニター |
-| 10.0.1.1 | TiKV                |
-| 10.0.1.2 | TiKV                |
+| Host IP  | Service                   |
+| :------- | :------------------------ |
+| 10.0.1.3 | TiDB + TiFlash            |
+| 10.0.1.4 | TiDB + PD                 |
+| 10.0.1.5 | **TiDB** + TiKV + Monitor |
+| 10.0.1.1 | TiKV                      |
+| 10.0.1.2 | TiKV                      |
 
-## TiFlashクラスタをスケールアウトする {#scale-out-a-tiflash-cluster}
+## Scale out a TiFlash cluster {#scale-out-a-tiflash-cluster}
 
-`10.0.1.4`のホストにTiFlashノードを追加する場合は、次の手順を実行します。
+This section exemplifies how to add a TiFlash node to the `10.0.1.4` host.
 
-> **ノート：**
+> **Note:**
 >
-> TiFlashノードを既存のTiDBクラスタに追加するときは、次の点に注意する必要があります。
+> When adding a TiFlash node to an existing TiDB cluster, note the following:
 >
-> 1.  現在のTiDBバージョンがTiFlashの使用をサポートしていることを確認します。それ以外の場合は、TiDBクラスタをv5.0以降のバージョンにアップグレードします。
-> 2.  `tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> config set enable-placement-rules true`コマンドを実行して、配置ルール機能を有効にします。または、 [pd-ctl](/pd-control.md)で対応するコマンドを実行します。
+> -   Confirm that the current TiDB version supports using TiFlash. Otherwise, upgrade your TiDB cluster to v5.0 or later versions.
+> -   Run the `tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> config set enable-placement-rules true` command to enable the Placement Rules feature. Or run the corresponding command in [pd-ctl](/pd-control.md).
 
-1.  ノード情報を`scale-out.yaml`のファイルに追加します。
+1.  Add the node information to the `scale-out.yaml` file:
 
-    `scale-out.yaml`のファイルを作成して、TiFlashノード情報を追加します。
+    Create the `scale-out.yaml` file to add the TiFlash node information.
 
     {{< copyable "" >}}
 
     ```ini
     tiflash_servers:
-      - host: 10.0.1.4
+    - host: 10.0.1.4
     ```
 
-    現在、IPのみを追加できますが、ドメイン名は追加できません。
+    Currently, you can only add IP addresses but not domain names.
 
-2.  scale-outコマンドを実行します。
+2.  Run the scale-out command:
 
     {{< copyable "" >}}
 
@@ -166,11 +178,11 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster scale-out <cluster-name> scale-out.yaml
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > 上記のコマンドは、ユーザーがコマンドと新しいマシンを実行するための相互信頼が構成されていることを前提としています。相互信頼を設定できない場合は、 `-p`オプションを使用して新しいマシンのパスワードを入力するか、 `-i`オプションを使用して秘密鍵ファイルを指定します。
+    > The preceding command is based on the assumption that the mutual trust has been configured for the user to run the command and the new machine. If the mutual trust cannot be configured, use the `-p` option to enter the password of the new machine, or use the `-i` option to specify the private key file.
 
-3.  クラスタステータスを表示します。
+3.  View the cluster status:
 
     {{< copyable "" >}}
 
@@ -178,25 +190,25 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster display <cluster-name>
     ```
 
-    ブラウザを使用して[http://10.0.1.5:3000](http://10.0.1.5:3000)の監視プラットフォームにアクセスし、クラスタと新しいノードのステータスを表示します。
+    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new node.
 
-スケールアウト後のクラスタトポロジは次のとおりです。
+After the scale-out, the cluster topology is as follows:
 
-| ホストIP    | サービス                    |
+| Host IP  | Service                 |
 | :------- | :---------------------- |
 | 10.0.1.3 | TiDB + TiFlash          |
 | 10.0.1.4 | TiDB + PD + **TiFlash** |
-| 10.0.1.5 | TiDB +TiKV+モニター         |
+| 10.0.1.5 | TiDB+ TiKV + Monitor    |
 | 10.0.1.1 | TiKV                    |
 | 10.0.1.2 | TiKV                    |
 
-## TiCDCクラスタをスケールアウトする {#scale-out-a-ticdc-cluster}
+## Scale out a TiCDC cluster {#scale-out-a-ticdc-cluster}
 
-`10.0.1.3`つおよび`10.0.1.4`のホストに2つのTiCDCノードを追加する場合は、次の手順を実行します。
+This section exemplifies how to add two TiCDC nodes to the `10.0.1.3` and `10.0.1.4` hosts.
 
-1.  ノード情報を`scale-out.yaml`のファイルに追加します。
+1.  Add the node information to the `scale-out.yaml` file:
 
-    `scale-out.yaml`のファイルを作成して、TiCDCノード情報を追加します。
+    Create the `scale-out.yaml` file to add the TiCDC node information.
 
     {{< copyable "" >}}
 
@@ -210,7 +222,7 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
         data_dir: /data/deploy/install/data/cdc-8300
     ```
 
-2.  scale-outコマンドを実行します。
+2.  Run the scale-out command:
 
     {{< copyable "" >}}
 
@@ -218,11 +230,11 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster scale-out <cluster-name> scale-out.yaml
     ```
 
-    > **ノート：**
+    > **Note:**
     >
-    > 上記のコマンドは、ユーザーがコマンドと新しいマシンを実行するための相互信頼が構成されていることを前提としています。相互信頼を設定できない場合は、 `-p`オプションを使用して新しいマシンのパスワードを入力するか、 `-i`オプションを使用して秘密鍵ファイルを指定します。
+    > The preceding command is based on the assumption that the mutual trust has been configured for the user to run the command and the new machine. If the mutual trust cannot be configured, use the `-p` option to enter the password of the new machine, or use the `-i` option to specify the private key file.
 
-3.  クラスタステータスを表示します。
+3.  View the cluster status:
 
     {{< copyable "" >}}
 
@@ -230,32 +242,29 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster display <cluster-name>
     ```
 
-    ブラウザを使用して[http://10.0.1.5:3000](http://10.0.1.5:3000)の監視プラットフォームにアクセスし、クラスタと新しいノードのステータスを表示します。
+    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new nodes.
 
-スケールアウト後のクラスタトポロジは次のとおりです。
+After the scale-out, the cluster topology is as follows:
 
-| ホストIP    | サービス                            |
+| Host IP  | Service                         |
 | :------- | :------------------------------ |
 | 10.0.1.3 | TiDB + TiFlash + **TiCDC**      |
 | 10.0.1.4 | TiDB + PD + TiFlash + **TiCDC** |
-| 10.0.1.5 | TiDB +TiKV+モニター                 |
+| 10.0.1.5 | TiDB+ TiKV + Monitor            |
 | 10.0.1.1 | TiKV                            |
 | 10.0.1.2 | TiKV                            |
 
-## TiDB / PD/TiKVクラスタでのスケーリング {#scale-in-a-tidb-pd-tikv-cluster}
+## Scale in a TiDB/PD/TiKV cluster {#scale-in-a-tidb-pd-tikv-cluster}
 
-`10.0.1.5`のホストからTiKVノードを削除する場合は、次の手順を実行します。
+This section exemplifies how to remove a TiKV node from the `10.0.1.5` host.
 
-> **ノート：**
+> **Note:**
 >
-> -   同様の手順を実行して、TiDBおよびPDノードを削除できます。
-> -   TiKV、TiFlash、およびTiDB Binlogコンポーネントは非同期でオフラインになり、停止プロセスに時間がかかるため、TiUPはさまざまな方法でそれらをオフラインにします。詳細については、 [コンポーネントのオフラインプロセスの特定の処理](/tiup/tiup-component-cluster-scale-in.md#particular-handling-of-components-offline-process)を参照してください。
+> -   You can take similar steps to remove a TiDB or PD node.
+> -   Because the TiKV, TiFlash, and TiDB Binlog components are taken offline asynchronously and the stopping process takes a long time, TiUP takes them offline in different methods. For details, see [Particular handling of components' offline process](/tiup/tiup-component-cluster-scale-in.md#particular-handling-of-components-offline-process).
+> -   The PD Client in TiKV caches the list of PD nodes. The current version of TiKV has a mechanism to automatically and regularly update PD nodes, which can help mitigate the issue of an expired list of PD nodes cached by TiKV. However, after scaling out PD, you should try to avoid directly removing all PD nodes at once that exist before the scaling. If necessary, before making all the previously existing PD nodes offline, make sure to switch the PD leader to a newly added PD node.
 
-> **ノート：**
->
-> TiKVのPDクライアントは、PDノードのリストをキャッシュします。 TiKVの現在のバージョンには、PDノードを自動的かつ定期的に更新するメカニズムがあり、TiKVによってキャッシュされたPDノードの期限切れリストの問題を軽減するのに役立ちます。ただし、PDをスケールアウトした後は、スケールアウトの前に存在するすべてのPDノードを一度に直接削除しないようにする必要があります。必要に応じて、既存のすべてのPDノードをオフラインにする前に、PDリーダーを新しく追加されたPDノードに切り替えてください。
-
-1.  ノードID情報を表示します。
+1.  View the node ID information:
 
     {{< copyable "" >}}
 
@@ -266,7 +275,7 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     ```
     Starting /root/.tiup/components/cluster/v1.10.0/cluster display <cluster-name>
     TiDB Cluster: <cluster-name>
-    TiDB Version: v6.1.0
+    TiDB Version: v6.1.5
     ID              Role         Host        Ports                            Status  Data Dir                Deploy Dir
     --              ----         ----        -----                            ------  --------                ----------
     10.0.1.3:8300   cdc          10.0.1.3    8300                             Up      data/cdc-8300           deploy/cdc-8300
@@ -285,7 +294,7 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     10.0.1.5:9093   alertmanager 10.0.1.5    9093/9294                        Up      data/alertmanager-9093  deploy/alertmanager-9093
     ```
 
-2.  スケールインコマンドを実行します。
+2.  Run the scale-in command:
 
     {{< copyable "" >}}
 
@@ -293,15 +302,13 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster scale-in <cluster-name> --node 10.0.1.5:20160
     ```
 
-    `--node`パラメーターは、オフラインにするノードのIDです。
+    The `--node` parameter is the ID of the node to be taken offline.
 
-    `Scaled cluster <cluster-name> in successfully`が表示されている場合、スケールイン操作は正常に完了しています。
+    If you see `Scaled cluster <cluster-name> in successfully`, the scale-in operation succeeds.
 
-3.  クラスタのステータスを確認します。
+3.  Check the cluster status:
 
-    スケールインプロセスには時間がかかります。スケールインするノードのステータスが`Tombstone`になった場合は、スケールイン操作が成功したことを意味します。
-
-    スケールインステータスを確認するには、次のコマンドを実行します。
+    The scale-in process takes some time. You can run the following command to check the scale-in status:
 
     {{< copyable "" >}}
 
@@ -309,43 +316,47 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster display <cluster-name>
     ```
 
-    ブラウザを使用して[http://10.0.1.5:3000](http://10.0.1.5:3000)の監視プラットフォームにアクセスし、クラスタのステータスを表示します。
+    If the node to be scaled in becomes `Tombstone`, the scale-in operation succeeds.
 
-現在のトポロジは次のとおりです。
+    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster.
 
-| ホストIP    | サービス                        |
-| :------- | :-------------------------- |
-| 10.0.1.3 | TiDB + TiFlash + TiCDC      |
-| 10.0.1.4 | TiDB + PD + TiFlash + TiCDC |
-| 10.0.1.5 | TiDB +モニター**（TiKVは削除されます）** |
-| 10.0.1.1 | TiKV                        |
-| 10.0.1.2 | TiKV                        |
+The current topology is as follows:
 
-## TiFlashクラスタでのスケーリング {#scale-in-a-tiflash-cluster}
+| Host IP  | Service                              |
+| :------- | :----------------------------------- |
+| 10.0.1.3 | TiDB + TiFlash + TiCDC               |
+| 10.0.1.4 | TiDB + PD + TiFlash + TiCDC          |
+| 10.0.1.5 | TiDB + Monitor **(TiKV is deleted)** |
+| 10.0.1.1 | TiKV                                 |
+| 10.0.1.2 | TiKV                                 |
 
-`10.0.1.4`のホストからTiFlashノードを削除する場合は、次の手順を実行します。
+## Scale in a TiFlash cluster {#scale-in-a-tiflash-cluster}
 
-### 1.残りのTiFlashノードの数に応じて、テーブルのレプリカの数を調整します {#1-adjust-the-number-of-replicas-of-the-tables-according-to-the-number-of-remaining-tiflash-nodes}
+This section exemplifies how to remove a TiFlash node from the `10.0.1.4` host.
 
-ノードがダウンする前に、TiFlashクラスタの残りのノードの数がすべてのテーブルのレプリカの最大数以上であることを確認してください。それ以外の場合は、関連するテーブルのTiFlashレプリカの数を変更します。
+### 1. Adjust the number of replicas of the tables according to the number of remaining TiFlash nodes {#1-adjust-the-number-of-replicas-of-the-tables-according-to-the-number-of-remaining-tiflash-nodes}
 
-1.  レプリカがクラスタの残りのTiFlashノードの数よりも大きいすべてのテーブルに対して、TiDBクライアントで次のコマンドを実行します。
-
-    {{< copyable "" >}}
+1.  Query whether any table has TiFlash replicas more than the number of TiFlash nodes after scale-in. `tobe_left_nodes` means the number of TiFlash nodes after scale-in. If the query result is empty, you can start scaling in TiFlash. If the query result is not empty, you need to modify the number of TiFlash replicas of the related table(s).
 
     ```sql
-    alter table <db-name>.<table-name> set tiflash replica 0;
+    SELECT * FROM information_schema.tiflash_replica WHERE REPLICA_COUNT >  'tobe_left_nodes';
     ```
 
-2.  関連するテーブルのTiFlashレプリカが削除されるのを待ちます。 [テーブルのレプリケーションの進行状況を確認します](/tiflash/use-tiflash.md#check-replication-progress)であり、関連するテーブルのレプリケーション情報が見つからない場合、レプリカは削除されます。
+2.  Execute the following statement for all tables with TiFlash replicas more than the number of TiFlash nodes after scale-in. `new_replica_num` must be less than or equal to `tobe_left_nodes`:
 
-### 2.スケールイン操作を実行します {#2-perform-the-scale-in-operation}
+    ```sql
+    ALTER TABLE <db-name>.<table-name> SET tiflash replica 'new_replica_num';
+    ```
 
-次に、次のいずれかの解決策を使用してスケールイン操作を実行します。
+3.  Perform step 1 again and make sure that there is no table with TiFlash replicas more than the number of TiFlash nodes after scale-in.
 
-#### 解決策1：TiUPを使用してTiFlashノードを削除する {#solution-1-use-tiup-to-remove-a-tiflash-node}
+### 2. Perform the scale-in operation {#2-perform-the-scale-in-operation}
 
-1.  まず、削除するノードの名前を確認します。
+Perform the scale-in operation with one of the following solutions.
+
+#### Solution 1. Use TiUP to remove a TiFlash node {#solution-1-use-tiup-to-remove-a-tiflash-node}
+
+1.  Confirm the name of the node to be taken down:
 
     {{< copyable "" >}}
 
@@ -353,7 +364,7 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster display <cluster-name>
     ```
 
-2.  TiFlashノードを削除します（ステップ1のノード名が`10.0.1.4:9000`であると想定します）。
+2.  Remove the TiFlash node (assume that the node name is `10.0.1.4:9000` from Step 1):
 
     {{< copyable "" >}}
 
@@ -361,31 +372,31 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
     tiup cluster scale-in <cluster-name> --node 10.0.1.4:9000
     ```
 
-#### 解決策2：TiFlashノードを手動で削除する {#solution-2-manually-remove-a-tiflash-node}
+#### Solution 2. Manually remove a TiFlash node {#solution-2-manually-remove-a-tiflash-node}
 
-特別な場合（ノードを強制的に停止する必要がある場合など）、またはTiUPスケールイン操作が失敗した場合は、次の手順でTiFlashノードを手動で削除できます。
+In special cases (such as when a node needs to be forcibly taken down), or if the TiUP scale-in operation fails, you can manually remove a TiFlash node with the following steps.
 
-1.  pd-ctlのstoreコマンドを使用して、このTiFlashノードに対応するストアIDを表示します。
+1.  Use the store command of pd-ctl to view the store ID corresponding to this TiFlash node.
 
-    -   [pd-ctl](/pd-control.md)にstoreコマンドを入力します（バイナリファイルはtidb-ansibleディレクトリの`resources/bin`未満です）。
+    -   Enter the store command in [pd-ctl](/pd-control.md) (the binary file is under `resources/bin` in the tidb-ansible directory).
 
-    -   TiUPデプロイメントを使用する場合は、 `pd-ctl`を`tiup ctl pd`に置き換えます。
+    -   If you use TiUP deployment, replace `pd-ctl` with `tiup ctl:<cluster-version> pd`:
 
-        {{< copyable "" >}}
+    {{< copyable "" >}}
 
-        ```shell
-        tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> store
-        ```
+    ```shell
+    tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> store
+    ```
 
-        > **ノート：**
-        >
-        > クラスタに複数のPDインスタンスが存在する場合は、上記のコマンドでアクティブなPDインスタンスのIPアドレス：ポートを指定するだけで済みます。
+    > **Note:**
+    >
+    > If multiple PD instances exist in the cluster, you only need to specify the IP address:port of an active PD instance in the above command.
 
-2.  pd-ctlでTiFlashノードを削除します。
+2.  Remove the TiFlash node in pd-ctl:
 
-    -   pd-ctlに`store delete <store_id>`を入力します（ `<store_id>`は、前の手順で見つかったTiFlashノードのストアIDです。
+    -   Enter `store delete <store_id>` in pd-ctl (`<store_id>` is the store ID of the TiFlash node found in the previous step.
 
-    -   TiUPデプロイメントを使用する場合は、 `pd-ctl`を`tiup ctl pd`に置き換えます。
+    -   If you use TiUP deployment, replace `pd-ctl` with `tiup ctl:<cluster-version> pd`:
 
         {{< copyable "" >}}
 
@@ -393,29 +404,29 @@ TiDBクラスタの容量は、オンラインサービスを中断すること�
         tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> store delete <store_id>
         ```
 
-        > **ノート：**
-        >
-        > クラスタに複数のPDインスタンスが存在する場合は、上記のコマンドでアクティブなPDインスタンスのIPアドレス：ポートを指定するだけで済みます。
+    > **Note:**
+    >
+    > If multiple PD instances exist in the cluster, you only need to specify the IP address:port of an active PD instance in the above command.
 
-3.  TiFlashプロセスを停止する前に、TiFlashノードのストアが消えるのを待つか、 `state_name`が`Tombstone`になるのを待ちます。
+3.  Wait for the store of the TiFlash node to disappear or for the `state_name` to become `Tombstone` before you stop the TiFlash process.
 
-4.  TiFlashデータファイルを手動で削除します（その場所は、クラスタトポロジファイルのTiFlash構成の下の`data_dir`ディレクトリにあります）。
+4.  Manually delete TiFlash data files (the location can be found in the `data_dir` directory under the TiFlash configuration of the cluster topology file).
 
-5.  TiUPのクラスタ構成ファイルを手動で更新します（編集モードでダウンするTiFlashノードの情報を削除します）。
+5.  Delete information about the TiFlash node that goes down from the cluster topology using the following command:
 
     {{< copyable "" >}}
 
     ```shell
-    tiup cluster edit-config <cluster-name>
+    tiup cluster scale-in <cluster-name> --node <pd_ip>:<pd_port> --force
     ```
 
-> **ノート：**
+> **Note:**
 >
-> クラスタのすべてのTiFlashノードの実行を停止する前に、TiFlashにレプリケートされたすべてのテーブルがキャンセルされない場合は、PDのレプリケーションルールを手動でクリーンアップする必要があります。そうしないと、TiFlashノードを正常に停止できません。
+> Before all TiFlash nodes in the cluster stop running, if not all tables replicated to TiFlash are canceled, you need to manually clean up the replication rules in PD, or the TiFlash node cannot be taken down successfully.
 
-PDのレプリケーションルールを手動でクリーンアップする手順は次のとおりです。
+The steps to manually clean up the replication rules in PD are below:
 
-1.  現在のPDインスタンスのTiFlashに関連するすべてのデータレプリケーションルールを表示します。
+1.  View all data replication rules related to TiFlash in the current PD instance:
 
     {{< copyable "" >}}
 
@@ -446,7 +457,7 @@ PDのレプリケーションルールを手動でクリーンアップする手
     ]
     ```
 
-2.  TiFlashに関連するすべてのデータ複製ルールを削除します。例として、 `id`が`table-45-r`であるルールを取り上げます。次のコマンドで削除します。
+2.  Remove all data replication rules related to TiFlash. Take the rule whose `id` is `table-45-r` as an example. Delete it by the following command:
 
     {{< copyable "" >}}
 
@@ -454,19 +465,7 @@ PDのレプリケーションルールを手動でクリーンアップする手
     curl -v -X DELETE http://<pd_ip>:<pd_port>/pd/api/v1/config/rule/tiflash/table-45-r
     ```
 
-## TiCDCクラスタでのスケーリング {#scale-in-a-ticdc-cluster}
-
-`10.0.1.4`のホストからTiCDCノードを削除する場合は、次の手順を実行します。
-
-1.  ノードをオフラインにします。
-
-    {{< copyable "" >}}
-
-    ```shell
-    tiup cluster scale-in <cluster-name> --node 10.0.1.4:8300
-    ```
-
-2.  クラスタステータスを表示します。
+3.  View the cluster status:
 
     {{< copyable "" >}}
 
@@ -474,14 +473,46 @@ PDのレプリケーションルールを手動でクリーンアップする手
     tiup cluster display <cluster-name>
     ```
 
-    ブラウザを使用して[http://10.0.1.5:3000](http://10.0.1.5:3000)の監視プラットフォームにアクセスし、クラスタのステータスを表示します。
+    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new nodes.
 
-現在のトポロジは次のとおりです。
+After the scale-out, the cluster topology is as follows:
 
-| ホストIP    | サービス                           |
-| :------- | :----------------------------- |
-| 10.0.1.3 | TiDB + TiFlash + TiCDC         |
-| 10.0.1.4 | TiDB + PD + **（TiCDCは削除されます）** |
-| 10.0.1.5 | TiDB+モニター                      |
-| 10.0.1.1 | TiKV                           |
-| 10.0.1.2 | TiKV                           |
+| Host IP  | Service                                    |
+| :------- | :----------------------------------------- |
+| 10.0.1.3 | TiDB + TiFlash + TiCDC                     |
+| 10.0.1.4 | TiDB + PD + TiCDC **(TiFlash is deleted)** |
+| 10.0.1.5 | TiDB+ Monitor                              |
+| 10.0.1.1 | TiKV                                       |
+| 10.0.1.2 | TiKV                                       |
+
+## Scale in a TiCDC cluster {#scale-in-a-ticdc-cluster}
+
+This section exemplifies how to remove the TiCDC node from the `10.0.1.4` host.
+
+1.  Take the node offline:
+
+    {{< copyable "" >}}
+
+    ```shell
+    tiup cluster scale-in <cluster-name> --node 10.0.1.4:8300
+    ```
+
+2.  View the cluster status:
+
+    {{< copyable "" >}}
+
+    ```shell
+    tiup cluster display <cluster-name>
+    ```
+
+    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster.
+
+The current topology is as follows:
+
+| Host IP  | Service                            |
+| :------- | :--------------------------------- |
+| 10.0.1.3 | TiDB + TiFlash + TiCDC             |
+| 10.0.1.4 | TiDB + PD + **(TiCDC is deleted）** |
+| 10.0.1.5 | TiDB + Monitor                     |
+| 10.0.1.1 | TiKV                               |
+| 10.0.1.2 | TiKV                               |

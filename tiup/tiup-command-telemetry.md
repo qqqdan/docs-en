@@ -4,53 +4,49 @@ title: tiup telemetry
 
 # tiup telemetry {#tiup-telemetry}
 
-TiDB、TiUP、およびTiDBダッシュボードは、デフォルトで使用状況情報を収集し、その情報をPingCAPと共有して、製品を改善します。たとえば、この使用法情報を通じて、PingCAPは一般的なTiDBクラスタ操作について学習し、それによって新機能の優先順位を決定します。
+Starting from v1.11.3, the telemetry is disabled by default in newly deployed TiUP, and usage information is not collected and shared with PingCAP. In versions earlier than v1.11.3, the telemetry is enabled by default in TiUP, and usage information is collected and shared with PingCAP to improve the product.
 
-TiUPテレメトリが有効になっている場合、TiUPコマンドが実行されると、使用情報がPingCAPと共有されます。
+When TiUP telemetry is enabled, usage information is shared with PingCAP when TiUP commands are executed, including (but not limited to):
 
--   ランダムに生成されたテレメトリ識別子。
--   コマンドの実行が成功したかどうかやコマンドの実行時間など、TiUPコマンドの実行ステータス。
--   ターゲットマシンのハードウェア情報、コンポーネントのバージョン番号、変更された展開構成名など、展開にTiUPを使用している状況。
+-   Randomly generated telemetry identifiers.
+-   The execution status of the TiUP command, such as whether the command execution is successful and the duration of command execution.
+-   Situations using TiUP for deployment, such as target machine hardware information, component version number, and modified deployment configuration name.
 
-以下の情報は共有されていません。
+The information below is not shared:
 
--   クラスタの正確な名前
--   クラスタトポロジー
--   クラスタ構成ファイル
+-   The accurate name of the cluster
+-   The cluster topology
+-   The cluster configuration file
 
-TiUPは、 `tiup telemetry`コマンドを使用してテレメトリを制御します。
+TiUP uses the `tiup telemetry` command to control telemetry.
 
-> **ノート：**
->
-> この機能はデフォルトで有効になっています。
-
-## 構文 {#syntax}
+## Syntax {#syntax}
 
 ```shell
 tiup telemetry <command>
 ```
 
-`<command>`はサブコマンドを表します。サポートされているサブコマンドのリストについては、以下のコマンドセクションを参照してください。
+`<command>` stands for sub-commands. For the list of supported sub-commands, refer to the commands section below.
 
-## コマンド {#commands}
+## Commands {#commands}
 
-### 状態 {#status}
+### status {#status}
 
-`tiup telemetry status`コマンドは、現在のテレメトリ設定を表示し、次の情報を出力するために使用されます。
+The `tiup telemetry status` command is used to view the current telemetry settings and output the following information:
 
--   `status` ：テレメトリ`(enable|disable)`の有効化または無効化を指定します。
--   `uuid` ：ランダムに生成されたテレメトリ識別子を指定します。
+-   `status`: specifies enabling or disabling the telemetry `(enable|disable)`.
+-   `uuid`: specifies the randomly generated telemetry identifiers.
 
-### リセット {#reset}
+### reset {#reset}
 
-`tiup telemetry reset`コマンドは、現在のテレメトリIDをリセットし、新しいランダムIDに置き換えるために使用されます。
+The `tiup telemetry reset` command is used to reset the current telemetry identifier and replaces it with a new random identifier.
 
-### 有効 {#enable}
+### enable {#enable}
 
-`tiup telemetry enable`コマンドは、テレメトリを有効にするために使用されます。
+The `tiup telemetry enable` command is used to enable the telemetry.
 
-### 無効にする {#disable}
+### disable {#disable}
 
-`tiup telemetry disable`コマンドは、テレメトリを無効にするために使用されます。
+The `tiup telemetry disable` command is used to disable the telemetry.
 
-[&lt;&lt;前のページに戻る-TiUPリファレンスコマンドリスト](/tiup/tiup-reference.md#command-list)
+[&#x3C;&#x3C; Back to the previous page - TiUP Reference command list](/tiup/tiup-reference.md#command-list)

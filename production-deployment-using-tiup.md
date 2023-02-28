@@ -3,32 +3,28 @@ title: Deploy a TiDB Cluster Using TiUP
 summary: Learn how to easily deploy a TiDB cluster using TiUP.
 ---
 
-# TiUPを使用してTiDBクラスターをデプロイする {#deploy-a-tidb-cluster-using-tiup}
+# Deploy a TiDB Cluster Using TiUP {#deploy-a-tidb-cluster-using-tiup}
 
-[TiUP](https://github.com/pingcap/tiup)は、TiDB4.0で導入されたクラスタの運用および保守ツールです。 TiUPは、Golangで記述されたクラスタ管理コンポーネントである[TiUPクラスタ](https://github.com/pingcap/tiup/tree/master/components/cluster)を提供します。 TiUPクラスタを使用すると、TiDBクラスターのデプロイ、開始、停止、破棄、スケーリング、アップグレードなどの日常的なデータベース操作を簡単に実行し、TiDBクラスタパラメーターを管理できクラスタ。
+[TiUP](https://github.com/pingcap/tiup) is a cluster operation and maintenance tool introduced in TiDB 4.0. TiUP provides [TiUP cluster](https://github.com/pingcap/tiup/tree/master/components/cluster), a cluster management component written in Golang. By using TiUP cluster, you can easily perform daily database operations, including deploying, starting, stopping, destroying, scaling, and upgrading a TiDB cluster, and manage TiDB cluster parameters.
 
-TiUPは、TiDB、TiFlash、TiDB Binlog、TiCDC、および監視システムの展開をサポートします。このドキュメントでは、さまざまなトポロジのTiDBクラスターを展開する方法を紹介します。
+TiUP supports deploying TiDB, TiFlash, TiDB Binlog, TiCDC, and the monitoring system. This document introduces how to deploy TiDB clusters of different topologies.
 
-> **ノート：**
->
-> TiDB、TiUP、およびTiDBダッシュボードは、使用法の詳細をPingCAPと共有して、製品を改善する方法を理解するのに役立ちます。共有される内容と共有を無効にする方法の詳細については、 [テレメトリー](/telemetry.md)を参照してください。
+## Step 1. Prerequisites and precheck {#step-1-prerequisites-and-precheck}
 
-## ステップ1：前提条件と事前チェック {#step-1-prerequisites-and-precheck}
+Make sure that you have read the following documents:
 
-次のドキュメントを読んだことを確認してください。
+-   [Hardware and software requirements](/hardware-and-software-requirements.md)
+-   [Environment and system configuration check](/check-before-deployment.md)
 
--   [ハードウェアとソフトウェアの要件](/hardware-and-software-requirements.md)
--   [環境とシステム構成のチェック](/check-before-deployment.md)
+## Step 2. Deploy TiUP on the control machine {#step-2-deploy-tiup-on-the-control-machine}
 
-## ステップ2：制御マシンにTiUPをインストールします {#step-2-install-tiup-on-the-control-machine}
+You can deploy TiUP on the control machine in either of the two ways: online deployment and offline deployment.
 
-TiUPは、オンライン展開とオフライン展開の2つの方法のいずれかで制御マシンにインストールできます。
+### Deploy TiUP online {#deploy-tiup-online}
 
-### 方法1：TiUPをオンラインでデプロイ {#method-1-deploy-tiup-online}
+Log in to the control machine using a regular user account (take the `tidb` user as an example). Subsequent TiUP installation and cluster management can be performed by the `tidb` user.
 
-通常のユーザーアカウントを使用してコントロールマシンにログインします（例として`tidb`人のユーザーを取り上げます）。以下のすべてのTiUPインストールおよびクラスタ管理操作は、 `tidb`のユーザーが実行できます。
-
-1.  次のコマンドを実行して、TiUPをインストールします。
+1.  Install TiUP by running the following command:
 
     {{< copyable "" >}}
 
@@ -36,69 +32,9 @@ TiUPは、オンライン展開とオフライン展開の2つの方法のいず
     curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
     ```
 
-2.  TiUP環境変数を設定します。
+2.  Set TiUP environment variables:
 
-    グローバル環境変数を再宣言します。
-
-    {{< copyable "" >}}
-
-    ```shell
-    source .bash_profile
-    ```
-
-    TiUPがインストールされているかどうかを確認します。
-
-    {{< copyable "" >}}
-
-    ```shell
-    which tiup
-    ```
-
-3.  TiUPクラスタコンポーネントをインストールします。
-
-    {{< copyable "" >}}
-
-    ```shell
-    tiup cluster
-    ```
-
-4.  TiUPがすでにインストールされている場合は、TiUPクラスタコンポーネントを最新バージョンに更新します。
-
-    {{< copyable "" >}}
-
-    ```shell
-    tiup update --self && tiup update cluster
-    ```
-
-    期待される出力には`“Update successfully!”`が含まれます。
-
-5.  TiUPクラスタの現在のバージョンを確認します。
-
-    {{< copyable "" >}}
-
-    ```shell
-    tiup --binary cluster
-    ```
-
-### 方法2：TiUPをオフラインでデプロイ {#method-2-deploy-tiup-offline}
-
-このセクションの次の手順を実行して、TiUPを使用してTiDBクラスタをオフラインでデプロイします。
-
-#### ステップ1：TiUPオフラインコンポーネントパッケージを準備する {#step-1-prepare-the-tiup-offline-component-package}
-
-TiUPオフラインコンポーネントパッケージを準備するには、 `tiup mirror clone`を使用してオフラインコンポーネントパッケージを手動でパックします。
-
-1.  TiUPパッケージマネージャーをオンラインでインストールします。
-
-    1.  TiUPツールをインストールします。
-
-        {{< copyable "" >}}
-
-        ```shell
-        curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
-        ```
-
-    2.  グローバル環境変数を再宣言します。
+    1.  Redeclare the global environment variables:
 
         {{< copyable "" >}}
 
@@ -106,7 +42,7 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         source .bash_profile
         ```
 
-    3.  TiUPがインストールされているかどうかを確認します。
+    2.  Confirm whether TiUP is installed:
 
         {{< copyable "" >}}
 
@@ -114,9 +50,71 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         which tiup
         ```
 
-2.  TiUPを使用してミラーを引きます。
+3.  Install the TiUP cluster component:
 
-    1.  インターネットにアクセスできるマシンで必要なコンポーネントをプルします。
+    {{< copyable "" >}}
+
+    ```shell
+    tiup cluster
+    ```
+
+4.  If TiUP is already installed, update the TiUP cluster component to the latest version:
+
+    {{< copyable "" >}}
+
+    ```shell
+    tiup update --self && tiup update cluster
+    ```
+
+    If `Update successfully!` is displayed, the TiUP cluster is updated successfully.
+
+5.  Verify the current version of your TiUP cluster:
+
+    {{< copyable "" >}}
+
+    ```shell
+    tiup --binary cluster
+    ```
+
+### Deploy TiUP offline {#deploy-tiup-offline}
+
+Perform the following steps in this section to deploy a TiDB cluster offline using TiUP:
+
+#### Prepare the TiUP offline component package {#prepare-the-tiup-offline-component-package}
+
+Method 1: On the [official download page](https://www.pingcap.com/download/), select the offline mirror package (TiUP offline package included) of the target TiDB version. Note that you need to download the server package and toolkit package at the same time.
+
+Method 2: Manually pack an offline component package using `tiup mirror clone`. The detailed steps are as follows:
+
+1.  Install the TiUP package manager online.
+
+    1.  Install the TiUP tool:
+
+        {{< copyable "" >}}
+
+        ```shell
+        curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
+        ```
+
+    2.  Redeclare the global environment variables:
+
+        {{< copyable "" >}}
+
+        ```shell
+        source .bash_profile
+        ```
+
+    3.  Confirm whether TiUP is installed:
+
+        {{< copyable "" >}}
+
+        ```shell
+        which tiup
+        ```
+
+2.  Pull the mirror using TiUP.
+
+    1.  Pull the needed components on a machine that has access to the Internet:
 
         {{< copyable "" >}}
 
@@ -124,9 +122,9 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         tiup mirror clone tidb-community-server-${version}-linux-amd64 ${version} --os=linux --arch=amd64
         ```
 
-        上記のコマンドは、現在のディレクトリに`tidb-community-server-${version}-linux-amd64`という名前のディレクトリを作成します。このディレクトリには、クラスタの起動に必要なコンポーネントパッケージが含まれています。
+        The command above creates a directory named `tidb-community-server-${version}-linux-amd64` in the current directory, which contains the component package necessary for starting a cluster.
 
-    2.  `tar`コマンドを使用してコンポーネントパッケージをパックし、分離された環境の制御マシンにパッケージを送信します。
+    2.  Pack the component package by using the `tar` command and send the package to the control machine in the isolated environment:
 
         {{< copyable "" >}}
 
@@ -134,13 +132,13 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         tar czvf tidb-community-server-${version}-linux-amd64.tar.gz tidb-community-server-${version}-linux-amd64
         ```
 
-        `tidb-community-server-${version}-linux-amd64.tar.gz`は独立したオフライン環境パッケージです。
+        `tidb-community-server-${version}-linux-amd64.tar.gz` is an independent offline environment package.
 
-3.  オフラインミラーをカスタマイズするか、既存のオフラインミラーの内容を調整します。
+3.  Customize the offline mirror, or adjust the contents of an existing offline mirror.
 
-    既存のオフラインミラーを調整する場合（コンポーネントの新しいバージョンの追加など）、次の手順を実行します。
+    If you want to adjust an existing offline mirror (such as adding a new version of a component), take the following steps:
 
-    1.  オフラインミラーをプルする場合、コンポーネントやバージョン情報などのパラメーターを介して特定の情報を指定することにより、不完全なオフラインミラーを取得できます。たとえば、次のコマンドを実行することにより、TiUPv1.10.0およびTiUPClusterv1.10.0のオフラインミラーのみを含むオフラインミラーをプルできます。
+    1.  When pulling an offline mirror, you can get an incomplete offline mirror by specifying specific information via parameters, such as the component and version information. For example, you can pull an offline mirror that includes only the offline mirror of TiUP v1.10.0 and TiUP Cluster v1.10.0 by running the following command:
 
         {{< copyable "" >}}
 
@@ -148,11 +146,11 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         tiup mirror clone tiup-custom-mirror-v1.10.0 --tiup v1.10.0 --cluster v1.10.0
         ```
 
-        特定のプラットフォームのコンポーネントのみが必要な場合は、 `--os`つまたは`--arch`のパラメーターを使用してそれらを指定できます。
+        If you only need the components for a particular platform, you can specify them using the `--os` or `--arch` parameters.
 
-    2.  「TiUPを使用してミラーをプルする」のステップ2を参照し、この不完全なオフラインミラーを隔離された環境の制御マシンに送信します。
+    2.  Refer to the step 2 of "Pull the mirror using TiUP", and send this incomplete offline mirror to the control machine in the isolated environment.
 
-    3.  隔離された環境の制御マシンで現在のオフラインミラーのパスを確認します。 TiUPツールが最新バージョンの場合は、次のコマンドを実行して現在のミラーアドレスを取得できます。
+    3.  Check the path of the current offline mirror on the control machine in the isolated environment. If your TiUP tool is of a recent version, you can get the current mirror address by running the following command:
 
         {{< copyable "" >}}
 
@@ -160,11 +158,11 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         tiup mirror show
         ```
 
-        上記のコマンドの出力が`show`コマンドが存在しないことを示している場合は、古いバージョンのTiUPを使用している可能性があります。この場合、 `$HOME/.tiup/tiup.toml`から現在のミラーアドレスを取得できます。このミラーアドレスを記録します。次の手順では、 `${base_mirror}`を使用してこのアドレスを参照します。
+        If the output of the above command indicates that the `show` command does not exist, you might be using an older version of TiUP. In this case, you can get the current mirror address from `$HOME/.tiup/tiup.toml`. Record this mirror address. In the following steps, `${base_mirror}` is used to refer to this address.
 
-    4.  不完全なオフラインミラーを既存のオフラインミラーにマージします。
+    4.  Merge an incomplete offline mirror into an existing offline mirror:
 
-        まず、現在のオフラインミラーの`keys`ディレクトリを`$HOME/.tiup`ディレクトリにコピーします。
+        First, copy the `keys` directory in the current offline mirror to the `$HOME/.tiup` directory:
 
         {{< copyable "" >}}
 
@@ -172,7 +170,7 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         cp -r ${base_mirror}/keys $HOME/.tiup/
         ```
 
-        次に、TiUPコマンドを使用して、不完全なオフラインミラーを使用中のミラーにマージします。
+        Then use the TiUP command to merge the incomplete offline mirror into the mirror in use:
 
         {{< copyable "" >}}
 
@@ -180,11 +178,11 @@ TiUPオフラインコンポーネントパッケージを準備するには、 
         tiup mirror merge tiup-custom-mirror-v1.10.0
         ```
 
-    5.  上記の手順が完了したら、 `tiup list`コマンドを実行して結果を確認します。このドキュメントの例では、 `tiup list tiup`と`tiup list cluster`の両方の出力は、 `v1.10.0`の対応するコンポーネントが使用可能であることを示しています。
+    5.  When the above steps are completed, check the result by running the `tiup list` command. In this document's example, the outputs of both `tiup list tiup` and `tiup list cluster` show that the corresponding components of `v1.10.0` are available.
 
-#### ステップ2：オフラインTiUPコンポーネントをデプロイ {#step-2-deploy-the-offline-tiup-component}
+#### Deploy the offline TiUP component {#deploy-the-offline-tiup-component}
 
-パッケージをターゲットクラスタの制御マシンに送信した後、次のコマンドを実行してTiUPコンポーネントをインストールします。
+After sending the package to the control machine of the target cluster, install the TiUP component by running the following commands:
 
 {{< copyable "" >}}
 
@@ -194,15 +192,27 @@ sh tidb-community-server-${version}-linux-amd64/local_install.sh && \
 source /home/tidb/.bash_profile
 ```
 
-`local_install.sh`スクリプトは、 `tiup mirror set tidb-community-server-${version}-linux-amd64`コマンドを自動的に実行して、現在のミラーアドレスを`tidb-community-server-${version}-linux-amd64`に設定します。
+The `local_install.sh` script automatically runs the `tiup mirror set tidb-community-server-${version}-linux-amd64` command to set the current mirror address to `tidb-community-server-${version}-linux-amd64`.
 
-ミラーを別のディレクトリに切り替えるには、 `tiup mirror set <mirror-dir>`コマンドを手動で実行できます。ミラーをオンライン環境に切り替えるには、 `tiup mirror set https://tiup-mirrors.pingcap.com`コマンドを実行します。
+#### Merge offline packages {#merge-offline-packages}
 
-## ステップ3：クラスタトポロジファイルを初期化する {#step-3-initialize-cluster-topology-file}
+If you download the offline packages from the [official download page](https://www.pingcap.com/download/), you need to merge the server package and the toolkit package into an offline mirror. If you manually package the offline component packages using the `tiup mirror clone` command, you can skip this step.
 
-目的のクラスタトポロジに従って、クラスタ初期化構成ファイルを手動で作成および編集する必要があります。
+Run the following commands to merge the offline toolkit package into the server package directory:
 
-クラスタ初期化構成ファイルを作成するには、TiUPを使用してコントロールマシンにYAML形式の構成ファイルを作成できます。
+```bash
+tar xf tidb-community-toolkit-${version}-linux-amd64.tar.gz
+ls -ld tidb-community-server-${version}-linux-amd64 tidb-community-toolkit-${version}-linux-amd64
+cd tidb-community-server-${version}-linux-amd64/
+cp -rp keys ~/.tiup/
+tiup mirror merge ../tidb-community-toolkit-${version}-linux-amd64
+```
+
+To switch the mirror to another directory, run the `tiup mirror set <mirror-dir>` command. To switch the mirror to the online environment, run the `tiup mirror set https://tiup-mirrors.pingcap.com` command.
+
+## Step 3. Initialize cluster topology file {#step-3-initialize-cluster-topology-file}
+
+Run the following command to create a cluster topology file:
 
 {{< copyable "" >}}
 
@@ -210,11 +220,27 @@ source /home/tidb/.bash_profile
 tiup cluster template > topology.yaml
 ```
 
-> **ノート：**
->
-> ハイブリッド展開シナリオの場合、 `tiup cluster template --full > topology.yaml`を実行して、推奨されるトポロジテンプレートを作成することもできます。地理的に分散された展開シナリオの場合、 `tiup cluster template --multi-dc > topology.yaml`を実行して、推奨されるトポロジテンプレートを作成できます。
+In the following two common scenarios, you can generate recommended topology templates by running commands:
 
-`vi topology.yaml`を実行して、構成ファイルの内容を確認します。
+-   For hybrid deployment: Multiple instances are deployed on a single machine. For details, see [Hybrid Deployment Topology](/hybrid-deployment-topology.md).
+
+    {{< copyable "" >}}
+
+    ```shell
+    tiup cluster template --full > topology.yaml
+    ```
+
+-   For geo-distributed deployment: TiDB clusters are deployed in geographically distributed data centers. For details, see [Geo-Distributed Deployment Topology](/geo-distributed-deployment-topology.md).
+
+    {{< copyable "" >}}
+
+    ```shell
+    tiup cluster template --multi-dc > topology.yaml
+    ```
+
+Run `vi topology.yaml` to see the configuration file content:
+
+{{< copyable "" >}}
 
 ```shell
 global:
@@ -243,87 +269,84 @@ alertmanager_servers:
   - host: 10.0.1.4
 ```
 
-次の例では、6つの一般的なシナリオについて説明します。対応するリンクのトポロジの説明とテンプレートに従って、構成ファイル（ `topology.yaml`という名前）を変更する必要があります。他のシナリオでは、それに応じて構成テンプレートを編集します。
+The following examples cover seven common scenarios. You need to modify the configuration file (named `topology.yaml`) according to the topology description and templates in the corresponding links. For other scenarios, edit the configuration template accordingly.
 
--   [最小限の展開トポロジ](/minimal-deployment-topology.md)
+| Application                                                                          | Configuration task                                                                      | Configuration file template                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Topology description                                                                                                                                                                                                                              |
+| :----------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| OLTP                                                                                 | [Deploy minimal topology](/minimal-deployment-topology.md)                              | [Simple minimal configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-mini.yaml) <br/> [Full minimal configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-mini.yaml)                                                                                                                                                                                                                | This is the basic cluster topology, including tidb-server, tikv-server, and pd-server.                                                                                                                                                            |
+| HTAP                                                                                 | [Deploy the TiFlash topology](/tiflash-deployment-topology.md)                          | [Simple TiFlash configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tiflash.yaml) <br/> [Full TiFlash configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tiflash.yaml)                                                                                                                                                                                                          | This is to deploy TiFlash along with the minimal cluster topology. TiFlash is a columnar storage engine, and gradually becomes a standard cluster topology.                                                                                       |
+| Replicate incremental data using [TiCDC](/ticdc/ticdc-overview.md)                   | [Deploy the TiCDC topology](/ticdc-deployment-topology.md)                              | [Simple TiCDC configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-cdc.yaml) <br/> [Full TiCDC configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-cdc.yaml)                                                                                                                                                                                                                      | This is to deploy TiCDC along with the minimal cluster topology. TiCDC supports multiple downstream platforms, such as TiDB, MySQL, and MQ.                                                                                                       |
+| Replicate incremental data using [TiDB Binlog](/tidb-binlog/tidb-binlog-overview.md) | [Deploy the TiDB Binlog topology](/tidb-binlog-deployment-topology.md)                  | [Simple TiDB Binlog configuration template (MySQL as downstream)](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tidb-binlog.yaml) <br/> [Simple TiDB Binlog configuration template (Files as downstream)](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-file-binlog.yaml) <br/> [Full TiDB Binlog configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tidb-binlog.yaml) | This is to deploy TiDB Binlog along with the minimal cluster topology.                                                                                                                                                                            |
+| Use OLAP on Spark                                                                    | [Deploy the TiSpark topology](/tispark-deployment-topology.md)                          | [Simple TiSpark configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tispark.yaml) <br/> [Full TiSpark configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tispark.yaml)                                                                                                                                                                                                          | This is to deploy TiSpark along with the minimal cluster topology. TiSpark is a component built for running Apache Spark on top of TiDB/TiKV to answer the OLAP queries. Currently, TiUP cluster's support for TiSpark is still **experimental**. |
+| Deploy multiple instances on a single machine                                        | [Deploy a hybrid topology](/hybrid-deployment-topology.md)                              | [Simple configuration template for hybrid deployment](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-multi-instance.yaml) <br/> [Full configuration template for hybrid deployment](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-multi-instance.yaml)                                                                                                                                                                | The deployment topologies also apply when you need to add extra configurations for the directory, port, resource ratio, and label.                                                                                                                |
+| Deploy TiDB clusters across data centers                                             | [Deploy a geo-distributed deployment topology](/geo-distributed-deployment-topology.md) | [Configuration template for geo-distributed deployment](https://github.com/pingcap/docs/blob/release-6.1/config-templates/geo-redundancy-deployment.yaml)                                                                                                                                                                                                                                                                                                                   | This topology takes the typical architecture of three data centers in two cities as an example. It introduces the geo-distributed deployment architecture and the key configuration that requires attention.                                      |
 
-    これは、tidb-server、tikv-server、およびpd-serverを含む基本的なクラスタトポロジです。 OLTPアプリケーションに適しています。
-
--   [TiFlash展開トポロジ](/tiflash-deployment-topology.md)
-
-    これは、最小限のクラスタトポロジとともにTiFlashを展開するためです。 TiFlashは列指向ストレージエンジンであり、徐々に標準のクラスタトポロジになります。リアルタイムHTAPアプリケーションに適しています。
-
--   [TiCDC展開トポロジ](/ticdc-deployment-topology.md)
-
-    これは、最小限のクラスタトポロジとともにTiCDCを展開するためです。 TiCDCは、TiDB4.0で導入されたTiDBのインクリメンタルデータを複製するためのツールです。 TiDB、MySQL、MQなどの複数のダウンストリームプラットフォームをサポートします。 TiDB Binlogと比較して、TiCDCはレイテンシーが低く、ネイティブの高可用性を備えています。展開後、TiCDCと[`cdc cli`を使用してレプリケーションタスクを作成します](/ticdc/manage-ticdc.md)を起動します。
-
--   [TiDBBinlogデプロイメントトポロジ](/tidb-binlog-deployment-topology.md)
-
-    これは、最小限のクラスタトポロジとともにTiDBBinlogを展開するためです。 TiDB Binlogは、インクリメンタルデータを複製するために広く使用されているコンポーネントです。ほぼリアルタイムのバックアップとレプリケーションを提供します。
-
--   [TiSparkデプロイメントトポロジ](/tispark-deployment-topology.md)
-
-    これは、最小限のクラスタトポロジとともにTiSparkを展開するためです。 TiSparkは、TiDB /TiKV上でApacheSparkを実行して、OLAPクエリに応答するために構築されたコンポーネントです。現在、TiSparkに対するTiUPクラスターのサポートはまだ**実験的**段階です。
-
--   [ハイブリッド展開トポロジ](/hybrid-deployment-topology.md)
-
-    これは、1台のマシンに複数のインスタンスをデプロイするためのものです。ディレクトリ、ポート、リソース比率、およびラベルの構成を追加する必要があります。
-
--   [地理分散型デプロイメントトポロジ](/geo-distributed-deployment-topology.md)
-
-    このトポロジでは、2つの都市にある3つのデータセンターの一般的なアーキテクチャを例として取り上げます。地理的に分散された展開アーキテクチャと、注意が必要な主要な構成を紹介します。
-
-> **ノート：**
+> **Note:**
 >
-> -   グローバルに有効である必要があるパラメーターについては、構成ファイルの`server_configs`セクションで対応するコンポーネントのこれらのパラメーターを構成します。
-> -   特定のノードで有効になるはずのパラメーターについては、このノードの`config`でこれらのパラメーターを構成します。
-> -   `.`を使用して、構成のサブカテゴリ（ `log.slow-threshold`など）を示します。その他の形式については、 [TiUP構成テンプレート](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml)を参照してください。
-> -   パラメータの詳細については、 [TiDB `config.toml.example`](https://github.com/pingcap/tidb/blob/master/config/config.toml.example) 、および[TiKV `config.toml.example`](https://github.com/tikv/tikv/blob/master/etc/config-template.toml)を[TiFlash構成](/tiflash/tiflash-configuration.md)して[PD `config.toml.example`](https://github.com/pingcap/pd/blob/master/conf/config.toml) 。
+> -   For parameters that should be globally effective, configure these parameters of corresponding components in the `server_configs` section of the configuration file.
+> -   For parameters that should be effective on a specific node, configure these parameters in the `config` of this node.
+> -   Use `.` to indicate the subcategory of the configuration, such as `log.slow-threshold`. For more formats, see [TiUP configuration template](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml).
+> -   If you need to specify the user group name to be created on the target machine, see [this example](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml#L7).
 
-## 手順4：展開コマンドを実行する {#step-4-execute-the-deployment-command}
+For more configuration description, see the following configuration examples:
 
-> **ノート：**
+-   [TiDB `config.toml.example`](https://github.com/pingcap/tidb/blob/master/config/config.toml.example)
+-   [TiKV `config.toml.example`](https://github.com/tikv/tikv/blob/master/etc/config-template.toml)
+-   [PD `config.toml.example`](https://github.com/pingcap/pd/blob/master/conf/config.toml)
+-   [TiFlash `config.toml.example`](https://github.com/pingcap/tiflash/blob/master/etc/config-template.toml)
+
+## Step 4. Run the deployment command {#step-4-run-the-deployment-command}
+
+> **Note:**
 >
-> TiUPを使用してTiDBを展開する場合、セキュリティ認証に秘密鍵または対話型パスワードを使用できます。
+> You can use secret keys or interactive passwords for security authentication when you deploy TiDB using TiUP:
 >
-> -   秘密鍵を使用する場合は、 `-i`または`--identity_file`を介して鍵のパスを指定できます。
-> -   パスワードを使用する場合は、 `-p`フラグを追加して、パスワード操作ウィンドウに入ります。
-> -   ターゲットマシンへのパスワードなしのログインが設定されている場合、認証は必要ありません。
+> -   If you use secret keys, specify the path of the keys through `-i` or `--identity_file`.
+> -   If you use passwords, add the `-p` flag to enter the password interaction window.
+> -   If password-free login to the target machine has been configured, no authentication is required.
 >
-> 一般に、TiUPは、次の例外を除いて、ターゲットマシン上の`topology.yaml`ファイルで指定されたユーザーとグループを作成します。
+> In general, TiUP creates the user and group specified in the `topology.yaml` file on the target machine, with the following exceptions:
 >
-> -   `topology.yaml`で構成されたユーザー名は、ターゲットマシンにすでに存在します。
-> -   コマンドラインで`--skip-create-user`オプションを使用して、ユーザーを作成する手順を明示的にスキップしました。
+> -   The user name configured in `topology.yaml` already exists on the target machine.
+> -   You have used the `--skip-create-user` option in the command line to explicitly skip the step of creating the user.
 
-`deploy`コマンドを実行する前に、 `check`および`check --apply`コマンドを使用して、クラスタの潜在的なリスクを検出し、自動的に修復します。
+Before you run the `deploy` command, use the `check` and `check --apply` commands to detect and automatically repair potential risks in the cluster:
 
-{{< copyable "" >}}
+1.  Check for potential risks:
 
-```shell
-tiup cluster check ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
-tiup cluster check ./topology.yaml --apply --user root [-p] [-i /home/root/.ssh/gcp_rsa]
-```
+    {{< copyable "" >}}
 
-次に、 `deploy`コマンドを実行してTiDBクラスタをデプロイします。
+    ```shell
+    tiup cluster check ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
+    ```
 
-{{< copyable "" >}}
+2.  Enable automatic repair:
 
-```shell
-tiup cluster deploy tidb-test v6.1.0 ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
-```
+    {{< copyable "" >}}
 
-上記のコマンドでは：
+    ```shell
+    tiup cluster check ./topology.yaml --apply --user root [-p] [-i /home/root/.ssh/gcp_rsa]
+    ```
 
--   デプロイされたTiDBクラスタの名前は`tidb-test`です。
--   `tiup list tidb`を実行すると、サポートされている最新バージョンを確認できます。このドキュメントでは、例として`v6.1.0`を取り上げます。
--   初期化設定ファイルは`topology.yaml`です。
--   `--user root` ： `root`キーを使用してターゲットマシンにログインしてクラスタの展開を完了するか、 `ssh`および`sudo`の特権を持つ他のユーザーを使用して展開を完了することができます。
--   `[-i]`および`[-p]` ：オプション。パスワードなしでターゲットマシンへのログインを設定した場合、これらのパラメータは必要ありません。そうでない場合は、2つのパラメーターのいずれかを選択してください。 `[-i]`は、ターゲットマシンにアクセスできる`root`のユーザー（または`--user`で指定された他のユーザー）の秘密鍵です。 `[-p]`は、ユーザーパスワードをインタラクティブに入力するために使用されます。
--   ターゲットマシンで作成するユーザーグループ名を指定する必要がある場合は、 [この例](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml#L7)を参照してください。
+3.  Deploy a TiDB cluster:
 
-出力ログの最後に、 ``Deployed cluster `tidb-test` successfully``が表示されます。これは、展開が成功したことを示します。
+    {{< copyable "" >}}
 
-## ステップ5：TiUPによって管理されているクラスターを確認します {#step-5-check-the-clusters-managed-by-tiup}
+    ```shell
+    tiup cluster deploy tidb-test v6.1.5 ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
+    ```
+
+In the `tiup cluster deploy` command above:
+
+-   `tidb-test` is the name of the TiDB cluster to be deployed.
+-   `v6.1.5` is the version of the TiDB cluster to be deployed. You can see the latest supported versions by running `tiup list tidb`.
+-   `topology.yaml` is the initialization configuration file.
+-   `--user root` indicates logging into the target machine as the `root` user to complete the cluster deployment. The `root` user is expected to have `ssh` and `sudo` privileges to the target machine. Alternatively, you can use other users with `ssh` and `sudo` privileges to complete the deployment.
+-   `[-i]` and `[-p]` are optional. If you have configured login to the target machine without password, these parameters are not required. If not, choose one of the two parameters. `[-i]` is the private key of the root user (or other users specified by `--user`) that has access to the target machine. `[-p]` is used to input the user password interactively.
+
+At the end of the output log, you will see ``Deployed cluster `tidb-test` successfully``. This indicates that the deployment is successful.
+
+## Step 5. Check the clusters managed by TiUP {#step-5-check-the-clusters-managed-by-tiup}
 
 {{< copyable "" >}}
 
@@ -331,18 +354,11 @@ tiup cluster deploy tidb-test v6.1.0 ./topology.yaml --user root [-p] [-i /home/
 tiup cluster list
 ```
 
-TiUPは、複数のTiDBクラスターの管理をサポートしています。上記のコマンドは、名前、展開ユーザー、バージョン、秘密鍵情報など、現在TiUPによって管理されているすべてのクラスターの情報を出力します。
+TiUP supports managing multiple TiDB clusters. The preceding command outputs information of all the clusters currently managed by TiUP, including the cluster name, deployment user, version, and secret key information:
 
-```log
-Starting /home/tidb/.tiup/components/cluster/v1.5.0/cluster list
-Name              User  Version        Path                                                        PrivateKey
-----              ----  -------        ----                                                        ----------
-tidb-test         tidb  v5.3.0      /home/tidb/.tiup/storage/cluster/clusters/tidb-test         /home/tidb/.tiup/storage/cluster/clusters/tidb-test/ssh/id_rsa
-```
+## Step 6. Check the status of the deployed TiDB cluster {#step-6-check-the-status-of-the-deployed-tidb-cluster}
 
-## 手順6：デプロイされたTiDBクラスタのステータスを確認する {#step-6-check-the-status-of-the-deployed-tidb-cluster}
-
-たとえば、次のコマンドを実行して、 `tidb-test`のクラスタのステータスを確認します。
+For example, run the following command to check the status of the `tidb-test` cluster:
 
 {{< copyable "" >}}
 
@@ -350,21 +366,21 @@ tidb-test         tidb  v5.3.0      /home/tidb/.tiup/storage/cluster/clusters/ti
 tiup cluster display tidb-test
 ```
 
-期待される出力には、インスタンスID、ロール、ホスト、リスニングポート、ステータス（クラスタがまだ開始されていないため、ステータスは`Down` ）、およびディレクトリ情報が含まれ`inactive` 。
+Expected output includes the instance ID, role, host, listening port, and status (because the cluster is not started yet, so the status is `Down`/`inactive`), and directory information.
 
-## ステップ7：TiDBクラスタを開始する {#step-7-start-a-tidb-cluster}
+## Step 7. Start a TiDB cluster {#step-7-start-a-tidb-cluster}
 
-TiUPクラスタv1.9.0以降、新しい開始方法としてセーフスタートが導入されました。この方法を使用してデータベースを開始すると、データベースのセキュリティが向上します。この方法を使用することをお勧めします。
+Since TiUP cluster v1.9.0, safe start is introduced as a new start method. Starting a database using this method improves the security of the database. It is recommended that you use this method.
 
-安全に起動すると、TiUPはTiDB rootユーザーのパスワードを自動的に生成し、コマンドラインインターフェイスでパスワードを返します。
+After safe start, TiUP automatically generates a password for the TiDB root user and returns the password in the command-line interface.
 
-> **ノート：**
+> **Note:**
 >
-> -   TiDBクラスタを安全に起動した後は、パスワードなしでrootユーザーを使用してTiDBにログインすることはできません。したがって、今後のログインのために、コマンド出力で返されたパスワードを記録する必要があります。
+> -   After safe start of a TiDB cluster, you cannot log in to TiDB using a root user without a password. Therefore, you need to record the password returned in the command output for future logins.
 >
-> -   パスワードは1回だけ生成されます。記録しない場合や忘れた場合は、 [`root`パスワードを忘れる](/user-account-management.md#forget-the-root-password)を参照してパスワードを変更してください。
+> -   The password is generated only once. If you do not record it or you forgot it, refer to [Forget the `root` password](/user-account-management.md#forget-the-root-password) to change the password.
 
-方法1：安全なスタート
+Method 1: Safe start
 
 {{< copyable "" >}}
 
@@ -372,7 +388,7 @@ TiUPクラスタv1.9.0以降、新しい開始方法としてセーフスター�
 tiup cluster start tidb-test --init
 ```
 
-出力が次の場合、開始は成功しています。
+If the output is as follows, the start is successful:
 
 {{< copyable "" >}}
 
@@ -384,7 +400,7 @@ Copy and record it to somewhere safe, it is only displayed once, and will not be
 The generated password can NOT be got again in future.
 ```
 
-方法2：標準開始
+Method 2: Standard start
 
 {{< copyable "" >}}
 
@@ -392,22 +408,29 @@ The generated password can NOT be got again in future.
 tiup cluster start tidb-test
 ```
 
-出力ログに``Started cluster `tidb-test` successfully``が含まれている場合、開始は成功しています。標準の起動後、パスワードなしでrootユーザーを使用してデータベースにログインできます。
+If the output log includes ``Started cluster `tidb-test` successfully``, the start is successful. After standard start, you can log in to a database using a root user without a password.
 
-## 手順8：TiDBクラスタの実行ステータスを確認する {#step-8-verify-the-running-status-of-the-tidb-cluster}
+## Step 8. Verify the running status of the TiDB cluster {#step-8-verify-the-running-status-of-the-tidb-cluster}
 
-具体的な操作については、 [クラスタステータスの確認](/post-installation-check.md)を参照してください。
+{{< copyable "" >}}
 
-## 次は何ですか {#what-s-next}
+```shell
+tiup cluster display tidb-test
+```
 
-TiDBクラスタと一緒に[TiFlash](/tiflash/tiflash-overview.md)をデプロイした場合は、次のドキュメントを参照してください。
+If the output log shows `Up` status, the cluster is running properly.
 
--   [TiFlashを使用する](/tiflash/use-tiflash.md)
--   [TiFlashクラスターを管理する](/tiflash/maintain-tiflash.md)
--   [TiFlashアラートルールとソリューション](/tiflash/tiflash-alert-rules.md)
--   [TiFlashのトラブルシューティング](/tiflash/troubleshoot-tiflash.md)
+## See also {#see-also}
 
-TiDBクラスタと一緒に[TiCDC](/ticdc/ticdc-overview.md)をデプロイした場合は、次のドキュメントを参照してください。
+If you have deployed [TiFlash](/tiflash/tiflash-overview.md) along with the TiDB cluster, see the following documents:
 
--   [TiCDCクラスターおよびレプリケーションタスクの管理](/ticdc/manage-ticdc.md)
--   [TiCDCのトラブルシューティング](/ticdc/troubleshoot-ticdc.md)
+-   [Use TiFlash](/tiflash/tiflash-overview.md#use-tiflash)
+-   [Maintain a TiFlash Cluster](/tiflash/maintain-tiflash.md)
+-   [TiFlash Alert Rules and Solutions](/tiflash/tiflash-alert-rules.md)
+-   [Troubleshoot TiFlash](/tiflash/troubleshoot-tiflash.md)
+
+If you have deployed [TiCDC](/ticdc/ticdc-overview.md) along with the TiDB cluster, see the following documents:
+
+-   [Manage TiCDC Cluster and Replication Tasks](/ticdc/manage-ticdc.md)
+-   [Troubleshoot TiCDC](/ticdc/troubleshoot-ticdc.md)
+-   [TiCDC FAQs](/ticdc/ticdc-faq.md)

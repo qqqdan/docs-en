@@ -3,29 +3,34 @@ title: Telemetry
 summary: Learn the telemetry feature, how to disable the feature and view its status.
 ---
 
-# テレメトリー {#telemetry}
+# Telemetry {#telemetry}
 
-デフォルトでは、TiDB、TiUP、およびTiDBダッシュボードは使用状況情報を収集し、その情報をPingCAPと共有して、製品を改善する方法を理解するのに役立ちます。たとえば、この使用法情報は、新機能の優先順位付けに役立ちます。
+When the telemetry is enabled, TiDB, TiUP and TiDB Dashboard collect usage information and share the information with PingCAP to help understand how to improve the product. For example, this usage information helps prioritize new features.
 
-## 何が共有されますか？ {#what-is-shared}
-
-次のセクションでは、各コンポーネントの共有使用情報について詳しく説明します。共有される使用法の詳細は、時間の経過とともに変更される可能性があります。これらの変更（ある場合）は[リリースノート](/releases/release-notes.md)で発表されます。
-
-> **ノート：**
+> **Note:**
 >
-> **すべて**の場合において、TiDBクラスタに保存されているユーザーデータは共有され<strong>ません</strong>。 [PingCAPプライバシーポリシー](https://pingcap.com/privacy-policy)も参照できます。
+> -   Starting from February 20, 2023, the telemetry feature is disabled by default in new versions of TiDB and TiDB Dashboard, and usage information is not collected and shared with PingCAP. Before upgrading to these versions, if the cluster uses the default telemetry configuration, the telemetry feature is disabled after the upgrade. See [TiDB Release Timeline](/releases/release-timeline.md) for a specific version.
+> -   Starting from v1.11.3, the telemetry feature is disabled by default in newly deployed TiUP, and usage information is not collected. If you upgrade from a TiUP version earlier than v1.11.3 to v1.11.3 or a later version, the telemetry feature keeps the same status as before the upgrade.
+
+## What is shared? {#what-is-shared}
+
+The following sections describe the shared usage information in detail for each component. The usage details that get shared might change over time. These changes (if any) will be announced in [release notes](/releases/release-notes.md).
+
+> **Note:**
+>
+> In **ALL** cases, user data stored in the TiDB cluster will <strong>NOT</strong> be shared. You can also refer to [PingCAP Privacy Policy](https://pingcap.com/privacy-policy).
 
 ### TiDB {#tidb}
 
-TiDBでテレメトリ収集機能が有効になっている場合、TiDBクラスタは6時間ごとに使用状況の詳細を収集します。これらの使用法の詳細には、以下が含まれますが、これらに限定されません。
+When the telemetry collection feature is enabled in TiDB, the TiDB cluster collects usage details on a 6-hour basis. These usage details include but are not limited to:
 
--   ランダムに生成されたテレメトリID。
--   ハードウェアのサイズ（CPU、メモリ、ディスク）、TiDBコンポーネントのバージョン、OS名などの展開特性。
--   クエリ要求の数や期間など、システム内のクエリ要求のステータス。
--   コンポーネントの使用法、たとえば、非同期コミット機能が使用されているかどうか。
--   TiDBテレメトリデータ送信者の仮名化されたIPアドレス。
+-   A randomly generated telemetry ID.
+-   Deployment characteristics, such as the size of hardware (CPU, memory, disk), TiDB components versions, OS name.
+-   The status of query requests in the system, such as the number of query requests and the duration.
+-   Component usage, for example, whether the Async Commit feature is in use or not.
+-   Pseudonymized IP address of the TiDB telemetry data sender.
 
-PingCAPに共有される使用情報の全内容を表示するには、次のSQLステートメントを実行します。
+To view the full content of the usage information shared to PingCAP, execute the following SQL statement:
 
 {{< copyable "" >}}
 
@@ -33,25 +38,25 @@ PingCAPに共有される使用情報の全内容を表示するには、次のS
 ADMIN SHOW TELEMETRY;
 ```
 
-### TiDBダッシュボード {#tidb-dashboard}
+### TiDB Dashboard {#tidb-dashboard}
 
-テレメトリ収集機能がTiDBダッシュボードで有効になっている場合、TiDBダッシュボードWeb UIの使用情報が共有されます（ただし、これらに限定されません）。
+When the telemetry collection feature is enabled for TiDB Dashboard, usage details of the TiDB Dashboard web UI will be shared, including (but not limited to):
 
--   ランダムに生成されたテレメトリID。
--   ユーザーがアクセスしたTiDBダッシュボードWebページの名前などのユーザー操作情報。
--   ブラウザ名、OS名、画面解像度などのブラウザとOSの情報。
+-   A randomly generated telemetry ID.
+-   User operation information, such as the name of the TiDB Dashboard web page accessed by the user.
+-   Browser and OS information, such as browser name, OS name, and screen resolution.
 
-PingCAPに共有される使用情報の全内容を表示するには、 [ChromeDevToolsのネットワークアクティビティインスペクター](https://developers.google.com/web/tools/chrome-devtools/network)または[Firefox開発ツールのネットワークモニター](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor)を使用します。
+To view the full content of the usage information shared to PingCAP, use the [Network Activity Inspector of Chrome DevTools](https://developers.google.com/web/tools/chrome-devtools/network) or the [Network Monitor of Firefox Developer Tools](https://developer.mozilla.org/en-US/docs/Tools/Network_Monitor).
 
 ### TiUP {#tiup}
 
-TiUPでテレメトリ収集機能が有効になっている場合、TiUPを使用したユーザー操作は、以下を含む（ただしこれらに限定されない）共有されます。
+When the telemetry collection feature is enabled in TiUP, usage details of TiUP will be shared, including (but not limited to):
 
--   ランダムに生成されたテレメトリID。
--   実行が成功したかどうかや実行時間など、TiUPコマンドの実行ステータス。
--   ハードウェアのサイズ、TiDBコンポーネントのバージョン、変更された展開構成名などの展開特性。
+-   A randomly generated telemetry ID.
+-   Execution status of TiUP commands, such as whether the execution is successful and the execution duration.
+-   Deployment characteristics, such as the size of hardware, TiDB components versions, and deployment configuration names that have been modified.
 
-PingCAPに共有される使用情報の全内容を表示するには、TiUPコマンドの実行時に`TIUP_CLUSTER_DEBUG=enable`環境変数を設定します。例えば：
+To view the full content of the usage information shared to PingCAP, set the `TIUP_CLUSTER_DEBUG=enable` environment variable when executing the TiUP command. For example:
 
 {{< copyable "" >}}
 
@@ -59,17 +64,36 @@ PingCAPに共有される使用情報の全内容を表示するには、TiUPコ
 TIUP_CLUSTER_DEBUG=enable tiup cluster list
 ```
 
-## テレメトリを無効にする {#disable-telemetry}
+### TiSpark {#tispark}
 
-### 展開時にTiDBテレメトリを無効にする {#disable-tidb-telemetry-at-deployment}
+> **Note:**
+>
+> Starting from v3.3, the telemetry collection is disabled by default in TiSpark, and usage information is not collected and shared with PingCAP.
 
-TiDBクラスターを展開するときは、すべてのTiDBインスタンスでTiDBテレメトリコレクションを無効にするように[`enable-telemetry = false`](/tidb-configuration-file.md#enable-telemetry-new-in-v402)を構成します。この設定を使用して、既存のTiDBクラスタでテレメトリを無効にすることもできます。テレメトリは、クラスタを再起動するまで有効になりません。
+When the telemetry collection feature is enabled for TiSpark, the Spark module will share the usage details of TiSpark, including (but not limited to):
 
-さまざまな展開ツールでテレメトリを無効にする詳細な手順を以下に示します。
+-   A randomly generated telemetry ID.
+-   Some configuration information of TiSpark, such as the read engine and whether streaming read is enabled.
+-   Cluster deployment information, such as the machine hardware information, OS information, and component version number of the node where TiSpark is located.
 
-<details><summary>バイナリ展開</summary>
+You can view TiSpark usage information that is collected in Spark logs. You can set the Spark log level to INFO or lower, for example:
 
-次の内容で構成ファイル`tidb_config.toml`を作成します。
+```shell
+cat {spark.log} | grep Telemetry report | tail -n 1
+```
+
+## Disable telemetry {#disable-telemetry}
+
+### Disable TiDB telemetry at deployment {#disable-tidb-telemetry-at-deployment}
+
+When the telemetry is enabled in existing TiDB clusters, you can configure [`enable-telemetry = false`](/tidb-configuration-file.md#enable-telemetry-new-in-v402) on each TiDB instance to disable the TiDB telemetry collection on that instance, which does not take effect until you restart the cluster.
+
+Detailed steps to disable telemetry in different deployment tools are listed below.
+
+<details>
+  <summary>Binary deployment</summary>
+
+Create a configuration file `tidb_config.toml` with the following content:
 
 {{< copyable "" >}}
 
@@ -77,15 +101,16 @@ TiDBクラスターを展開するときは、すべてのTiDBインスタンス
 enable-telemetry = false
 ```
 
-上記の構成ファイルを有効にするには、TiDBを起動するときに`--config=tidb_config.toml`のコマンドラインパラメーターを指定します。
+Specify the `--config=tidb_config.toml` command-line parameter when starting TiDB for the configuration file above to take effect.
 
-詳細については、 [TiDBConfiguration / コンフィグレーションオプション](/command-line-flags-for-tidb-configuration.md#--config)と[TiDBConfiguration / コンフィグレーションファイル](/tidb-configuration-file.md#enable-telemetry-new-in-v402)を参照してください。
+See [TiDB Configuration Options](/command-line-flags-for-tidb-configuration.md#--config) and [TiDB Configuration File](/tidb-configuration-file.md#enable-telemetry-new-in-v402) for details.
 
 </details>
 
-<details><summary>TiUPPlaygroundを使用した展開</summary>
+<details>
+  <summary>Deployment using TiUP Playground</summary>
 
-次の内容で構成ファイル`tidb_config.toml`を作成します。
+Create a configuration file `tidb_config.toml` with the following content:
 
 {{< copyable "" >}}
 
@@ -93,7 +118,7 @@ enable-telemetry = false
 enable-telemetry = false
 ```
 
-TiUP Playgroundを起動するときは、上記の構成ファイルの`--db.config tidb_config.toml`コマンドラインパラメーターを指定して有効にします。例えば：
+When starting TiUP Playground, specify the `--db.config tidb_config.toml` command-line parameter for the configuration file above to take effect. For example:
 
 {{< copyable "" >}}
 
@@ -101,13 +126,14 @@ TiUP Playgroundを起動するときは、上記の構成ファイルの`--db.co
 tiup playground --db.config tidb_config.toml
 ```
 
-詳細については、 [ローカルTiDBクラスターを迅速にデプロイする](/tiup/tiup-playground.md)を参照してください。
+See [Quickly Deploy a Local TiDB Cluster](/tiup/tiup-playground.md) for details.
 
 </details>
 
-<details><summary>TiUPクラスターを使用した展開</summary>
+<details>
+  <summary>Deployment using TiUP Cluster</summary>
 
-デプロイメントトポロジファイル`topology.yaml`を変更して、次のコンテンツを追加します。
+Modify the deployment topology file `topology.yaml` to add the following content:
 
 {{< copyable "" >}}
 
@@ -119,21 +145,22 @@ server_configs:
 
 </details>
 
-<details><summary>TiDB Operatorを介したKubernetesでのデプロイ</summary>
+<details>
+  <summary>Deployment on Kubernetes via TiDB Operator</summary>
 
-`tidb-cluster.yaml`分の`spec.tidb.config.enable-telemetry: false`またはTidbClusterカスタムリソースを構成します。
+Configure `spec.tidb.config.enable-telemetry: false` in `tidb-cluster.yaml` or TidbCluster Custom Resource.
 
-詳細については、 [KubernetesにTiDB Operatorをデプロイ](https://docs.pingcap.com/tidb-in-kubernetes/stable/deploy-tidb-operator)を参照してください。
+See [Deploy TiDB Operator on Kubernetes](https://docs.pingcap.com/tidb-in-kubernetes/stable/deploy-tidb-operator) for details.
 
-> **ノート：**
+> **Note:**
 >
-> この構成アイテムを有効にするには、 TiDB Operatorv1.1.3以降が必要です。
+> This configuration item requires TiDB Operator v1.1.3 or later to take effect.
 
 </details>
 
-### デプロイされたTiDBクラスターのTiDBテレメトリを無効にする {#disable-tidb-telemetry-for-deployed-tidb-clusters}
+### Disable TiDB telemetry for deployed TiDB clusters {#disable-tidb-telemetry-for-deployed-tidb-clusters}
 
-既存のTiDBクラスターでは、システム変数[`tidb_enable_telemetry`](/system-variables.md#tidb_enable_telemetry-new-in-v402)を変更して、TiDBテレメトリコレクションを動的に無効にすることもできます。
+In existing TiDB clusters, you can also modify the system variable [`tidb_enable_telemetry`](/system-variables.md#tidb_enable_telemetry-new-in-v402) to dynamically disable the TiDB telemetry collection:
 
 {{< copyable "" >}}
 
@@ -141,19 +168,20 @@ server_configs:
 SET GLOBAL tidb_enable_telemetry = 0;
 ```
 
-> **ノート：**
+> **Note:**
 >
-> テレメトリを無効にすると、構成ファイルの優先度がシステム変数よりも高くなります。つまり、テレメトリ収集が構成ファイルによって無効にされた後、システム変数の値は無視されます。
+> When you disable telemetry, the configuration file has a higher priority over system variable. That is, after telemetry collection is disabled by the configuration file, the value of the system variable will be ignored.
 
-### TiDBダッシュボードテレメトリを無効にする {#disable-tidb-dashboard-telemetry}
+### Disable TiDB Dashboard telemetry {#disable-tidb-dashboard-telemetry}
 
-[`dashboard.enable-telemetry = false`](/pd-configuration-file.md#enable-telemetry)を構成して、すべてのPDインスタンスでTiDBダッシュボードテレメトリコレクションを無効にします。構成を有効にするには、実行中のクラスターを再起動する必要があります。
+Configure [`dashboard.enable-telemetry = false`](/pd-configuration-file.md#enable-telemetry) to disable the TiDB Dashboard telemetry collection on all PD instances. You need to restart the running clusters for the configuration to take effect.
 
-さまざまな展開ツールのテレメトリを無効にする詳細な手順を以下に示します。
+Detailed steps to disable telemetry for different deployment tools are listed below.
 
-<details><summary>バイナリ展開</summary>
+<details>
+  <summary>Binary deployment</summary>
 
-次の内容で構成ファイル`pd_config.toml`を作成します。
+Create a configuration file `pd_config.toml` with the following content:
 
 {{< copyable "" >}}
 
@@ -162,15 +190,16 @@ SET GLOBAL tidb_enable_telemetry = 0;
 enable-telemetry = false
 ```
 
-PDを開始するときに、 `--config=pd_config.toml`のコマンドラインパラメータを指定して有効にします。
+Specify the `--config=pd_config.toml` command-line parameter when starting PD to take effect.
 
-詳細については、 [PDConfiguration / コンフィグレーションフラグ](/command-line-flags-for-pd-configuration.md#--config)と[PDConfiguration / コンフィグレーションファイル](/pd-configuration-file.md#enable-telemetry)を参照してください。
+See [PD Configuration Flags](/command-line-flags-for-pd-configuration.md#--config) and [PD Configuration File](/pd-configuration-file.md#enable-telemetry) for details.
 
 </details>
 
-<details><summary>TiUPPlaygroundを使用した展開</summary>
+<details>
+  <summary>Deployment using TiUP Playground</summary>
 
-次の内容で構成ファイル`pd_config.toml`を作成します。
+Create a configuration file `pd_config.toml` with the following content:
 
 {{< copyable "" >}}
 
@@ -179,7 +208,7 @@ PDを開始するときに、 `--config=pd_config.toml`のコマンドライン�
 enable-telemetry = false
 ```
 
-TiUP Playgroundを起動するときに、有効にする`--pd.config pd_config.toml`のコマンドラインパラメーターを指定します。次に例を示します。
+When starting TiUP Playground, specify the `--pd.config pd_config.toml` command-line parameter to take effect, for example:
 
 {{< copyable "" >}}
 
@@ -187,13 +216,14 @@ TiUP Playgroundを起動するときに、有効にする`--pd.config pd_config.
 tiup playground --pd.config pd_config.toml
 ```
 
-詳細については、 [ローカルTiDBクラスターを迅速にデプロイする](/tiup/tiup-playground.md)を参照してください。
+See [Quickly Deploy a Local TiDB Cluster](/tiup/tiup-playground.md) for details.
 
 </details>
 
-<details><summary>TiUPクラスターを使用した展開</summary>
+<details>
+  <summary>Deployment using TiUP Cluster</summary>
 
-デプロイメントトポロジファイル`topology.yaml`を変更して、次のコンテンツを追加します。
+Modify the deployment topology file `topology.yaml` to add the following content:
 
 {{< copyable "" >}}
 
@@ -205,21 +235,22 @@ server_configs:
 
 </details>
 
-<details><summary>TiDB Operatorを介したKubernetesでのデプロイ</summary>
+<details>
+  <summary>Deployment on Kubernetes via TiDB Operator</summary>
 
-`tidb-cluster.yaml`分の`spec.pd.config.dashboard.enable-telemetry: false`またはTidbClusterカスタムリソースを構成します。
+Configure `spec.pd.config.dashboard.enable-telemetry: false` in `tidb-cluster.yaml` or TidbCluster Custom Resource.
 
-詳細については、 [KubernetesにTiDB Operatorをデプロイ](https://docs.pingcap.com/tidb-in-kubernetes/stable/deploy-tidb-operator)を参照してください。
+See [Deploy TiDB Operator on Kubernetes](https://docs.pingcap.com/tidb-in-kubernetes/stable/deploy-tidb-operator) for details.
 
-> **ノート：**
+> **Note:**
 >
-> この構成アイテムを有効にするには、 TiDB Operatorv1.1.3以降が必要です。
+> This configuration item requires TiDB Operator v1.1.3 or later to take effect.
 
 </details>
 
-### TiUPテレメトリを無効にする {#disable-tiup-telemetry}
+### Disable TiUP telemetry {#disable-tiup-telemetry}
 
-TiUPテレメトリ収集を無効にするには、次のコマンドを実行します。
+To disable the TiUP telemetry collection, execute the following command:
 
 {{< copyable "" >}}
 
@@ -227,9 +258,9 @@ TiUPテレメトリ収集を無効にするには、次のコマンドを実行�
 tiup telemetry disable
 ```
 
-## テレメトリステータスを確認する {#check-telemetry-status}
+## Check telemetry status {#check-telemetry-status}
 
-TiDBテレメトリの場合、次のSQLステートメントを実行してテレメトリステータスを確認します。
+For TiDB telemetry, execute the following SQL statement to check the telemetry status:
 
 {{< copyable "" >}}
 
@@ -237,9 +268,9 @@ TiDBテレメトリの場合、次のSQLステートメントを実行してテ�
 ADMIN SHOW TELEMETRY;
 ```
 
-実行結果の`DATA_PREVIEW`列が空の場合、TiDBテレメトリは無効になります。そうでない場合、TiDBテレメトリが有効になります。また、 `LAST_STATUS`列目で以前に利用情報を共有した時期や共有に成功したかどうかを確認することもできます。
+If the `DATA_PREVIEW` column in the execution result is empty, TiDB telemetry is disabled. If not, TiDB telemetry is enabled. You can also check when the usage information was shared previously according to the `LAST_STATUS` column and whether the sharing was successful or not.
 
-TiUPテレメトリの場合、次のコマンドを実行してテレメトリステータスを確認します。
+For TiUP telemetry, execute the following command to check the telemetry status:
 
 {{< copyable "" >}}
 
@@ -247,11 +278,11 @@ TiUPテレメトリの場合、次のコマンドを実行してテレメトリ�
 tiup telemetry status
 ```
 
-## コンプライアンス {#compliance}
+## Compliance {#compliance}
 
-さまざまな国または地域のコンプライアンス要件を満たすために、使用情報は送信者のマシンのIPアドレスに従ってさまざまな国にあるサーバーに送信されます。
+To meet compliance requirements in different countries or regions, the usage information is sent to servers located in different countries according to the IP address of the sender machine:
 
--   中国本土からのIPアドレスの場合、使用情報は中国本土のクラウドサーバーに送信されて保存されます。
--   中国本土以外のIPアドレスの場合、使用情報は米国のクラウドサーバーに送信されて保存されます。
+-   For IP addresses from the Chinese mainland, usage information is sent to and stored on cloud servers in the Chinese mainland.
+-   For IP addresses from outside of the Chinese mainland, usage information is sent to and stored on cloud servers in the US.
 
-詳細については、 [PingCAPプライバシーポリシー](https://en.pingcap.com/privacy-policy/)を参照してください。
+See [PingCAP Privacy Policy](https://en.pingcap.com/privacy-policy/) for details.
