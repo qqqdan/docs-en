@@ -1,86 +1,82 @@
 ---
-title: TiDB Lightning Deployment
+title: Deploy TiDB Lightning
 summary: Deploy TiDB Lightning to quickly import large amounts of new data.
 ---
 
-# TiDBLightningの導入 {#tidb-lightning-deployment}
+# Deploy TiDB Lightning {#deploy-tidb-lightning}
 
-このドキュメントでは、ローカルバックエンドを使用したTiDB Lightningのハードウェア要件と、それを手動で展開する方法について説明します。
+This document describes the hardware requirements of using TiDB Lightning to import data, and how to deploy it manually. Requirements on hardware resources vary with the import modes. For details, refer to the following docs:
 
-## ノート {#notes}
+-   [Physical Import Mode Requirements and Limitations](/tidb-lightning/tidb-lightning-physical-import-mode.md#requirements-and-restrictions)
+-   [Logical Import Mode Requirements and Limitations](/tidb-lightning/tidb-lightning-logical-import-mode.md)
 
-TiDB Lightningを開始する前に、次の点に注意してください。
+## Online deployment using TiUP (recommended) {#online-deployment-using-tiup-recommended}
 
--   `tidb-lightning`がクラッシュした場合、クラスタは「インポートモード」のままになります。 「通常モード」に戻すのを忘れると、TiKVクラスタ上に大量の圧縮されていないデータが発生し、異常に高いCPU使用率とストールが発生する可能性があります。 `tidb-lightning-ctl`のツールを使用して、クラスタを手動で「通常モード」に戻すことができます。
+1.  Install TiUP using the following command:
 
-    ```sh
-    bin/tidb-lightning-ctl --switch-mode=normal
+    ```shell
+    curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
     ```
 
-## ハードウェア要件 {#hardware-requirements}
+    This command automatically adds TiUP to the `PATH` environment variable. You need to start a new terminal session or run `source ~/.bashrc` before you can use TiUP. (According to your environment, you may need to run `source ~/.profile`. For the specific command, check the output of TiUP.)
 
-`tidb-lightning`はリソースを大量に消費するプログラムです。次のように展開することをお勧めします。
+2.  Install TiDB Lightning using TiUP:
 
--   32以上の論理コアCPU
--   20GB以上のメモリ
--   データソース全体を保存するのに十分な大きさのSSDで、より高速な読み取り速度を優先します
--   10ギガビットネットワークカード（1GB /秒以上で転送可能）
--   `tidb-lightning`は、実行時にすべてのCPUコアを完全に消費するため、専用マシンにデプロイすることを強くお勧めします。不可能な場合は、 `tidb-lightning`を`tidb-server`などの他のコンポーネントと一緒にデプロイし、CPU使用率を`region-concurrency`設定で制限することができます。
+    ```shell
+    tiup install tidb-lightning
+    ```
 
-> **ノート：**
->
-> -   `tidb-lightning`はCPUを集中的に使用するプログラムです。コンポーネントが混在する環境では、 `tidb-lightning`に割り当てられるリソースを制限する必要があります。そうしないと、他のコンポーネントを実行できない可能性があります。 CPU論理コアの`region-concurrency` ％を設定することをお勧めします。たとえば、CPUに32個の論理コアがある場合、 `region-concurrency`を24に設定できます。
+## Manual deployment {#manual-deployment}
 
-さらに、ターゲットTiKVクラスタには、新しいデータを吸収するのに十分なスペースが必要です。 [標準要件](/hardware-and-software-requirements.md)に加えて、ターゲットTiKVクラスタの合計空き領域は、**データソースのサイズ× <a href="/faq/manage-cluster-faq.md#is-the-number-of-replicas-in-each-region-configurable-if-yes-how-to-configure-it">レプリカの数</a>×2**よりも大きくする必要があります。
+### Download TiDB Lightning binaries {#download-tidb-lightning-binaries}
 
-デフォルトのレプリカ数が3の場合、これは、合計空き領域がデータソースのサイズの少なくとも6倍であることを意味します。
+Refer to [Download TiDB Tools](/download-ecosystem-tools.md) and download TiDB Lightning binaries. TiDB Lightning is completely compatible with early versions of TiDB. It is recommended to use the latest version of TiDB Lightning.
 
-## データのエクスポート {#export-data}
+Unzip the TiDB Lightning binary package to obtain the `tidb-lightning` executable file:
 
-次のコマンドを使用してMySQLからデータをエクスポートするには、 [`dumpling`ツール](/dumpling-overview.md)を使用します。
-
-```sh
-./dumpling -h 127.0.0.1 -P 3306 -u root -t 16 -F 256MB -B test -f 'test.t[12]' -o /data/my_database/
+```bash
+tar -zxvf tidb-lightning-${version}-linux-amd64.tar.gz
+chmod +x tidb-lightning
 ```
 
-このコマンドでは、
+In this command,
 
--   `-B test` ：データが`test`データベースからエクスポートされることを意味します。
--   `-f test.t[12]` ： `test.t1`つと`test.t2`のテーブルのみがエクスポートされることを意味します。
--   `-t 16` ：データのエクスポートに16スレッドが使用されることを意味します。
--   `-F 256MB` ：テーブルがチャンクに分割され、1つのチャンクが256MBであることを意味します。
+-   `-B test`: means the data is exported from the `test` database.
+-   `-f test.t[12]`: means only the `test.t1` and `test.t2` tables are exported.
+-   `-t 16`: means 16 threads are used to export the data.
+-   `-F 256MB`: means a table is partitioned into chunks and one chunk is 256 MB.
 
-データソースがCSVファイルで構成されている場合、構成については[CSVサポート](/tidb-lightning/migrate-from-csv-using-tidb-lightning.md)を参照してください。
+If the data source consists of CSV files, see [CSV support](/tidb-lightning/tidb-lightning-data-source.md#csv) for configuration.
 
-## TiDBLightningをデプロイ {#deploy-tidb-lightning}
+## Deploy TiDB Lightning {#deploy-tidb-lightning}
 
-このセクションでは、 [TiDBLightningを手動でデプロイする](#deploy-tidb-lightning-manually)の方法について説明します。
+This section describes how to [deploy TiDB Lightning manually](#deploy-tidb-lightning-manually).
 
-### TiDBLightningを手動でデプロイ {#deploy-tidb-lightning-manually}
+### Deploy TiDB Lightning manually {#deploy-tidb-lightning-manually}
 
-#### ステップ1：TiDBクラスタをデプロイする {#step-1-deploy-a-tidb-cluster}
+#### Step 1: Deploy a TiDB cluster {#step-1-deploy-a-tidb-cluster}
 
-データをインポートする前に、TiDBクラスタをデプロイする必要があります。最新の安定バージョンを使用することを強くお勧めします。
+Before importing data, you need to have a deployed TiDB cluster. It is highly recommended to use the latest stable version.
 
-展開手順は[TiDBクイックスタートガイド](/quick-start-with-tidb.md)にあります。
+You can find deployment instructions in [TiDB Quick Start Guide](/quick-start-with-tidb.md).
 
-#### 手順2：TiDBLightningインストールパッケージをダウンロードする {#step-2-download-the-tidb-lightning-installation-package}
+#### Step 2: Download the TiDB Lightning installation package {#step-2-download-the-tidb-lightning-installation-package}
 
-TiDB Lightningパッケージをダウンロードするには、 [TiDBツールをダウンロードする](/download-ecosystem-tools.md)のドキュメントを参照してください。
+Refer to the [Download TiDB Tools](/download-ecosystem-tools.md) document to download the TiDB Lightning package.
 
-> **ノート：**
+> **Note:**
 >
-> TiDB Lightningは、以前のバージョンのTiDBクラスターと互換性があります。 TiDBLightningインストールパッケージの最新の安定バージョンをダウンロードすることをお勧めします。
+> TiDB Lightning is compatible with TiDB clusters of earlier versions. It is recommended that you download the latest stable version of the TiDB Lightning installation package.
 
-#### ステップ3： <code>tidb-lightning</code>を開始します {#step-3-start-code-tidb-lightning-code}
+#### Step 3: Start <code>tidb-lightning</code> {#step-3-start-code-tidb-lightning-code}
 
-1.  ツールセットから`bin/tidb-lightning`と`bin/tidb-lightning-ctl`をアップロードします。
+1.  Upload `bin/tidb-lightning` and `bin/tidb-lightning-ctl` from the tool set.
 
-2.  データソースを同じマシンにマウントします。
+2.  Mount the data source onto the same machine.
 
-3.  `tidb-lightning.toml`を構成します。以下のテンプレートに表示されない構成の場合、TiDBLightningは構成エラーをログファイルに書き込んで終了します。
+3.  Configure `tidb-lightning.toml`. For configurations that do not appear in the template below, TiDB Lightning writes a configuration error to the log file and exits.
 
-    `sorted-kv-dir`は、ソートされたKey-Valueファイルの一時ストレージディレクトリを設定します。ディレクトリは空である必要があり、ストレージスペース**はインポートするデータセットのサイズよりも大きい必要があります**。詳細については、 [ダウンストリームストレージスペースの要件](/tidb-lightning/tidb-lightning-requirements.md#resource-requirements)を参照してください。
+    `sorted-kv-dir` sets the temporary storage directory for the sorted Key-Value files. The directory must be empty, and the storage space **must be greater than the size of the dataset to be imported**. See [Downstream storage space requirements](/tidb-lightning/tidb-lightning-requirements.md#storage-space-of-the-target-database) for details.
 
     ```toml
     [lightning]
@@ -115,16 +111,16 @@ TiDB Lightningパッケージをダウンロードするには、 [TiDBツール
     pd-addr = "172.16.31.4:2379"
     ```
 
-    上記は基本的な設定のみを示しています。設定の完全なリストについては、 [Configuration / コンフィグレーション](/tidb-lightning/tidb-lightning-configuration.md#tidb-lightning-global)セクションを参照してください。
+    The above only shows the essential settings. See the [Configuration](/tidb-lightning/tidb-lightning-configuration.md#tidb-lightning-global) section for the full list of settings.
 
-4.  `tidb-lightning`を実行します。
+4.  Run `tidb-lightning`.
 
     ```sh
     nohup ./tidb-lightning -config tidb-lightning.toml > nohup.out &
     ```
 
-## TiDBLightningのアップグレード {#upgrading-tidb-lightning}
+## Upgrade TiDB Lightning {#upgrade-tidb-lightning}
 
-バイナリのみを置き換えることで、TiDBLightningをアップグレードできます。これ以上の構成は必要ありません。 TiDB Lightningを再起動する詳細な手順については、 [FAQ](/tidb-lightning/tidb-lightning-faq.md#how-to-properly-restart-tidb-lightning)を参照してください。
+You can upgrade TiDB Lightning by replacing the binaries alone without further configurations. After the upgrade, you need to restart TiDB Lightning. For details, see [How to properly restart TiDB Lightning](/tidb-lightning/tidb-lightning-faq.md#how-to-properly-restart-tidb-lightning).
 
-インポートタスクが実行されている場合は、TiDBLightningをアップグレードする前にタスクが完了するまで待つことをお勧めします。そうしないと、チェックポイントがバージョン間で機能する保証がないため、最初から再インポートする必要がある可能性があります。
+If an import task is running, we recommend you to wait until it finishes before upgrading TiDB Lightning. Otherwise, there might be chances that you need to reimport from scratch, because there is no guarantee that checkpoints work across versions.
