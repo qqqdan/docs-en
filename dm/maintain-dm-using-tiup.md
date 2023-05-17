@@ -3,22 +3,22 @@ title: Maintain a DM Cluster Using TiUP
 summary: Learn how to maintain a DM cluster using TiUP.
 ---
 
-# TiUPを使用してDMクラスターを管理する {#maintain-a-dm-cluster-using-tiup}
+# Maintain a DM Cluster Using TiUP {#maintain-a-dm-cluster-using-tiup}
 
-このドキュメントでは、TiUPDMコンポーネントを使用してDMクラスタを保守する方法を紹介します。
+This document introduces how to maintain a DM cluster using the TiUP DM component.
 
-DMクラスタをまだデプロイしていない場合は、 [TiUPを使用してDMクラスターをデプロイする](/dm/deploy-a-dm-cluster-using-tiup.md)を参照して手順を確認できます。
+If you have not deployed a DM cluster yet, you can refer to [Deploy a DM Cluster Using TiUP](/dm/deploy-a-dm-cluster-using-tiup.md) for instructions.
 
-> **ノート：**
+> **Note:**
 >
-> -   次のコンポーネント間のポートが相互接続されていることを確認してください
->     -   DMマスターノード間の`peer_port` （デフォルトでは`8291` ）は相互接続されています。
->     -   各DMマスターノードは、すべてのDMワーカーノードの`port`つ（デフォルトでは`8262` ）に接続できます。
->     -   各DM-workerノードは、すべてのDM-masterノードの`port`つ（デフォルトでは`8261` ）に接続できます。
->     -   TiUPノードは、すべてのDMマスターノードの`port`つ（デフォルトでは`8261` ）に接続できます。
->     -   TiUPノードは、すべてのDMワーカーノードの`port`つ（デフォルトでは`8262` ）に接続できます。
+> -   Make sure that the ports among the following components are interconnected
+>     -   The `peer_port` (`8291` by default) among the DM-master nodes are interconnected.
+>     -   Each DM-master node can connect to the `port` of all DM-worker nodes (`8262` by default).
+>     -   Each DM-worker node can connect to the `port` of all DM-master nodes (`8261` by default).
+>     -   The TiUP nodes can connect to the `port` of all DM-master nodes (`8261` by default).
+>     -   The TiUP nodes can connect to the `port` of all DM-worker nodes (`8262` by default).
 
-TiUP DMコンポーネントのヘルプ情報については、次のコマンドを実行してください。
+For the help information of the TiUP DM component, run the following command:
 
 ```bash
 tiup dm --help
@@ -59,9 +59,9 @@ Flags:
   -y, --yes                Skip all confirmations and assumes 'yes'
 ```
 
-## クラスタリストを表示する {#view-the-cluster-list}
+## View the cluster list {#view-the-cluster-list}
 
-クラスタが正常にデプロイされたら、次のコマンドを実行してクラスタリストを表示します。
+After the cluster is successfully deployed, view the cluster list by running the following command:
 
 {{< copyable "" >}}
 
@@ -75,9 +75,9 @@ Name  User  Version  Path                                  PrivateKey
 prod-cluster  tidb  ${version}  /root/.tiup/storage/dm/clusters/test  /root/.tiup/storage/dm/clusters/test/ssh/id_rsa
 ```
 
-## クラスタを開始します {#start-the-cluster}
+## Start the cluster {#start-the-cluster}
 
-クラスタが正常にデプロイされたら、次のコマンドを実行してクラスタを起動します。
+After the cluster is successfully deployed, start the cluster by running the following command:
 
 {{< copyable "" >}}
 
@@ -85,11 +85,11 @@ prod-cluster  tidb  ${version}  /root/.tiup/storage/dm/clusters/test  /root/.tiu
 tiup dm start prod-cluster
 ```
 
-クラスタの名前を忘れた場合は、 `tiup dm list`を実行してクラスタリストを表示します。
+If you forget the name of your cluster, view the cluster list by running `tiup dm list`.
 
-## クラスタのステータスを確認する {#check-the-cluster-status}
+## Check the cluster status {#check-the-cluster-status}
 
-TiUPは、クラスタの各コンポーネントのステータスを表示するための`tiup dm display`のコマンドを提供します。このコマンドを使用すると、コンポーネントのステータスを確認するために各マシンにログインする必要はありません。コマンドの使用法は次のとおりです。
+TiUP provides the `tiup dm display` command to view the status of each component in the cluster. With this command, you do not have to log in to each machine to see the component status. The usage of the command is as follows:
 
 {{< copyable "" >}}
 
@@ -113,29 +113,29 @@ ID                 Role          Host          Ports      OS/Arch       Status  
 172.19.0.101:9090  prometheus    172.19.0.101  9090       linux/x86_64  Up         /home/tidb/data/prometheus-9090    /home/tidb/deploy/prometheus-9090
 ```
 
-`Status`列は、サービスが正常に実行されているかどうかを示すために`Up`または`Down`を使用します。
+The `Status` column uses `Up` or `Down` to indicate whether the service is running normally.
 
-DMマスターコンポーネントの場合、ステータスに`|L`が追加されることがあります。これは、DMマスターノードがリーダーであることを示します。 DM-workerコンポーネントの場合、 `Free`は、現在のDM-workerノードがアップストリームにバインドされていないことを示します。
+For the DM-master component, `|L` might be appended to a status, which indicates that the DM-master node is a Leader. For the DM-worker component, `Free` indicates that the current DM-worker node is not bound to an upstream.
 
-## クラスタでのスケーリング {#scale-in-a-cluster}
+## Scale in a cluster {#scale-in-a-cluster}
 
-クラスタでのスケーリングとは、一部のノードをオフラインにすることを意味します。この操作により、指定されたノードがクラスタから削除され、残りのデータファイルが削除されます。
+Scaling in a cluster means making some node(s) offline. This operation removes the specified node(s) from the cluster and deletes the remaining data files.
 
-クラスタでスケーリングする場合、DM-masterおよびDM-workerコンポーネントに対するDM操作は次の順序で実行されます。
+When you scale in a cluster, DM operations on DM-master and DM-worker components are performed in the following order:
 
-1.  コンポーネントプロセスを停止します。
-2.  DMマスターのAPIを呼び出して、 `member`を削除します。
-3.  ノードに関連するデータファイルをクリーンアップします。
+1.  Stop component processes.
+2.  Call the API for DM-master to delete the `member`.
+3.  Clean up the data files related to the node.
 
-スケールインコマンドの基本的な使用法：
+The basic usage of the scale-in command:
 
 ```bash
 tiup dm scale-in <cluster-name> -N <node-id>
 ```
 
-このコマンドを使用するには、クラスタ名とノードIDの少なくとも2つの引数を指定する必要があります。ノードIDは、前のセクションの`tiup dm display`コマンドを使用して取得できます。
+To use this command, you need to specify at least two arguments: the cluster name and the node ID. The node ID can be obtained by using the `tiup dm display` command in the previous section.
 
-たとえば、 `172.16.5.140`のDM-workerノードでスケーリングするには（DM-masterでのスケーリングと同様）、次のコマンドを実行します。
+For example, to scale in the DM-worker node on `172.16.5.140` (similar to scaling in DM-master), run the following command:
 
 {{< copyable "" >}}
 
@@ -143,17 +143,18 @@ tiup dm scale-in <cluster-name> -N <node-id>
 tiup dm scale-in prod-cluster -N 172.16.5.140:8262
 ```
 
-## クラスタをスケールアウトする {#scale-out-a-cluster}
+## Scale out a cluster {#scale-out-a-cluster}
 
-スケールアウト操作には、展開と同様の内部ロジックがあります。TiUPDMコンポーネントは、最初にノードのSSH接続を確認し、ターゲットノードに必要なディレクトリを作成してから、展開操作を実行し、ノードサービスを開始します。
+The scale-out operation has an inner logic similar to that of deployment: the TiUP DM component first ensures the SSH connection of the node, creates the required directories on the target node, then executes the deployment operation, and starts the node service.
 
-たとえば、 `prod-cluster`クラスタのDM-workerノードをスケールアウトするには、次の手順を実行します（DM-masterのスケールアウトにも同様の手順があります）。
+For example, to scale out a DM-worker node in the `prod-cluster` cluster, take the following steps (scaling out DM-master has similar steps):
 
-1.  `scale.yaml`のファイルを作成し、新しいワーカーノードの情報を追加します。
+1.  Create a `scale.yaml` file and add information of the new worker node:
 
-    > **ノート：**
+    > **Note:**
     >
-    > トポロジファイルを作成する必要があります。このファイルには、既存のノードではなく、新しいノードの説明のみが含まれています。その他の構成項目（デプロイメントディレクトリなど）については、この[TiUP構成パラメーターの例](https://github.com/pingcap/tiup/blob/master/embed/examples/dm/topology.example.yaml)を参照してください。
+    > You need to create a topology file, which includes only the description of the new nodes, not the existing nodes.
+    > For more configuration items (such as the deployment directory), refer to this [TiUP configuration parameter example](https://github.com/pingcap/tiup/blob/master/embed/examples/dm/topology.example.yaml).
 
     ```yaml
     ---
@@ -163,7 +164,7 @@ tiup dm scale-in prod-cluster -N 172.16.5.140:8262
 
     ```
 
-2.  スケールアウト操作を実行します。 TiUP DMは、ポート、ディレクトリ、および`scale.yaml`で説明されているその他の情報に従って、対応するノードをクラスタに追加します。
+2.  Perform the scale-out operation. TiUP DM adds the corresponding nodes to the cluster according to the port, directory, and other information described in `scale.yaml`.
 
     {{< copyable "" >}}
 
@@ -171,25 +172,25 @@ tiup dm scale-in prod-cluster -N 172.16.5.140:8262
     tiup dm scale-out prod-cluster scale.yaml
     ```
 
-    コマンドの実行後、 `tiup dm display prod-cluster`を実行することにより、スケールアウトされたクラスタのステータスを確認できます。
+    After the command is executed, you can check the status of the scaled-out cluster by running `tiup dm display prod-cluster`.
 
-## ローリングアップグレード {#rolling-upgrade}
+## Rolling upgrade {#rolling-upgrade}
 
-> **ノート：**
+> **Note:**
 >
-> v2.0.5以降、dmctlは[データソースのエクスポートとインポート、およびクラスターのタスクConfiguration / コンフィグレーション](/dm/dm-export-import-config.md)をサポートします。
+> Since v2.0.5, dmctl support [Export and Import Data Sources and Task Configuration of Clusters](/dm/dm-export-import-config.md).
 >
-> アップグレードする前に、 `config export`を使用してクラスターの構成ファイルをエクスポートできます。アップグレード後、以前のバージョンにダウングレードする必要がある場合は、最初に以前のクラスタを再デプロイしてから、 `config import`を使用して以前の構成ファイルをインポートできます。
+> Before upgrading, you can use `config export` to export the configuration files of clusters. After upgrading, if you need to downgrade to an earlier version, you can first redeploy the earlier cluster and then use `config import` to import the previous configuration files.
 >
-> v2.0.5より前のクラスターの場合、dmctl v2.0.5以降を使用して、データソースおよびタスク構成ファイルをエクスポートおよびインポートできます。
+> For clusters earlier than v2.0.5, you can use dmctl v2.0.5 or later to export and import the data source and task configuration files.
 >
-> v2.0.2以降のクラスターの場合、現在、リレーワーカーに関連する構成を自動的にインポートすることはサポートされていません。 `start-relay`のコマンドを使用して手動で[リレーログを開始](/dm/relay-log.md#start-and-stop-the-relay-log-feature)を実行できます。
+> For clusters later than v2.0.2, currently, it is not supported to automatically import the configuration related to relay worker. You can use `start-relay` command to manually [start relay log](/dm/relay-log.md#enable-and-disable-relay-log).
 
-ローリングアップグレードプロセスは、アプリケーションに対して可能な限り透過的に行われ、ビジネスに影響を与えません。操作はノードによって異なります。
+The rolling upgrade process is made as transparent as possible to the application, and does not affect the business. The operations vary with different nodes.
 
-### アップグレードコマンド {#upgrade-command}
+### Upgrade command {#upgrade-command}
 
-`tiup dm upgrade`コマンドを実行して、DMクラスタをアップグレードできます。たとえば、次のコマンドはクラスタを`${version}`にアップグレードします。このコマンドを実行する前に、 `${version}`を必要なバージョンに変更してください。
+You can run the `tiup dm upgrade` command to upgrade a DM cluster. For example, the following command upgrades the cluster to `${version}`. Modify `${version}` to your needed version before running this command:
 
 {{< copyable "" >}}
 
@@ -197,9 +198,9 @@ tiup dm scale-in prod-cluster -N 172.16.5.140:8262
 tiup dm upgrade prod-cluster ${version}
 ```
 
-## 構成を更新する {#update-configuration}
+## Update configuration {#update-configuration}
 
-コンポーネント構成を動的に更新する場合、TiUPDMコンポーネントは各クラスタの現在の構成を保存します。この構成を編集するには、 `tiup dm edit-config <cluster-name>`コマンドを実行します。例えば：
+If you want to dynamically update the component configurations, the TiUP DM component saves a current configuration for each cluster. To edit this configuration, execute the `tiup dm edit-config <cluster-name>` command. For example:
 
 {{< copyable "" >}}
 
@@ -207,7 +208,7 @@ tiup dm upgrade prod-cluster ${version}
 tiup dm edit-config prod-cluster
 ```
 
-TiUP DMは、viエディターで構成ファイルを開きます。他のエディターを使用する場合は、 `EDITOR`環境変数を使用して、 `export EDITOR=nano`などのエディターをカスタマイズします。ファイルを編集した後、変更を保存します。新しい構成をクラスタに適用するには、次のコマンドを実行します。
+TiUP DM opens the configuration file in the vi editor. If you want to use other editors, use the `EDITOR` environment variable to customize the editor, such as `export EDITOR=nano`. After editing the file, save the changes. To apply the new configuration to the cluster, execute the following command:
 
 {{< copyable "" >}}
 
@@ -215,11 +216,11 @@ TiUP DMは、viエディターで構成ファイルを開きます。他のエ�
 tiup dm reload prod-cluster
 ```
 
-このコマンドは、構成をターゲットマシンに送信し、クラスタを再起動して構成を有効にします。
+The command sends the configuration to the target machine and restarts the cluster to make the configuration take effect.
 
-## コンポーネントを更新 {#update-component}
+## Update component {#update-component}
 
-通常のアップグレードでは、 `upgrade`コマンドを使用できます。ただし、デバッグなどの一部のシナリオでは、現在実行中のコンポーネントを一時パッケージに置き換える必要がある場合があります。これを実現するには、次の`patch`のコマンドを使用します。
+For normal upgrade, you can use the `upgrade` command. But in some scenarios, such as debugging, you might need to replace the currently running component with a temporary package. To achieve this, use the `patch` command:
 
 {{< copyable "" >}}
 
@@ -247,7 +248,7 @@ Global Flags:
   -y, --yes                Skip all confirmations and assumes 'yes'
 ```
 
-DM-masterホットフィックスパッケージが`/tmp/dm-master-hotfix.tar.gz`に含まれていて、クラスタのすべてのDM-masterパッケージを置き換える場合は、次のコマンドを実行します。
+If a DM-master hotfix package is in `/tmp/dm-master-hotfix.tar.gz` and you want to replace all the DM-master packages in the cluster, run the following command:
 
 {{< copyable "" >}}
 
@@ -255,7 +256,7 @@ DM-masterホットフィックスパッケージが`/tmp/dm-master-hotfix.tar.gz
 tiup dm patch prod-cluster /tmp/dm-master-hotfix.tar.gz -R dm-master
 ```
 
-クラスタのDMマスターパッケージを1つだけ置き換えることもできます。
+You can also replace only one DM-master package in the cluster:
 
 {{< copyable "" >}}
 
@@ -263,22 +264,22 @@ tiup dm patch prod-cluster /tmp/dm-master-hotfix.tar.gz -R dm-master
 tiup dm patch prod-cluster /tmp/dm--hotfix.tar.gz -N 172.16.4.5:8261
 ```
 
-## DM-Ansibleを使用してデプロイされたDM1.0クラスタをインポートしてアップグレードします {#import-and-upgrade-a-dm-1-0-cluster-deployed-using-dm-ansible}
+## Import and upgrade a DM 1.0 cluster deployed using DM-Ansible {#import-and-upgrade-a-dm-1-0-cluster-deployed-using-dm-ansible}
 
-> **ノート：**
+> **Note:**
 >
-> -   TiUPは、DM1.0クラスタへのDMポータルコンポーネントのインポートをサポートしていません。
-> -   インポートする前に、元のクラスタを停止する必要があります。
-> -   2.0にアップグレードする必要があるタスクには`stop-task`を実行しないでください。
-> -   TiUPは、v2.0.0-rc.2以降のバージョンのDMクラスタへのインポートのみをサポートします。
-> -   `import`コマンドは、DM1.0クラスタから新しいDM2.0クラスターにデータをインポートするために使用されクラスタ。 DM移行タスクを既存のDM2.0クラスタにインポートする必要がある場合は、 [TiDBデータ移行をv1.0.xからv2.0+に手動でアップグレードする](/dm/manually-upgrade-dm-1.0-to-2.0.md)を参照してください。
-> -   一部のコンポーネントのデプロイメントディレクトリは、元のクラスタのデプロイメントディレクトリとは異なります。 `display`コマンドを実行して詳細を表示できます。
-> -   インポートする前に`tiup update --self && tiup update dm`を実行して、TiUPDMコンポーネントが最新バージョンであることを確認します。
-> -   インポート後、クラスタにはDMマスターノードが1つだけ存在します。 DMマスターをスケールアウトするには、 [クラスタをスケールアウトする](#scale-out-a-cluster)を参照してください。
+> -   TiUP does not support importing the DM Portal component in a DM 1.0 cluster.
+> -   You need to stop the original cluster before importing.
+> -   Don't run `stop-task` for tasks that need to be upgraded to 2.0.
+> -   TiUP only supports importing to a DM cluster of v2.0.0-rc.2 or a later version.
+> -   The `import` command is used to import data from a DM 1.0 cluster to a new DM 2.0 cluster. If you need to import DM migration tasks to an existing DM 2.0 cluster, refer to [Manually Upgrade TiDB Data Migration from v1.0.x to v2.0+](/dm/manually-upgrade-dm-1.0-to-2.0.md).
+> -   The deployment directories of some components are different from those of the original cluster. You can execute the `display` command to view the details.
+> -   Run `tiup update --self && tiup update dm` before importing to make sure that the TiUP DM component is the latest version.
+> -   Only one DM-master node exists in the cluster after importing. Refer to [Scale out a cluster](#scale-out-a-cluster) to scale out the DM-master.
 
-TiUPがリリースされる前は、DM-Ansibleを使用してDMクラスターをデプロイすることがよくあります。 TiUPがDM-AnsibleによってデプロイされたDM1.0クラスタを引き継ぐことができるようにするには、 `import`コマンドを使用します。
+Before TiUP is released, DM-Ansible is often used to deploy DM clusters. To enable TiUP to take over the DM 1.0 cluster deployed by DM-Ansible, use the `import` command.
 
-たとえば、DM Ansibleを使用してデプロイされたクラスタをインポートするには、次のようにします。
+For example, to import a cluster deployed using DM Ansible:
 
 {{< copyable "" >}}
 
@@ -286,18 +287,18 @@ TiUPがリリースされる前は、DM-Ansibleを使用してDMクラスター�
 tiup dm import --dir=/path/to/dm-ansible --cluster-version ${version}
 ```
 
-`tiup list dm-master`を実行して、TiUPでサポートされている最新のクラスタバージョンを表示します。
+Execute `tiup list dm-master` to view the latest cluster version supported by TiUP.
 
-`import`コマンドを使用するプロセスは次のとおりです。
+The process of using the `import` command is as follows:
 
-1.  TiUPは、DM-Ansibleを使用して以前にデプロイされたDMクラスタに基づいてトポロジファイル[`topology.yml`](https://github.com/pingcap/tiup/blob/master/embed/examples/dm/topology.example.yaml)を生成します。
-2.  トポロジー・ファイルが生成されたことを確認した後、それを使用して、v2.0以降のバージョンのDMクラスタをデプロイできます。
+1.  TiUP generates a topology file [`topology.yml`](https://github.com/pingcap/tiup/blob/master/embed/examples/dm/topology.example.yaml) based on the DM cluster previously deployed using DM-Ansible.
+2.  After confirming that the topology file has been generated, you can use it to deploy the DM cluster of v2.0 or later versions.
 
-展開が完了したら、 `tiup dm start`コマンドを実行してクラスタを開始し、DMカーネルのアップグレードプロセスを開始できます。
+After the deployment is completed, you can execute the `tiup dm start` command to start the cluster and begin the process of upgrading the DM kernel.
 
-## 操作ログを表示する {#view-the-operation-log}
+## View the operation log {#view-the-operation-log}
 
-操作ログを表示するには、 `audit`コマンドを使用します。 `audit`コマンドの使用法は次のとおりです。
+To view the operation log, use the `audit` command. The usage of the `audit` command is as follows:
 
 ```bash
 Usage:
@@ -307,7 +308,7 @@ Flags:
   -h, --help   help for audit
 ```
 
-`[audit-id]`引数が指定されていない場合、コマンドは実行されたコマンドのリストを表示します。例えば：
+If the `[audit-id]` argument is not specified, the command shows a list of commands that have been executed. For example:
 
 {{< copyable "" >}}
 
@@ -323,7 +324,7 @@ ID      Time                  Command
 4D5kNr  2020-08-13T05:36:10Z  tiup dm deploy -p prod-cluster ${version} ./examples/dm/minimal.yaml
 ```
 
-最初の列は`audit-id`です。特定のコマンドの実行ログを表示するには、次のように`audit-id`の引数を渡します。
+The first column is `audit-id`. To view the execution log of a certain command, pass the `audit-id` argument as follows:
 
 {{< copyable "" >}}
 
@@ -331,9 +332,9 @@ ID      Time                  Command
 tiup dm audit 4D5kQY
 ```
 
-## DMクラスタのホストでコマンドを実行する {#run-commands-on-a-host-in-the-dm-cluster}
+## Run commands on a host in the DM cluster {#run-commands-on-a-host-in-the-dm-cluster}
 
-DMクラスタのホストでコマンドを実行するには、 `exec`コマンドを使用します。 `exec`コマンドの使用法は次のとおりです。
+To run commands on a host in the DM cluster, use the `exec` command. The usage of the `exec` command is as follows:
 
 ```bash
 Usage:
@@ -347,7 +348,7 @@ Flags:
       --sudo             use root permissions (default false)
 ```
 
-たとえば、すべてのDMノードで`ls /tmp`を実行するには、次のコマンドを実行します。
+For example, to execute `ls /tmp` on all DM nodes, run the following command:
 
 {{< copyable "" >}}
 
@@ -357,21 +358,21 @@ tiup dm exec prod-cluster --command='ls /tmp'
 
 ## dmctl {#dmctl}
 
-TiUPはDMクラスタコントローラー`dmctl`を統合します。
+TiUP integrates the DM cluster controller `dmctl`.
 
-次のコマンドを実行して、dmctlを使用します。
+Run the following command to use dmctl:
 
 ```bash
 tiup dmctl [args]
 ```
 
-dmctlのバージョンを指定します。このコマンドを実行する前に、 `${version}`を必要なバージョンに変更してください。
+Specify the version of dmctl. Modify `${version}` to your needed version before running this command:
 
 ```
 tiup dmctl:${version} [args]
 ```
 
-ソースを追加するための以前のdmctlコマンドは`dmctl --master-addr master1:8261 operate-source create /tmp/source1.yml`です。 dmctlがTiUPに統合された後、コマンドは次のようになります。
+The previous dmctl command to add a source is `dmctl --master-addr master1:8261 operate-source create /tmp/source1.yml`. After dmctl is integrated into TiUP, the command is:
 
 {{< copyable "" >}}
 
@@ -379,22 +380,22 @@ tiup dmctl:${version} [args]
 tiup dmctl --master-addr master1:8261 operate-source create /tmp/source1.yml
 ```
 
-## システムのネイティブSSHクライアントを使用してクラスタに接続します {#use-the-system-s-native-ssh-client-to-connect-to-cluster}
+## Use the system's native SSH client to connect to cluster {#use-the-system-s-native-ssh-client-to-connect-to-cluster}
 
-クラスタマシンで実行される上記のすべての操作は、TiUPに組み込まれたSSHクライアントを使用してクラスタに接続し、コマンドを実行します。ただし、シナリオによっては、このようなクラスタ操作を実行するために、制御マシンシステムにネイティブなSSHクライアントを使用する必要がある場合もあります。例えば：
+All operations above performed on the cluster machine use the SSH client embedded in TiUP to connect to the cluster and execute commands. However, in some scenarios, you might also need to use the SSH client native to the control machine system to perform such cluster operations. For example:
 
--   認証にSSHプラグインを使用するには
--   カスタマイズされたSSHクライアントを使用するには
+-   To use a SSH plug-in for authentication
+-   To use a customized SSH client
 
-次に、 `--native-ssh`コマンドラインフラグを使用して、システムネイティブのコマンドラインツールを有効にします。
+Then you can use the `--native-ssh` command-line flag to enable the system-native command-line tool:
 
--   クラスタのデプロイ： `tiup dm deploy <cluster-name> <version> <topo> --native-ssh`
--   クラスタを開始します： `tiup dm start <cluster-name> --native-ssh`
--   クラスタのアップグレード： `tiup dm upgrade ... --native-ssh`
+-   Deploy a cluster: `tiup dm deploy <cluster-name> <version> <topo> --native-ssh`
+-   Start a cluster: `tiup dm start <cluster-name> --native-ssh`
+-   Upgrade a cluster: `tiup dm upgrade ... --native-ssh`
 
-上記のすべてのクラスタ操作コマンドに`--native-ssh`を追加して、システムのネイティブSSHクライアントを使用できます。
+You can add `--native-ssh` in all cluster operation commands above to use the system's native SSH client.
 
-すべてのコマンドにこのようなフラグが追加されないようにするには、 `TIUP_NATIVE_SSH`システム変数を使用して、ローカルSSHクライアントを使用するかどうかを指定できます。
+To avoid adding such a flag in every command, you can use the `TIUP_NATIVE_SSH` system variable to specify whether to use the local SSH client:
 
 ```sh
 export TIUP_NATIVE_SSH=true
@@ -404,8 +405,8 @@ export TIUP_NATIVE_SSH=1
 export TIUP_NATIVE_SSH=enable
 ```
 
-この環境変数と`--native-ssh`を同時に指定すると、 `--native-ssh`の優先度が高くなります。
+If you specify this environment variable and `--native-ssh` at the same time, `--native-ssh` has higher priority.
 
-> **ノート：**
+> **Note:**
 >
-> クラスタ展開のプロセス中に、接続にパスワードを使用する必要がある場合、またはキーファイルに`passphrase`が設定されている場合は、 `sshpass`が制御マシンにインストールされていることを確認する必要があります。それ以外の場合は、タイムアウトエラーが報告されます。
+> During the process of cluster deployment, if you need to use a password for connection or `passphrase` is configured in the key file, you must ensure that `sshpass` is installed on the control machine; otherwise, a timeout error is reported.
