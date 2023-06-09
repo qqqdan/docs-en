@@ -2,7 +2,7 @@
 title: Use TiFlash
 ---
 
-To experience the whole process from importing data to querying in a TPC-H dataset, refer to [Quick Start Guide for TiDB HTAP](/quick-start-with-htap.md).
+To experience the whole process from importing data to querying in a TPC-H dataset, refer to [<a href="/quick-start-with-htap.md">Quick Start Guide for TiDB HTAP</a>](/quick-start-with-htap.md).
 
 # Use TiFlash {#use-tiflash}
 
@@ -10,8 +10,8 @@ After TiFlash is deployed, data replication does not automatically begin. You ne
 
 You can either use TiDB to read TiFlash replicas for medium-scale analytical processing, or use TiSpark to read TiFlash replicas for large-scale analytical processing, which is based on your own needs. See the following sections for details:
 
--   [Use TiDB to read TiFlash replicas](#use-tidb-to-read-tiflash-replicas)
--   [Use TiSpark to read TiFlash replicas](#use-tispark-to-read-tiflash-replicas)
+-   [<a href="#use-tidb-to-read-tiflash-replicas">Use TiDB to read TiFlash replicas</a>](#use-tidb-to-read-tiflash-replicas)
+-   [<a href="#use-tispark-to-read-tiflash-replicas">Use TiSpark to read TiFlash replicas</a>](#use-tispark-to-read-tiflash-replicas)
 
 ## Create TiFlash replicas for tables {#create-tiflash-replicas-for-tables}
 
@@ -93,7 +93,7 @@ Before TiFlash replicas are added, each TiKV instance performs a full table scan
       server.snap-max-write-bytes-per-sec: 300MiB  # Default to 100MiB.
     ```
 
-    The configuration change takes effect after restarting the TiFlash and TiKV instances. The TiKV configuration can be also changed online by using the [Dynamic Config SQL statement](https://docs.pingcap.com/tidb/stable/dynamic-config), which takes effect immediately without restarting TiKV instances:
+    The configuration change takes effect after restarting the TiFlash and TiKV instances. The TiKV configuration can be also changed online by using the [<a href="https://docs.pingcap.com/tidb/stable/dynamic-config">Dynamic Config SQL statement</a>](https://docs.pingcap.com/tidb/stable/dynamic-config), which takes effect immediately without restarting TiKV instances:
 
     ```sql
     SET CONFIG tikv `server.snap-max-write-bytes-per-sec` = '300MiB';
@@ -101,7 +101,7 @@ Before TiFlash replicas are added, each TiKV instance performs a full table scan
 
     After adjusting the preceding configurations, you cannot observe the acceleration for now, as the replication speed is still restricted by the PD limit globally.
 
-2.  Use [PD Control](https://docs.pingcap.com/tidb/stable/pd-control) to progressively ease the new replica speed limit.
+2.  Use [<a href="https://docs.pingcap.com/tidb/stable/pd-control">PD Control</a>](https://docs.pingcap.com/tidb/stable/pd-control) to progressively ease the new replica speed limit.
 
     The default new replica speed limit is 30, which means, approximately 30 Regions add TiFlash replicas every minute. Executing the following command will adjust the limit to 60 for all TiFlash instances, which doubles the original speed:
 
@@ -208,7 +208,7 @@ When configuring replicas, if you need to distribute TiFlash replicas to multipl
         ...
     ```
 
-For more information about scheduling replicas by using labels, see [Schedule Replicas by Topology Labels](/schedule-replicas-by-topology-labels.md), [Multiple Data Centers in One City Deployment](/multi-data-centers-in-one-city-deployment.md), and [Three Data Centers in Two Cities Deployment](/three-data-centers-in-two-cities-deployment.md).
+For more information about scheduling replicas by using labels, see [<a href="/schedule-replicas-by-topology-labels.md">Schedule Replicas by Topology Labels</a>](/schedule-replicas-by-topology-labels.md), [<a href="/multi-data-centers-in-one-city-deployment.md">Multiple Data Centers in One City Deployment</a>](/multi-data-centers-in-one-city-deployment.md), and [<a href="/three-data-centers-in-two-cities-deployment.md">Three Data Centers in Two Cities Deployment</a>](/three-data-centers-in-two-cities-deployment.md).
 
 ## Use TiDB to read TiFlash replicas {#use-tidb-to-read-tiflash-replicas}
 
@@ -290,7 +290,7 @@ The final engine configuration is the session-level configuration, that is, the 
 
 > **Note:**
 >
-> Because [TiDB Dashboard](/dashboard/dashboard-intro.md) and other components need to read some system tables stored in the TiDB memory table area, it is recommended to always add the "tidb" engine to the instance-level engine configuration.
+> Because [<a href="/dashboard/dashboard-intro.md">TiDB Dashboard</a>](/dashboard/dashboard-intro.md) and other components need to read some system tables stored in the TiDB memory table area, it is recommended to always add the "tidb" engine to the instance-level engine configuration.
 
 If the queried table does not have a replica of the specified engine (for example, the engine is configured as "tiflash" but the table does not have a TiFlash replica), the query returns an error.
 
@@ -312,7 +312,7 @@ If you set an alias to a table in a query statement, you must use the alias in t
 select /*+ read_from_storage(tiflash[alias_a,alias_b]) */ ... from table_name_1 as alias_a, table_name_2 as alias_b where alias_a.column_1 = alias_b.column_2;
 ```
 
-In the above statements, `tiflash[]` prompts the optimizer to read the TiFlash replicas. You can also use `tikv[]` to prompt the optimizer to read the TiKV replicas as needed. For hint syntax details, refer to [READ_FROM_STORAGE](/optimizer-hints.md#read_from_storagetiflasht1_name--tl_name--tikvt2_name--tl_name-).
+In the above statements, `tiflash[]` prompts the optimizer to read the TiFlash replicas. You can also use `tikv[]` to prompt the optimizer to read the TiKV replicas as needed. For hint syntax details, refer to [<a href="/optimizer-hints.md#read_from_storagetiflasht1_name--tl_name--tikvt2_name--tl_name-">READ_FROM_STORAGE</a>](/optimizer-hints.md#read_from_storagetiflasht1_name--tl_name--tikvt2_name--tl_name-).
 
 If the table specified by a hint does not have a replica of the specified engine, the hint is ignored and a warning is reported. In addition, a hint only takes effect on the premise of engine isolation. If the engine specified in a hint is not in the engine isolation list, the hint is also ignored and a warning is reported.
 
@@ -326,7 +326,7 @@ In the above three ways of reading TiFlash replicas, engine isolation specifies 
 
 > **Note:**
 >
-> Before v4.0.3, the behavior of reading from TiFlash replica in a non-read-only SQL statement (for example, `INSERT INTO ... SELECT`, `SELECT ... FOR UPDATE`, `UPDATE ...`, `DELETE ...`) is undefined. In v4.0.3 and later versions, internally TiDB ignores the TiFlash replica for a non-read-only SQL statement to guarantee the data correctness. That is, for [smart selection](#smart-selection), TiDB automatically selects the non-TiFlash replica; for [engine isolation](#engine-isolation) that specifies TiFlash replica **only**, TiDB reports an error; and for [manual hint](#manual-hint), TiDB ignores the hint.
+> Before v4.0.3, the behavior of reading from TiFlash replica in a non-read-only SQL statement (for example, `INSERT INTO ... SELECT`, `SELECT ... FOR UPDATE`, `UPDATE ...`, `DELETE ...`) is undefined. In v4.0.3 and later versions, internally TiDB ignores the TiFlash replica for a non-read-only SQL statement to guarantee the data correctness. That is, for [<a href="#smart-selection">smart selection</a>](#smart-selection), TiDB automatically selects the non-TiFlash replica; for [<a href="#engine-isolation">engine isolation</a>](#engine-isolation) that specifies TiFlash replica **only**, TiDB reports an error; and for [<a href="#manual-hint">manual hint</a>](#manual-hint), TiDB ignores the hint.
 
 ## Use TiSpark to read TiFlash replicas {#use-tispark-to-read-tiflash-replicas}
 
@@ -356,16 +356,16 @@ TiFlash supports the push-down of the following operators:
 
 -   TableScan: Reads data from tables.
 -   Selection: Filters data.
--   HashAgg: Performs data aggregation based on the [Hash Aggregation](/explain-aggregation.md#hash-aggregation) algorithm.
--   StreamAgg: Performs data aggregation based on the [Stream Aggregation](/explain-aggregation.md#stream-aggregation) algorithm. SteamAgg only supports the aggregation without the `GROUP BY` condition.
+-   HashAgg: Performs data aggregation based on the [<a href="/explain-aggregation.md#hash-aggregation">Hash Aggregation</a>](/explain-aggregation.md#hash-aggregation) algorithm.
+-   StreamAgg: Performs data aggregation based on the [<a href="/explain-aggregation.md#stream-aggregation">Stream Aggregation</a>](/explain-aggregation.md#stream-aggregation) algorithm. SteamAgg only supports the aggregation without the `GROUP BY` condition.
 -   TopN: Performs the TopN calculation.
 -   Limit: Performs the limit calculation.
 -   Project: Performs the projection calculation.
--   HashJoin (Equi Join): Performs the join calculation based on the [Hash Join](/explain-joins.md#hash-join) algorithm, but with the following conditions:
-    -   The operator can be pushed down only in the [MPP mode](#use-the-mpp-mode).
+-   HashJoin (Equi Join): Performs the join calculation based on the [<a href="/explain-joins.md#hash-join">Hash Join</a>](/explain-joins.md#hash-join) algorithm, but with the following conditions:
+    -   The operator can be pushed down only in the [<a href="#use-the-mpp-mode">MPP mode</a>](#use-the-mpp-mode).
     -   The push-down of `Full Outer Join` is not supported.
 -   HashJoin (Non-Equi Join): Performs the Cartesian Join algorithm, but with the following conditions:
-    -   The operator can be pushed down only in the [MPP mode](#use-the-mpp-mode).
+    -   The operator can be pushed down only in the [<a href="#use-the-mpp-mode">MPP mode</a>](#use-the-mpp-mode).
     -   Cartesian Join is supported only in Broadcast Join.
 
 In TiDB, operators are organized in a tree structure. For an operator to be pushed down to TiFlash, all of the following prerequisites must be met:
@@ -403,7 +403,7 @@ If a query encounters unsupported push-down calculations, TiDB needs to complete
 
 ## Use the MPP mode {#use-the-mpp-mode}
 
-TiFlash supports using the MPP mode to execute queries, which introduces cross-node data exchange (data shuffle process) into the computation. TiDB automatically determines whether to select the MPP mode using the optimizer's cost estimation. You can change the selection strategy by modifying the values of [`tidb_allow_mpp`](/system-variables.md#tidb_allow_mpp-new-in-v50) and [`tidb_enforce_mpp`](/system-variables.md#tidb_enforce_mpp-new-in-v51).
+TiFlash supports using the MPP mode to execute queries, which introduces cross-node data exchange (data shuffle process) into the computation. TiDB automatically determines whether to select the MPP mode using the optimizer's cost estimation. You can change the selection strategy by modifying the values of [<a href="/system-variables.md#tidb_allow_mpp-new-in-v50">`tidb_allow_mpp`</a>](/system-variables.md#tidb_allow_mpp-new-in-v50) and [<a href="/system-variables.md#tidb_enforce_mpp-new-in-v51">`tidb_enforce_mpp`</a>](/system-variables.md#tidb_enforce_mpp-new-in-v51).
 
 ### Control whether to select the MPP mode {#control-whether-to-select-the-mpp-mode}
 
@@ -443,7 +443,7 @@ set @@session.tidb_allow_mpp=1;
 set @@session.tidb_enforce_mpp=1;
 ```
 
-The initial value of the `tidb_enforce_mpp` session variable is equal to the [`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp) configuration value of this tidb-server instance (which is `false` by default). If multiple tidb-server instances in a TiDB cluster only perform analytical queries and you want to make sure that the MPP mode is used on these instances, you can change their [`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp) configuration values to `true`.
+The initial value of the `tidb_enforce_mpp` session variable is equal to the [<a href="/tidb-configuration-file.md#enforce-mpp">`enforce-mpp`</a>](/tidb-configuration-file.md#enforce-mpp) configuration value of this tidb-server instance (which is `false` by default). If multiple tidb-server instances in a TiDB cluster only perform analytical queries and you want to make sure that the MPP mode is used on these instances, you can change their [<a href="/tidb-configuration-file.md#enforce-mpp">`enforce-mpp`</a>](/tidb-configuration-file.md#enforce-mpp) configuration values to `true`.
 
 > **Note:**
 >
@@ -496,8 +496,23 @@ In the example execution plan, the `ExchangeReceiver` and `ExchangeSender` opera
 
 TiFlash provides the following two global/session variables to control whether to use Broadcast Hash Join:
 
--   [`tidb_broadcast_join_threshold_size`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is bytes. If the table size (in the unit of bytes) is less than the value of the variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
--   [`tidb_broadcast_join_threshold_count`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is rows. If the objects of the join operation belong to a subquery, the optimizer cannot estimate the size of the subquery result set, so the size is determined by the number of rows in the result set. If the estimated number of rows in the subquery is less than the value of this variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
+-   [<a href="/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50">`tidb_broadcast_join_threshold_size`</a>](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is bytes. If the table size (in the unit of bytes) is less than the value of the variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
+-   [<a href="/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50">`tidb_broadcast_join_threshold_count`</a>](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is rows. If the objects of the join operation belong to a subquery, the optimizer cannot estimate the size of the subquery result set, so the size is determined by the number of rows in the result set. If the estimated number of rows in the subquery is less than the value of this variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
+
+### Known issues of MPP {#known-issues-of-mpp}
+
+In the current version, TiFlash uses the `start_ts` of a query as the unique key of the query. In most cases, the `start_ts` of each query can uniquely identify a query, but in the following cases, different queries have the same `start_ts`:
+
+-   All queries in the same transaction have the same `start_ts`.
+-   When you use [<a href="/system-variables.md#tidb_snapshot">`tidb_snapshot`</a>](/system-variables.md#tidb_snapshot) to read data at a specific historical time point, the same time point is manually specified.
+-   When [<a href="/stale-read.md">Stale Read</a>](/stale-read.md) is enabled, the same time point is manually specified.
+
+When `start_ts` cannot uniquely represent the MPP query, if TiFlash detects that different queries have the same `start_ts` at a given time, TiFlash might report an error. Typical error cases are as follows:
+
+-   When multiple queries with the same `start_ts` are sent to TiFlash at the same time, you might encounter the `task has been registered` error.
+-   When multiple simple queries with `LIMIT` are executed continuously in the same transaction, once the `LIMIT` condition is met, TiDB sends a cancel request to TiFlash to cancel the query. This request also uses `start_ts` to identify the query to be canceled. If there are other queries with the same `start_ts` in TiFlash, these queries might be canceled by mistake. An example of this issue can be found in [<a href="https://github.com/pingcap/tidb/issues/43426">#43426</a>](https://github.com/pingcap/tidb/issues/43426).
+
+This issue is fixed in TiDB v6.6.0. It is recommended to use the [<a href="https://docs.pingcap.com/tidb/stable">latest LTS version</a>](https://docs.pingcap.com/tidb/stable).
 
 ## Data validation {#data-validation}
 
@@ -527,16 +542,16 @@ TiFlash supports both automatic and manual data validation:
 
 -   Automatic data validation:
     -   TiFlash enables the V2 validation mechanism by default.
-    -   To enable V3 validation mechanism, refer to [TiFlash configuration file](/tiflash/tiflash-configuration.md#configure-the-tiflashtoml-file).
--   Manual data validation. Refer to [`DTTool inspect`](/tiflash/tiflash-command-line-flags.md#dttool-inspect).
+    -   To enable V3 validation mechanism, refer to [<a href="/tiflash/tiflash-configuration.md#configure-the-tiflashtoml-file">TiFlash configuration file</a>](/tiflash/tiflash-configuration.md#configure-the-tiflashtoml-file).
+-   Manual data validation. Refer to [<a href="/tiflash/tiflash-command-line-flags.md#dttool-inspect">`DTTool inspect`</a>](/tiflash/tiflash-command-line-flags.md#dttool-inspect).
 
 > **Warning:**
 >
-> After you enable the V3 validation mechanism, the newly generated DTFile cannot be directly read by TiFlash earlier than v5.4.0. Since v5.4.0, TiFlash supports both V2 and V3 and does not actively upgrade or downgrade versions. If you need to upgrade or downgrade versions for existing files, you need to manually [switch versions](/tiflash/tiflash-command-line-flags.md#dttool-migrate).
+> After you enable the V3 validation mechanism, the newly generated DTFile cannot be directly read by TiFlash earlier than v5.4.0. Since v5.4.0, TiFlash supports both V2 and V3 and does not actively upgrade or downgrade versions. If you need to upgrade or downgrade versions for existing files, you need to manually [<a href="/tiflash/tiflash-command-line-flags.md#dttool-migrate">switch versions</a>](/tiflash/tiflash-command-line-flags.md#dttool-migrate).
 
 #### Validation tool {#validation-tool}
 
-In addition to automatic data validation performed when TiFlash reads data, a tool for manually checking data integrity is introduced in v5.4.0. For details, refer to [DTTool](/tiflash/tiflash-command-line-flags.md#dttool-inspect).
+In addition to automatic data validation performed when TiFlash reads data, a tool for manually checking data integrity is introduced in v5.4.0. For details, refer to [<a href="/tiflash/tiflash-command-line-flags.md#dttool-inspect">DTTool</a>](/tiflash/tiflash-command-line-flags.md#dttool-inspect).
 
 ## Notes {#notes}
 
