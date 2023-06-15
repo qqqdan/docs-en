@@ -3,29 +3,29 @@ title: TiDB Specific Functions
 summary: Learn about the usage of TiDB specific functions.
 ---
 
-# TiDB固有の機能 {#tidb-specific-functions}
+# TiDB Specific Functions {#tidb-specific-functions}
 
-次の関数はTiDB拡張機能であり、MySQLにはありません。
+The following functions are TiDB extensions, and are not present in MySQL:
 
-| 関数名                                                                                | 機能の説明                                                                                                                             |
-| :--------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- |
-| `TIDB_BOUNDED_STALENESS()`                                                         | `TIDB_BOUNDED_STALENESS`関数は、時間範囲内で可能な限り新しいデータを読み取るようにTiDBに指示します。参照： [`AS OF TIMESTAMP`句を使用して履歴データを読み取る](/as-of-timestamp.md)      |
-| [`TIDB_DECODE_KEY(str)`](#tidb_decode_key)                                         | `TIDB_DECODE_KEY`関数を使用して、TiDBでエンコードされたキーエントリを`_tidb_rowid`と`table_id`を含むJSON構造にデコードできます。これらのエンコードされたキーは、一部のシステムテーブルとログ出力にあります。    |
-| [`TIDB_DECODE_PLAN(str)`](#tidb_decode_plan)                                       | `TIDB_DECODE_PLAN`関数は、TiDB実行プランをデコードするために使用できます。                                                                                  |
-| `TIDB_IS_DDL_OWNER()`                                                              | `TIDB_IS_DDL_OWNER`関数を使用して、接続しているTiDBインスタンスがDDL所有者であるかどうかを確認できます。 DDL所有者は、クラスタの他のすべてのノードに代わってDDLステートメントを実行するタスクを実行するTiDBインスタンスです。 |
-| [`TIDB_PARSE_TSO(num)`](#tidb_parse_tso)                                           | `TIDB_PARSE_TSO`関数を使用して、TiDBTSOタイムスタンプから物理タイムスタンプを抽出できます。参照： [`tidb_current_ts`](/system-variables.md#tidb_current_ts) 。          |
-| [`TIDB_VERSION()`](#tidb_version)                                                  | `TIDB_VERSION`関数は、追加のビルド情報を含むTiDBバージョンを返します。                                                                                      |
-| [`TIDB_DECODE_SQL_DIGESTS(digests, stmtTruncateLength)`](#tidb_decode_sql_digests) | `TIDB_DECODE_SQL_DIGESTS()`関数は、クラスタのSQLダイジェストのセットに対応する正規化されたSQLステートメント（形式と引数のない形式）を照会するために使用されます。                                 |
-| `VITESS_HASH(str)`                                                                 | `VITESS_HASH`関数は、Vitessの`HASH`関数と互換性のある文字列のハッシュを返します。これは、Vitessからのデータ移行を支援することを目的としています。                                          |
-| `TIDB_SHARD()`                                                                     | `TIDB_SHARD`関数を使用して、インデックスのホットスポットを分散させるためのシャードインデックスを作成できます。シャードインデックスは、プレフィックスとして`TIDB_SHARD`関数を持つ式インデックスです。                    |
+| Function name                                                                                                             | Function description                                                                                                                                                                                                                                                       |
+| :------------------------------------------------------------------------------------------------------------------------ | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `TIDB_BOUNDED_STALENESS()`                                                                                                | The `TIDB_BOUNDED_STALENESS` function instructs TiDB to read the data as new as possible within the time range. See also: [<a href="/as-of-timestamp.md">Read Historical Data Using the `AS OF TIMESTAMP` Clause</a>](/as-of-timestamp.md)                                 |
+| [<a href="#tidb_decode_key">`TIDB_DECODE_KEY(str)`</a>](#tidb_decode_key)                                                 | The `TIDB_DECODE_KEY` function can be used to decode a TiDB-encoded key entry into a JSON structure containing `_tidb_rowid` and `table_id`. These encoded keys can be found in some system tables and in logging outputs.                                                 |
+| [<a href="#tidb_decode_plan">`TIDB_DECODE_PLAN(str)`</a>](#tidb_decode_plan)                                              | The `TIDB_DECODE_PLAN` function can be used to decode a TiDB execution plan.                                                                                                                                                                                               |
+| `TIDB_IS_DDL_OWNER()`                                                                                                     | The `TIDB_IS_DDL_OWNER` function can be used to check whether or not the TiDB instance you are connected to is the one that is the DDL Owner. The DDL Owner is the TiDB instance that is tasked with executing DDL statements on behalf of all other nodes in the cluster. |
+| [<a href="#tidb_parse_tso">`TIDB_PARSE_TSO(num)`</a>](#tidb_parse_tso)                                                    | The `TIDB_PARSE_TSO` function can be used to extract the physical timestamp from a TiDB TSO timestamp. See also: [<a href="/system-variables.md#tidb_current_ts">`tidb_current_ts`</a>](/system-variables.md#tidb_current_ts).                                             |
+| [<a href="#tidb_version">`TIDB_VERSION()`</a>](#tidb_version)                                                             | The `TIDB_VERSION` function returns the TiDB version with additional build information.                                                                                                                                                                                    |
+| [<a href="#tidb_decode_sql_digests">`TIDB_DECODE_SQL_DIGESTS(digests, stmtTruncateLength)`</a>](#tidb_decode_sql_digests) | The `TIDB_DECODE_SQL_DIGESTS()` function is used to query the normalized SQL statements (a form without formats and arguments) corresponding to the set of SQL digests in the cluster.                                                                                     |
+| `VITESS_HASH(str)`                                                                                                        | The `VITESS_HASH` function returns the hash of a string that is compatible with Vitess' `HASH` function. This is intended to help the data migration from Vitess.                                                                                                          |
+| `TIDB_SHARD()`                                                                                                            | The `TIDB_SHARD` function can be used to create a shard index to scatter the index hotspot. A shard index is an expression index with a `TIDB_SHARD` function as the prefix.                                                                                               |
 
-## 例 {#examples}
+## Examples {#examples}
 
-このセクションでは、上記のいくつかの関数の例を示します。
+This section provides examples for some of the functions above.
 
 ### TIDB_DECODE_KEY {#tidb-decode-key}
 
-次の例では、テーブル`t1`にTiDBによって生成された非表示の`rowid`があります。ステートメントでは`TIDB_DECODE_KEY`が使用されています。結果から、非表示の`rowid`がデコードされて出力されていることがわかります。これは、クラスター化されていない主キーの一般的な結果です。
+In the following example, the table `t1` has a hidden `rowid` that is generated by TiDB. The `TIDB_DECODE_KEY` is used in the statement. From the result, you can see that the hidden `rowid` is decoded and output, which is a typical result for the non-clustered primary key.
 
 {{< copyable "" >}}
 
@@ -40,7 +40,7 @@ TIDB_DECODE_KEY(START_KEY): {"_tidb_rowid":1958897,"table_id":"59"}
 1 row in set (0.00 sec)
 ```
 
-次の例では、表`t2`に複合クラスター主キーがあります。 JSON出力から、主キーの一部である両方の列の名前と値を含む`handle`を確認できます。
+In the following example, the table `t2` has a compound clustered primary key. From the JSON output, you can see a `handle` that contains the name and value for both of the columns that are part of the primary key.
 
 {{< copyable "" >}}
 
@@ -105,11 +105,9 @@ select tidb_decode_key('7480000000000000FF3E5F720400000000FF0000000601633430FF33
 
 ### TIDB_DECODE_PLAN {#tidb-decode-plan}
 
-遅いクエリログで、エンコードされた形式のTiDB実行プランを見つけることができます。次に、 `TIDB_DECODE_PLAN()`関数を使用して、エンコードされた計画を人間が読める形式にデコードします。
+You can find TiDB execution plans in encoded form in the slow query log. The `TIDB_DECODE_PLAN()` function is then used to decode the encoded plans into a human-readable form.
 
-この関数は、ステートメントの実行時にプランがキャプチャされるため便利です。 `EXPLAIN`でステートメントを再実行すると、データの分散と統計が時間の経過とともに変化するため、異なる結果が生成される可能性があります。
-
-{{< copyable "" >}}
+This function is useful because a plan is captured at the time the statement is executed. Re-executing the statement in `EXPLAIN` might produce different results as data distribution and statistics evolves over time.
 
 ```sql
 SELECT tidb_decode_plan('8QIYMAkzMV83CQEH8E85LjA0CWRhdGE6U2VsZWN0aW9uXzYJOTYwCXRpbWU6NzEzLjHCtXMsIGxvb3BzOjIsIGNvcF90YXNrOiB7bnVtOiAxLCBtYXg6IDU2OC41wgErRHByb2Nfa2V5czogMCwgcnBjXxEpAQwFWBAgNTQ5LglZyGNvcHJfY2FjaGVfaGl0X3JhdGlvOiAwLjAwfQkzLjk5IEtCCU4vQQoxCTFfNgkxXzAJMwm2SGx0KHRlc3QudC5hLCAxMDAwMCkNuQRrdgmiAHsFbBQzMTMuOMIBmQnEDDk2MH0BUgEEGAoyCTQzXzUFVwX1oGFibGU6dCwga2VlcCBvcmRlcjpmYWxzZSwgc3RhdHM6cHNldWRvCTk2ISE2aAAIMTUzXmYA')\G
@@ -125,14 +123,12 @@ SELECT tidb_decode_plan('8QIYMAkzMV83CQEH8E85LjA0CWRhdGE6U2VsZWN0aW9uXzYJOTYwCXR
 
 ### TIDB_PARSE_TSO {#tidb-parse-tso}
 
-`TIDB_PARSE_TSO`関数を使用して、TiDBTSOタイムスタンプから物理タイムスタンプを抽出できます。 TSOはTimeStampOracleの略で、トランザクションごとにPD（Placement Driver）によって与えられる単調に増加するタイムスタンプです。
+The `TIDB_PARSE_TSO` function can be used to extract the physical timestamp from a TiDB TSO timestamp. TSO stands for Time Stamp Oracle and is a monotonically increasing timestamp given out by PD (Placement Driver) for every transaction.
 
-TSOは、次の2つの部分で構成される数値です。
+A TSO is a number that consists of two parts:
 
--   物理的なタイムスタンプ
--   論理カウンター
-
-{{< copyable "" >}}
+-   A physical timestamp
+-   A logical counter
 
 ```sql
 BEGIN;
@@ -149,13 +145,11 @@ ROLLBACK;
 1 row in set (0.0012 sec)
 ```
 
-ここで、 `TIDB_PARSE_TSO`は、 `tidb_current_ts`セッション変数で使用可能なタイムスタンプ番号から物理タイムスタンプを抽出するために使用されます。タイムスタンプはトランザクションごとに与えられるため、この関数はトランザクションで実行されます。
+Here `TIDB_PARSE_TSO` is used to extract the physical timestamp from the timestamp number that is available in the `tidb_current_ts` session variable. Because timestamps are given out per transaction, this function is running in a transaction.
 
 ### TIDB_VERSION {#tidb-version}
 
-`TIDB_VERSION`関数を使用して、接続しているTiDBサーバーのバージョンとビルドの詳細を取得できます。この関数は、GitHubで問題を報告するときに使用できます。
-
-{{< copyable "" >}}
+The `TIDB_VERSION` function can be used to get the version and build details of the TiDB server that you are connected to. You can use this function when reporting issues on GitHub.
 
 ```sql
 SELECT TIDB_VERSION()\G
@@ -177,19 +171,19 @@ Check Table Before Drop: false
 
 ### TIDB_DECODE_SQL_DIGESTS {#tidb-decode-sql-digests}
 
-`TIDB_DECODE_SQL_DIGESTS()`関数は、クラスタのSQLダイジェストのセットに対応する正規化されたSQLステートメント（形式と引数のない形式）を照会するために使用されます。この関数は、1つまたは2つの引数を受け入れます。
+The `TIDB_DECODE_SQL_DIGESTS()` function is used to query the normalized SQL statements (a form without formats and arguments) corresponding to the set of SQL digests in the cluster. This function accepts 1 or 2 arguments:
 
--   `digests` ：文字列。このパラメーターはJSON文字列配列の形式であり、配列内の各文字列はSQLダイジェストです。
--   `stmtTruncateLength` ：整数（オプション）。これは、返される結果の各SQLステートメントの長さを制限するために使用されます。 SQLステートメントが指定された長さを超える場合、ステートメントは切り捨てられます。 `0`は、長さが無制限であることを意味します。
+-   `digests`: A string. This parameter is in the format of a JSON string array, and each string in the array is a SQL digest.
+-   `stmtTruncateLength`: An integer (optional). It is used to limit the length of each SQL statement in the returned result. If a SQL statement exceeds the specified length, the statement is truncated. `0` means that the length is unlimited.
 
-この関数は、JSON文字列配列の形式の文字列を返します。配列の*i*番目の項目は、 `digests`パラメーターの<em>i</em>番目の要素に対応する正規化されたSQLステートメントです。 `digests`パラメーターの要素が有効なSQLダイジェストではない場合、またはシステムが対応するSQLステートメントを見つけることができない場合、返される結果の対応する項目は`null`です。切り捨ての長さが指定されている場合（ `stmtTruncateLength > 0` ）、返された結果のこの長さを超えるステートメントごとに、最初の`stmtTruncateLength`文字が保持され、末尾に接尾辞`"..."`が追加されて切り捨てを示します。 `digests`パラメータが`NULL`の場合、関数の戻り値は`NULL`です。
+This function returns a string, which is in the format of a JSON string array. The *i*-th item in the array is the normalized SQL statement corresponding to the *i*-th element in the `digests` parameter. If an element in the `digests` parameter is not a valid SQL digest or the system cannot find the corresponding SQL statement, the corresponding item in the returned result is `null`. If the truncation length is specified (`stmtTruncateLength > 0`), for each statement in the returned result that exceeds this length, the first `stmtTruncateLength` characters are retained and the suffix `"..."` is added at the end to indicate the truncation. If the `digests` parameter is `NULL`, the returned value of the function is `NULL`.
 
-> **ノート：**
+> **Note:**
 >
-> -   この機能を使用できるのは、 [処理する](https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html#priv_process)の権限を持つユーザーのみです。
-> -   `TIDB_DECODE_SQL_DIGESTS`が実行されると、TiDBはステートメントサマリーテーブルから各SQLダイジェストに対応するステートメントをクエリするため、対応するステートメントがどのSQLダイジェストでも常に見つかるという保証はありません。クラスタで実行されたステートメントのみを見つけることができ、これらのSQLステートメントを照会できるかどうかは、ステートメント要約テーブルの関連する構成によっても影響を受けます。ステートメント要約テーブルの詳細な説明については、 [ステートメント要約表](/statement-summary-tables.md)を参照してください。
-> -   この関数はオーバーヘッドが高くなります。行数が多いクエリ（たとえば、大規模でビジーなクラスタで`information_schema.cluster_tidb_trx`のテーブル全体をクエリする）では、この関数を使用すると、クエリの実行時間が長すぎる可能性があります。注意して使用してください。
->     -   この関数は、呼び出されるたびに`STATEMENTS_SUMMARY` 、および`STATEMENTS_SUMMARY_HISTORY`テーブルを内部的にクエリし、クエリには`CLUSTER_STATEMENTS_SUMMARY`操作が含まれるため、オーバーヘッドが高く`UNION` `CLUSTER_STATEMENTS_SUMMARY_HISTORY` 。この関数は現在、ベクトル化をサポートしていません。つまり、データの複数の行に対してこの関数を呼び出す場合、上記のクエリは行ごとに個別に実行されます。
+> -   Only users with the [<a href="https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html#priv_process">PROCESS</a>](https://dev.mysql.com/doc/refman/8.0/en/privileges-provided.html#priv_process) privilege can use this function.
+> -   When `TIDB_DECODE_SQL_DIGESTS` is executed, TiDB queries the statement corresponding to each SQL digest from the statement summary tables, so there is no guarantee that the corresponding statement can always be found for any SQL digest. Only the statements that have been executed in the cluster can be found, and whether these SQL statements can be queried or not is also affected by the related configuration of the statement summary tables. For the detailed description of the statement summary table, see [<a href="/statement-summary-tables.md">Statement Summary Tables</a>](/statement-summary-tables.md).
+> -   This function has a high overhead. In queries with a large number of rows (for example, querying the full table of `information_schema.cluster_tidb_trx` on a large and busy cluster), using this function might cause the queries to run for too long. Use it with caution.
+>     -   This function has a high overhead because every time it is called, it internally queries the `STATEMENTS_SUMMARY`, `STATEMENTS_SUMMARY_HISTORY`, `CLUSTER_STATEMENTS_SUMMARY`, and `CLUSTER_STATEMENTS_SUMMARY_HISTORY` tables, and the query involves the `UNION` operation. This function currently does not support vectorization, that is, when calling this function for multiple rows of data, the above query is performed separately for each row.
 
 {{< copyable "" >}}
 
@@ -208,9 +202,7 @@ select tidb_decode_sql_digests(@digests);
 1 row in set (0.00 sec)
 ```
 
-上記の例では、パラメーターは3つのSQLダイジェストを含むJSON配列であり、対応するSQLステートメントはクエリ結果の3つの項目です。ただし、2番目のSQLダイジェストに対応するSQLステートメントがクラスタから見つからないため、結果の2番目の項目は`null`です。
-
-{{< copyable "" >}}
+In the above example, the parameter is a JSON array containing 3 SQL digests, and the corresponding SQL statements are the three items in the query results. But the SQL statement corresponding to the second SQL digest cannot be found from the cluster, so the second item in the result is `null`.
 
 ```sql
 select tidb_decode_sql_digests(@digests, 10);
@@ -225,53 +217,44 @@ select tidb_decode_sql_digests(@digests, 10);
 1 row in set (0.01 sec)
 ```
 
-上記の呼び出しは、2番目のパラメーター（つまり、切り捨ての長さ）を10として指定し、クエリ結果の3番目のステートメントの長さは10より大きいため、最初の10文字のみが保持され、 `"..."`が追加されます。 end、これは切り捨てを示します。
+The above call specifies the second parameter (that is, the truncation length) as 10, and the length of the third statement in the query result is greater than 10. Therefore, only the first 10 characters are retained, and `"..."` is added at the end, which indicates the truncation.
 
-参照：
+See also:
 
--   [`Statement Summary Tables`](/statement-summary-tables.md)
--   [`INFORMATION_SCHEMA.TIDB_TRX`](/information-schema/information-schema-tidb-trx.md)
+-   [<a href="/statement-summary-tables.md">`Statement Summary Tables`</a>](/statement-summary-tables.md)
+-   [<a href="/information-schema/information-schema-tidb-trx.md">`INFORMATION_SCHEMA.TIDB_TRX`</a>](/information-schema/information-schema-tidb-trx.md)
 
 ### TIDB_SHARD {#tidb-shard}
 
-`TIDB_SHARD`関数を使用して、インデックスのホットスポットを分散させるためのシャードインデックスを作成できます。シャードインデックスは、接頭辞`TIDB_SHARD`関数が付いた式インデックスです。
+The `TIDB_SHARD` function can be used to create a shard index to scatter the index hotspot. A shard index is an expression index prefixed with a `TIDB_SHARD` function.
 
-#### シャードインデックス {#shard-index}
+-   Creation:
 
--   作成：
+    To create a shard index for the index field `a`, you can use `uk((tidb_shard(a)), a))`. When there is a hotspot caused by monotonically increasing or decreasing data on the index field `a` in the unique secondary index `uk((tidb_shard(a)), a))`, the index's prefix `tidb_shard(a)` can scatter the hotspot to improve the scalability of the cluster.
 
-    インデックスフィールド`a`のシャードインデックスを作成するには、 `uk((tidb_shard(a)), a))`を使用できます。一意のセカンダリインデックス`uk((tidb_shard(a)), a))`のインデックスフィールド`a`のデータが単調に増加または減少することによってホットスポットが発生した場合、インデックスのプレフィックス`tidb_shard(a)`がホットスポットを分散させて、クラスタのスケーラビリティを向上させることができます。
+-   Scenarios:
 
--   シナリオ：
+    -   There is a write hotspot caused by monotonically increasing or decreasing keys on the unique secondary index, and the index contains integer type fields.
+    -   The SQL statement executes an equality query based on all fields of the secondary index, either as a separate `SELECT` or as an internal query generated by `UPDATE`, `DELETE` and so on. The equality query includes two ways: `a = 1` or `a IN (1, 2, ......)`.
 
-    -   一意のセカンダリインデックスのキーが単調に増加または減少することによって引き起こされる書き込みホットスポットがあり、インデックスには整数型のフィールドが含まれています。
-    -   SQLステートメントは、セカンダリインデックスのすべてのフィールドに基づいて、個別の`SELECT`として、または`UPDATE`などによって生成された内部クエリとして等式クエリを実行し`DELETE` 。等式クエリには、 `a = 1`または`a IN (1, 2, ......)`の2つの方法があります。
+-   Limitations:
 
--   制限：
+    -   Cannot be used in inequality queries.
+    -   Cannot be used in queries that contain `OR` mixed with an outmost `AND` operator.
+    -   Cannot be used in the `GROUP BY` clause.
+    -   Cannot be used in the `ORDER BY` clause.
+    -   Cannot be used in the `ON` clause.
+    -   Cannot be used in the `WHERE` subquery.
+    -   Can be used to scatter unique indexes of only the integer fields.
+    -   Might not take effect in composite indexes.
+    -   Cannot go through FastPlan process, which affects optimizer performance.
+    -   Cannot be used to prepare the execution plan cache.
 
-    -   不等式クエリでは使用できません。
-    -   `OR`と最上位の`AND`演算子が混在するクエリでは使用できません。
-    -   `GROUP BY`節では使用できません。
-    -   `ORDER BY`節では使用できません。
-    -   `ON`節では使用できません。
-    -   `WHERE`サブクエリでは使用できません。
-    -   整数フィールドのみの一意のインデックスを分散するために使用できます。
-    -   複合インデックスでは有効にならない場合があります。
-    -   オプティマイザのパフォーマンスに影響を与えるFastPlanプロセスを通過できません。
-    -   実行プランのキャッシュの準備には使用できません。
+The following example shows how to use the `TIDB_SHARD` function.
 
-#### あらすじ {#synopsis}
+-   Use the `TIDB_SHARD` function to calculate the SHARD value.
 
-```ebnf+diagram
-TIDBShardExpr ::=
-    "TIDB_SHARD" "(" expr ")"
-```
-
-#### 例 {#example}
-
--   `TIDB_SHARD`関数を使用して、SHARD値を計算します。
-
-    次のステートメントは、 `TIDB_SHARD`関数を使用してSHARD値`12373743746`を計算する方法を示しています。
+    The following statement shows how to use the `TIDB_SHARD` function to calculate the SHARD value of `12373743746`:
 
     {{< copyable "" >}}
 
@@ -279,7 +262,7 @@ TIDBShardExpr ::=
     SELECT TIDB_SHARD(12373743746);
     ```
 
--   SHARD値は次のとおりです。
+-   The SHARD value is:
 
     ```sql
     +-------------------------+
@@ -290,7 +273,7 @@ TIDBShardExpr ::=
     1 row in set (0.00 sec)
     ```
 
--   `TIDB_SHARD`関数を使用してシャードインデックスを作成します。
+-   Create a shard index using the `TIDB_SHARD` function:
 
     {{< copyable "" >}}
 
