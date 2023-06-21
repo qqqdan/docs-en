@@ -45,8 +45,8 @@ This document describes the common usage limitations of TiDB, including the maxi
 
 <CustomContent platform="tidb">
 
--   The upper limit of `Columns` can be modified via [`table-column-count-limit`](/tidb-configuration-file.md#table-column-count-limit-new-in-v50).
--   The upper limit of `Indexes` can be modified via [`index-limit`](/tidb-configuration-file.md#index-limit-new-in-v50).
+-   The upper limit of `Columns` can be modified via [<a href="/tidb-configuration-file.md#table-column-count-limit-new-in-v50">`table-column-count-limit`</a>](/tidb-configuration-file.md#table-column-count-limit-new-in-v50).
+-   The upper limit of `Indexes` can be modified via [<a href="/tidb-configuration-file.md#index-limit-new-in-v50">`index-limit`</a>](/tidb-configuration-file.md#index-limit-new-in-v50).
 
 </CustomContent>
 
@@ -58,15 +58,9 @@ This document describes the common usage limitations of TiDB, including the maxi
 
 <CustomContent platform="tidb">
 
-You can adjust the size limit via the [`txn-entry-size-limit`](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50) configuration item.
+You can adjust the size limit via the [<a href="/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50) configuration item.
 
 </CustomContent>
-
-## Limitation on a single column {#limitation-on-a-single-column}
-
-| Type | Upper limit |
-| :--- | :---------- |
-| Size | 6 MB        |
 
 ## Limitations on string types {#limitations-on-string-types}
 
@@ -87,6 +81,6 @@ You can adjust the size limit via the [`txn-entry-size-limit`](/tidb-configurati
 
 <CustomContent platform="tidb">
 
-You can modify the limit via the [`stmt-count-limit`](/tidb-configuration-file.md#stmt-count-limit) configuration item.
+You can modify the limit via the [<a href="/tidb-configuration-file.md#stmt-count-limit">`stmt-count-limit`</a>](/tidb-configuration-file.md#stmt-count-limit) configuration item.
 
 </CustomContent>
