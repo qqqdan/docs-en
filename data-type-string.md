@@ -5,7 +5,7 @@ summary: Learn about the string types supported in TiDB.
 
 # String Types {#string-types}
 
-TiDB supports all the MySQL string types, including `CHAR`, `VARCHAR`, `BINARY`, `VARBINARY`, `BLOB`, `TEXT`, `ENUM`, and `SET`. For more information, see [String Types in MySQL](https://dev.mysql.com/doc/refman/5.7/en/string-types.html).
+TiDB supports all the MySQL string types, including `CHAR`, `VARCHAR`, `BINARY`, `VARBINARY`, `BLOB`, `TEXT`, `ENUM`, and `SET`. For more information, see [<a href="https://dev.mysql.com/doc/refman/5.7/en/string-types.html">String Types in MySQL</a>](https://dev.mysql.com/doc/refman/5.7/en/string-types.html).
 
 ## Supported types {#supported-types}
 
@@ -45,7 +45,7 @@ TEXT[(M)] [CHARACTER SET charset_name] [COLLATE collation_name]
 
 ### <code>TINYTEXT</code> type {#code-tinytext-code-type}
 
-The `TINYTEXT` type is similar to the [`TEXT` type](#text-type). The difference is that the maximum column length of `TINYTEXT` is 255.
+The `TINYTEXT` type is similar to the [<a href="#text-type">`TEXT` type</a>](#text-type). The difference is that the maximum column length of `TINYTEXT` is 255.
 
 ```sql
 TINYTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -53,7 +53,16 @@ TINYTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
 
 ### <code>MEDIUMTEXT</code> type {#code-mediumtext-code-type}
 
-The `MEDIUMTEXT` type is similar to the [`TEXT` type](#text-type). The difference is that the maximum column length of `MEDIUMTEXT` is 16,777,215. But due to the [Limitation on a single column in TiDB](/tidb-limitations.md#limitation-on-a-single-column), the maximum storage size of a single column in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+<CustomContent platform="tidb">
+
+The `MEDIUMTEXT` type is similar to the [<a href="#text-type">`TEXT` type</a>](#text-type). The difference is that the maximum column length of `MEDIUMTEXT` is 16,777,215. But due to the limitation of [<a href="/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
+<CustomContent platform="tidb-cloud">
+
+The `MEDIUMTEXT` type is similar to the [<a href="#text-type">`TEXT` type</a>](#text-type). The difference is that the maximum column length of `MEDIUMTEXT` is 16,777,215. But due to the limitation of [<a href="https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
 
 ```sql
 MEDIUMTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -61,7 +70,16 @@ MEDIUMTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
 
 ### <code>LONGTEXT</code> type {#code-longtext-code-type}
 
-The `LONGTEXT` type is similar to the [`TEXT` type](#text-type). The difference is that the maximum column length of `LONGTEXT` is 4,294,967,295. But due to the [Limitation on a single column in TiDB](/tidb-limitations.md#limitation-on-a-single-column), the maximum storage size of a single column in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+<CustomContent platform="tidb">
+
+The `LONGTEXT` type is similar to the [<a href="#text-type">`TEXT` type</a>](#text-type). The difference is that the maximum column length of `LONGTEXT` is 4,294,967,295. But due to the limitation of [<a href="/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
+<CustomContent platform="tidb-cloud">
+
+The `LONGTEXT` type is similar to the [<a href="#text-type">`TEXT` type</a>](#text-type). The difference is that the maximum column length of `LONGTEXT` is 4,294,967,295. But due to the limitation of [<a href="https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
 
 ```sql
 LONGTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
@@ -69,7 +87,7 @@ LONGTEXT [CHARACTER SET charset_name] [COLLATE collation_name]
 
 ### <code>BINARY</code> type {#code-binary-code-type}
 
-The `BINARY` type is similar to the [`CHAR` type](#char-type). The difference is that `BINARY` stores binary byte strings.
+The `BINARY` type is similar to the [<a href="#char-type">`CHAR` type</a>](#char-type). The difference is that `BINARY` stores binary byte strings.
 
 ```sql
 BINARY(M)
@@ -77,7 +95,7 @@ BINARY(M)
 
 ### <code>VARBINARY</code> type {#code-varbinary-code-type}
 
-The `VARBINARY` type is similar to the [`VARCHAR` type](#varchar-type). The difference is that the `VARBINARY` stores binary byte strings.
+The `VARBINARY` type is similar to the [<a href="#varchar-type">`VARCHAR` type</a>](#varchar-type). The difference is that the `VARBINARY` stores binary byte strings.
 
 ```sql
 VARBINARY(M)
@@ -93,7 +111,7 @@ BLOB[(M)]
 
 ### <code>TINYBLOB</code> type {#code-tinyblob-code-type}
 
-The `TINYBLOB` type is similar to the [`BLOB` type](#blob-type). The difference is that the maximum column length of `TINYBLOB` is 255.
+The `TINYBLOB` type is similar to the [<a href="#blob-type">`BLOB` type</a>](#blob-type). The difference is that the maximum column length of `TINYBLOB` is 255.
 
 ```sql
 TINYBLOB
@@ -101,7 +119,16 @@ TINYBLOB
 
 ### <code>MEDIUMBLOB</code> type {#code-mediumblob-code-type}
 
-The `MEDIUMBLOB` type is similar to the [`BLOB` type](#blob-type). The difference is that the maximum column length of `MEDIUMBLOB` is 16,777,215. But due to the [Limitation on a single column in TiDB](/tidb-limitations.md#limitation-on-a-single-column), the maximum storage size of a single column in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+<CustomContent platform="tidb">
+
+The `MEDIUMBLOB` type is similar to the [<a href="#blob-type">`BLOB` type</a>](#blob-type). The difference is that the maximum column length of `MEDIUMBLOB` is 16,777,215. But due to the limitation of [<a href="/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
+<CustomContent platform="tidb-cloud">
+
+The `MEDIUMBLOB` type is similar to the [<a href="#blob-type">`BLOB` type</a>](#blob-type). The difference is that the maximum column length of `MEDIUMBLOB` is 16,777,215. But due to the limitation of [<a href="https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
 
 ```sql
 MEDIUMBLOB
@@ -109,7 +136,16 @@ MEDIUMBLOB
 
 ### <code>LONGBLOB</code> type {#code-longblob-code-type}
 
-The `LONGBLOB` type is similar to the [`BLOB` type](#blob-type). The difference is that the maximum column length of `LONGBLOB` is 4,294,967,295. But due to the [Limitation on a single column in TiDB](/tidb-limitations.md#limitation-on-a-single-column), the maximum storage size of a single column in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+<CustomContent platform="tidb">
+
+The `LONGBLOB` type is similar to the [<a href="#blob-type">`BLOB` type</a>](#blob-type). The difference is that the maximum column length of `LONGBLOB` is 4,294,967,295. But due to the limitation of [<a href="/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](/tidb-configuration-file.md#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
+<CustomContent platform="tidb-cloud">
+
+The `LONGBLOB` type is similar to the [<a href="#blob-type">`BLOB` type</a>](#blob-type). The difference is that the maximum column length of `LONGBLOB` is 4,294,967,295. But due to the limitation of [<a href="https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50">`txn-entry-size-limit`</a>](https://docs.pingcap.com/tidb/stable/tidb-configuration-file#txn-entry-size-limit-new-in-v50), the maximum storage size of a single row in TiDB is 6 MiB by default and can be increased to 120 MiB by changing the configuration.
+
+</CustomContent>
 
 ```sql
 LONGBLOB
@@ -136,7 +172,7 @@ The value of the `ENUM` data type is stored as numbers. Each value is converted 
 | 'orange' | 2      |
 | 'pear'   | 3      |
 
-For more information, see [the ENUM type in MySQL](https://dev.mysql.com/doc/refman/5.7/en/enum.html).
+For more information, see [<a href="https://dev.mysql.com/doc/refman/5.7/en/enum.html">the ENUM type in MySQL</a>](https://dev.mysql.com/doc/refman/5.7/en/enum.html).
 
 ### <code>SET</code> type {#code-set-code-type}
 
@@ -169,4 +205,4 @@ In TiDB, the values of the `SET` type is internally converted to `Int64`. The ex
 
 In this case, for an element of `('a', 'c')`, it is `0101` in binary.
 
-For more information, see [the SET type in MySQL](https://dev.mysql.com/doc/refman/5.7/en/set.html).
+For more information, see [<a href="https://dev.mysql.com/doc/refman/5.7/en/set.html">the SET type in MySQL</a>](https://dev.mysql.com/doc/refman/5.7/en/set.html).
