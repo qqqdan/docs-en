@@ -8,13 +8,13 @@ aliases: ['/docs/stable/reference/configuration/tikv-server/configuration-file/'
 
 <!-- markdownlint-disable MD001 -->
 
-The TiKV configuration file supports more options than command-line parameters. You can find the default configuration file in [etc/config-template.toml](https://github.com/tikv/tikv/blob/master/etc/config-template.toml) and rename it to `config.toml`.
+The TiKV configuration file supports more options than command-line parameters. You can find the default configuration file in [<a href="https://github.com/tikv/tikv/blob/master/etc/config-template.toml">etc/config-template.toml</a>](https://github.com/tikv/tikv/blob/master/etc/config-template.toml) and rename it to `config.toml`.
 
-This document only describes the parameters that are not included in command-line parameters. For more details, see [command-line parameter](/command-line-flags-for-tikv-configuration.md).
+This document only describes the parameters that are not included in command-line parameters. For more details, see [<a href="/command-line-flags-for-tikv-configuration.md">command-line parameter</a>](/command-line-flags-for-tikv-configuration.md).
 
 > **Tip:**
 >
-> If you need to adjust the value of a configuration item, refer to [Modify the configuration](/maintain-tidb-using-tiup.md#modify-the-configuration).
+> If you need to adjust the value of a configuration item, refer to [<a href="/maintain-tidb-using-tiup.md#modify-the-configuration">Modify the configuration</a>](/maintain-tidb-using-tiup.md#modify-the-configuration).
 
 ## Global configuration {#global-configuration}
 
@@ -119,7 +119,7 @@ This document only describes the parameters that are not included in command-lin
 
 ### <code>grpc-concurrency</code> {#code-grpc-concurrency-code}
 
--   The number of gRPC worker threads. When you modify the size of the gRPC thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The number of gRPC worker threads. When you modify the size of the gRPC thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Default value: `5`
 -   Minimum value: `1`
 
@@ -230,7 +230,7 @@ Configuration items related to the single thread pool serving read requests. Thi
 
 ### <code>max-thread-count</code> {#code-max-thread-count-code}
 
--   The maximum working thread count of the unified read pool or the UnifyReadPool thread pool. When you modify the size of this thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The maximum working thread count of the unified read pool or the UnifyReadPool thread pool. When you modify the size of this thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Value range: `[min-thread-count, MAX(4, CPU)]`. In `MAX(4, CPU)`, `CPU` means the number of your CPU cores. `MAX(4, CPU)` takes the greater value out of `4` and the `CPU`.
 -   Default value: MAX(4, CPU * 0.8)
 
@@ -255,8 +255,8 @@ Configuration items related to storage thread pool.
 
 ### <code>use-unified-pool</code> {#code-use-unified-pool-code}
 
--   Determines whether to use the unified thread pool (configured in [`readpool.unified`](#readpoolunified)) for storage requests. If the value of this parameter is `false`, a separate thread pool is used, which is configured through the rest parameters in this section (`readpool.storage`).
--   Default value: If this section (`readpool.storage`) has no other configurations, the default value is `true`. Otherwise, for the backward compatibility, the default value is `false`. Change the configuration in [`readpool.unified`](#readpoolunified) as needed before enabling this option.
+-   Determines whether to use the unified thread pool (configured in [<a href="#readpoolunified">`readpool.unified`</a>](#readpoolunified)) for storage requests. If the value of this parameter is `false`, a separate thread pool is used, which is configured through the rest parameters in this section (`readpool.storage`).
+-   Default value: If this section (`readpool.storage`) has no other configurations, the default value is `true`. Otherwise, for the backward compatibility, the default value is `false`. Change the configuration in [<a href="#readpoolunified">`readpool.unified`</a>](#readpoolunified) as needed before enabling this option.
 
 ### <code>high-concurrency</code> {#code-high-concurrency-code}
 
@@ -309,8 +309,8 @@ Configuration items related to the Coprocessor thread pool.
 
 ### <code>use-unified-pool</code> {#code-use-unified-pool-code}
 
--   Determines whether to use the unified thread pool (configured in [`readpool.unified`](#readpoolunified)) for coprocessor requests. If the value of this parameter is `false`, a separate thread pool is used, which is configured through the rest parameters in this section (`readpool.coprocessor`).
--   Default value: If none of the parameters in this section (`readpool.coprocessor`) are set, the default value is `true`. Otherwise, the default value is `false` for the backward compatibility. Adjust the configuration items in [`readpool.unified`](#readpoolunified) before enabling this parameter.
+-   Determines whether to use the unified thread pool (configured in [<a href="#readpoolunified">`readpool.unified`</a>](#readpoolunified)) for coprocessor requests. If the value of this parameter is `false`, a separate thread pool is used, which is configured through the rest parameters in this section (`readpool.coprocessor`).
+-   Default value: If none of the parameters in this section (`readpool.coprocessor`) are set, the default value is `true`. Otherwise, the default value is `false` for the backward compatibility. Adjust the configuration items in [<a href="#readpoolunified">`readpool.unified`</a>](#readpoolunified) before enabling this parameter.
 
 ### <code>high-concurrency</code> {#code-high-concurrency-code}
 
@@ -369,7 +369,7 @@ Configuration items related to storage.
 
 ### <code>scheduler-worker-pool-size</code> {#code-scheduler-worker-pool-size-code}
 
--   The number of threads in the Scheduler thread pool. Scheduler threads are mainly used for checking transaction consistency before data writing. If the number of CPU cores is greater than or equal to `16`, the default value is `8`; otherwise, the default value is `4`. When you modify the size of the Scheduler thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The number of threads in the Scheduler thread pool. Scheduler threads are mainly used for checking transaction consistency before data writing. If the number of CPU cores is greater than or equal to `16`, the default value is `8`; otherwise, the default value is `4`. When you modify the size of the Scheduler thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Default value: `4`
 -   Value range: `[1, MAX(4, CPU)]`. In `MAX(4, CPU)`, `CPU` means the number of your CPU cores. `MAX(4, CPU)` takes the greater value out of `4` and the `CPU`.
 
@@ -391,8 +391,8 @@ Configuration items related to storage.
 
 > **Warning:**
 >
-> -   Set `enable-ttl` to `true` or `false` **ONLY WHEN** deploying a new TiKV cluster. <strong>DO NOT</strong> modify the value of this configuration item in an existing TiKV cluster. TiKV clusters with different `enable-ttl` values use different data formats. Therefore, if you modify the value of this item in an existing TiKV cluster, the cluster will store data in different formats, which causes the "can't enable TTL on a non-ttl" error when you restart the TiKV cluster.
-> -   Use `enable-ttl` **ONLY IN** a TiKV cluster. <strong>DO NOT</strong> use this configuration item in a cluster that has TiDB nodes (which means setting `enable-ttl` to `true` in such clusters). Otherwise, critical issues such as data corruption and the upgrade failure of TiDB clusters will occur.
+> -   Set `enable-ttl` to `true` or `false` **ONLY WHEN** deploying a new TiKV cluster. **DO NOT** modify the value of this configuration item in an existing TiKV cluster. TiKV clusters with different `enable-ttl` values use different data formats. Therefore, if you modify the value of this item in an existing TiKV cluster, the cluster will store data in different formats, which causes the "can't enable TTL on a non-ttl" error when you restart the TiKV cluster.
+> -   Use `enable-ttl` **ONLY IN** a TiKV cluster. **DO NOT** use this configuration item in a cluster that has TiDB nodes (which means setting `enable-ttl` to `true` in such clusters). Otherwise, critical issues such as data corruption and the upgrade failure of TiDB clusters will occur.
 
 -   TTL is short for "Time to live". If this item is enabled, TiKV automatically deletes data that reaches its TTL. To set the value of TTL, you need to specify it in the requests when writing data via the client. If the TTL is not specified, it means that TiKV does not automatically delete the corresponding data.
 -   Default value: `false`
@@ -425,7 +425,7 @@ Configuration items related to storage.
 > **Warning:**
 
 > -   TiKV API V2 is still an experimental feature. It is not recommended to use it in production environments.
-> -   You can set the value of `api-version` to `2` **only when** deploying a new TiKV cluster. <strong>Do not</strong> modify the value of this configuration item in an existing TiKV cluster. TiKV clusters with different `api-version` values use different data formats. Therefore, if you modify the value of this item in an existing TiKV cluster, the cluster will store data in different formats and causes data corruption. It will raise the "unable to switch storage.api_version" error when you start the TiKV cluster.
+> -   You can set the value of `api-version` to `2` **only when** deploying a new TiKV cluster. **Do not** modify the value of this configuration item in an existing TiKV cluster. TiKV clusters with different `api-version` values use different data formats. Therefore, if you modify the value of this item in an existing TiKV cluster, the cluster will store data in different formats and causes data corruption. It will raise the "unable to switch storage.api_version" error when you start the TiKV cluster.
 > -   After API V2 is enabled, you **cannot** downgrade the TiKV cluster to a version earlier than v6.1.0. Otherwise, data corruption might occur.
 
 ## storage.block-cache {#storage-block-cache}
@@ -498,7 +498,7 @@ Configuration items related to Raftstore.
 
 ### <code>capacity</code> {#code-capacity-code}
 
--   The storage capacity, which is the maximum size allowed to store data. If `capacity` is left unspecified, the capacity of the current disk prevails. To deploy multiple TiKV instances on the same physical disk, add this parameter to the TiKV configuration. For details, see [Key parameters of the hybrid deployment](/hybrid-deployment-topology.md#key-parameters).
+-   The storage capacity, which is the maximum size allowed to store data. If `capacity` is left unspecified, the capacity of the current disk prevails. To deploy multiple TiKV instances on the same physical disk, add this parameter to the TiKV configuration. For details, see [<a href="/hybrid-deployment-topology.md#key-parameters">Key parameters of the hybrid deployment</a>](/hybrid-deployment-topology.md#key-parameters).
 -   Default value: `0`
 -   Unit: KB|MB|GB
 
@@ -829,7 +829,7 @@ Configuration items related to Raftstore.
 
 ### <code>apply-pool-size</code> {#code-apply-pool-size-code}
 
--   The allowable number of threads in the pool that flushes data to the disk, which is the size of the Apply thread pool. When you modify the size of this thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The allowable number of threads in the pool that flushes data to the disk, which is the size of the Apply thread pool. When you modify the size of this thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Default value: `2`
 -   Value ranges: `[1, CPU * 10]`. `CPU` means the number of your CPU cores.
 
@@ -842,13 +842,13 @@ Configuration items related to Raftstore.
 
 ### <code>store-pool-size</code> {#code-store-pool-size-code}
 
--   The allowable number of threads in the pool that processes Raft, which is the size of the Raftstore thread pool. When you modify the size of this thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The allowable number of threads in the pool that processes Raft, which is the size of the Raftstore thread pool. When you modify the size of this thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Default value: `2`
 -   Value ranges: `[1, CPU * 10]`. `CPU` means the number of your CPU cores.
 
 ### <code>store-io-pool-size</code> <span class="version-mark">New in v5.3.0</span> {#code-store-io-pool-size-code-span-class-version-mark-new-in-v5-3-0-span}
 
--   The allowable number of threads that process Raft I/O tasks, which is the size of the StoreWriter thread pool. When you modify the size of this thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The allowable number of threads that process Raft I/O tasks, which is the size of the StoreWriter thread pool. When you modify the size of this thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Default value: `0`
 -   Minimum value: `0`
 
@@ -876,10 +876,10 @@ Configuration items related to Raftstore.
 -   Default value: `1MB`
 -   Minimum value: `0`
 
-### <code>report-min-resolved-ts-interval</code> {#code-report-min-resolved-ts-interval-code}
+### <code>report-min-resolved-ts-interval</code> <span class="version-mark">New in v6.0.0</span> {#code-report-min-resolved-ts-interval-code-span-class-version-mark-new-in-v6-0-0-span}
 
--   Determines the minimum interval at which the resolved timestamp is reported to the PD leader. If this value is set to `0`, it means that the reporting is disabled.
--   Default value: `"1s"`, which is the smallest positive value
+-   Determines the interval at which the minimum resolved timestamp is reported to the PD leader. If this value is set to `0`, it means that the reporting is disabled.
+-   Default value: `"0s"`
 -   Minimum value: `0`
 -   Unit: second
 
@@ -922,7 +922,7 @@ Configuration items related to Coprocessor.
 
 ### <code>enable-region-bucket</code> <span class="version-mark">New in v6.1.0</span> {#code-enable-region-bucket-code-span-class-version-mark-new-in-v6-1-0-span}
 
--   Determines whether to divide a Region into smaller ranges called buckets. The bucket is used as the unit of the concurrent query to improve the scan concurrency. For more about the design of the bucket, refer to [Dynamic size Region](https://github.com/tikv/rfcs/blob/master/text/0082-dynamic-size-region.md).
+-   Determines whether to divide a Region into smaller ranges called buckets. The bucket is used as the unit of the concurrent query to improve the scan concurrency. For more about the design of the bucket, refer to [<a href="https://github.com/tikv/rfcs/blob/master/text/0082-dynamic-size-region.md">Dynamic size Region</a>](https://github.com/tikv/rfcs/blob/master/text/0082-dynamic-size-region.md).
 -   Default value: false
 
 > **Warning:**
@@ -955,7 +955,7 @@ Configuration items related to RocksDB
 
 ### <code>max-background-jobs</code> {#code-max-background-jobs-code}
 
--   The number of background threads in RocksDB. When you modify the size of the RocksDB thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The number of background threads in RocksDB. When you modify the size of the RocksDB thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Default value:
     -   When the number of CPU cores is 10, the default value is `9`.
     -   When the number of CPU cores is 8, the default value is `7`.
@@ -1436,7 +1436,7 @@ Configuration items related to `raftdb`
 
 ### <code>max-background-jobs</code> {#code-max-background-jobs-code}
 
--   The number of background threads in RocksDB. When you modify the size of the RocksDB thread pool, refer to [Performance tuning for TiKV thread pools](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
+-   The number of background threads in RocksDB. When you modify the size of the RocksDB thread pool, refer to [<a href="/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools">Performance tuning for TiKV thread pools</a>](/tune-tikv-thread-performance.md#performance-tuning-for-tikv-thread-pools).
 -   Default value: `4`
 -   Minimum value: `2`
 
@@ -1549,7 +1549,7 @@ Configuration items related to security.
 
 ## security.encryption {#security-encryption}
 
-Configuration items related to [encryption at rest](/encryption-at-rest.md) (TDE).
+Configuration items related to [<a href="/encryption-at-rest.md">encryption at rest</a>](/encryption-at-rest.md) (TDE).
 
 ### <code>data-encryption-method</code> {#code-data-encryption-method-code}
 
@@ -1566,16 +1566,16 @@ Configuration items related to [encryption at rest](/encryption-at-rest.md) (TDE
 ### enable-file-dictionary-log {#enable-file-dictionary-log}
 
 -   Enables the optimization to reduce I/O and mutex contention when TiKV manages the encryption metadata.
--   To avoid possible compatibility issues when this configuration parameter is enabled (by default), see [Encryption at Rest - Compatibility between TiKV versions](/encryption-at-rest.md#compatibility-between-tikv-versions) for details.
+-   To avoid possible compatibility issues when this configuration parameter is enabled (by default), see [<a href="/encryption-at-rest.md#compatibility-between-tikv-versions">Encryption at Rest - Compatibility between TiKV versions</a>](/encryption-at-rest.md#compatibility-between-tikv-versions) for details.
 -   Default value: `true`
 
 ### master-key {#master-key}
 
--   Specifies the master key if encryption is enabled. To learn how to configure a master key, see [Encryption at Rest - Configure encryption](/encryption-at-rest.md#configure-encryption).
+-   Specifies the master key if encryption is enabled. To learn how to configure a master key, see [<a href="/encryption-at-rest.md#configure-encryption">Encryption at Rest - Configure encryption</a>](/encryption-at-rest.md#configure-encryption).
 
 ### previous-master-key {#previous-master-key}
 
--   Specifies the old master key when rotating the new master key. The configuration format is the same as that of `master-key`. To learn how to configure a master key, see [Encryption at Rest - Configure encryption](/encryption-at-rest.md#configure-encryption).
+-   Specifies the old master key when rotating the new master key. The configuration format is the same as that of `master-key`. To learn how to configure a master key, see [<a href="/encryption-at-rest.md#configure-encryption">Encryption at Rest - Configure encryption</a>](/encryption-at-rest.md#configure-encryption).
 
 ## import {#import}
 
@@ -1607,17 +1607,17 @@ Configuration items related to BR backup.
 
 ### <code>enable-auto-tune</code> <span class="version-mark">New in v5.4.0</span> {#code-enable-auto-tune-code-span-class-version-mark-new-in-v5-4-0-span}
 
--   Controls whether to limit the resources used by backup tasks to reduce the impact on the cluster when the cluster resource utilization is high. For more information, refer to [BR Auto-Tune](/br/br-auto-tune.md).
+-   Controls whether to limit the resources used by backup tasks to reduce the impact on the cluster when the cluster resource utilization is high. For more information, refer to [<a href="/br/br-auto-tune.md">BR Auto-Tune</a>](/br/br-auto-tune.md).
 -   Default value: `true`
 
 ### <code>s3-multi-part-size</code> <span class="version-mark">New in v5.3.2</span> {#code-s3-multi-part-size-code-span-class-version-mark-new-in-v5-3-2-span}
 
 > **Note:**
 >
-> This configuration is introduced to address backup failures caused by S3 rate limiting. This problem has been fixed by [refining the backup data storage structure](/br/backup-and-restore-design.md#backup-file-structure). Therefore, this configuration is deprecated from v6.1.1 and is no longer recommended.
+> This configuration is introduced to address backup failures caused by S3 rate limiting. This problem has been fixed by [<a href="/br/backup-and-restore-design.md#backup-file-structure">refining the backup data storage structure</a>](/br/backup-and-restore-design.md#backup-file-structure). Therefore, this configuration is deprecated from v6.1.1 and is no longer recommended.
 
 -   The part size used when you perform multipart upload to S3 during backup. You can adjust the value of this configuration to control the number of requests sent to S3.
--   If data is backed up to S3 and the backup file is larger than the value of this configuration item, [multipart upload](https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html) is automatically enabled. Based on the compression ratio, the backup file generated by a 96-MiB Region is approximately 10 MiB to 30 MiB.
+-   If data is backed up to S3 and the backup file is larger than the value of this configuration item, [<a href="https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html">multipart upload</a>](https://docs.aws.amazon.com/AmazonS3/latest/API/API_UploadPart.html) is automatically enabled. Based on the compression ratio, the backup file generated by a 96-MiB Region is approximately 10 MiB to 30 MiB.
 -   Default value: 5MiB
 
 ## cdc {#cdc}
@@ -1676,7 +1676,7 @@ Configuration items related to maintaining the Resolved TS to serve Stale Read r
 
 ## pessimistic-txn {#pessimistic-txn}
 
-For pessimistic transaction usage, refer to [TiDB Pessimistic Transaction Mode](/pessimistic-transaction.md).
+For pessimistic transaction usage, refer to [<a href="/pessimistic-transaction.md">TiDB Pessimistic Transaction Mode</a>](/pessimistic-transaction.md).
 
 ### <code>wait-for-lock-timeout</code> {#code-wait-for-lock-timeout-code}
 
@@ -1704,7 +1704,7 @@ For pessimistic transaction usage, refer to [TiDB Pessimistic Transaction Mode](
 
 Configuration items related to Quota Limiter.
 
-Suppose that your machine on which TiKV is deployed has limited resources, for example, with only 4v CPU and 16 G memory. In this situation, the foreground of TiKV might process too many read and write requests so that the CPU resources used by the background are occupied to help process such requests, which affects the performance stability of TiKV. To avoid this situation, you can use the quota-related configuration items to limit the CPU resources to be used by the foreground. When a request triggers Quota Limiter, the request is forced to wait for a while for TiKV to free up CPU resources. The exact waiting time depends on the number of requests, and the maximum waiting time is no longer than the value of [`max-delay-duration`](#max-delay-duration-new-in-v600).
+Suppose that your machine on which TiKV is deployed has limited resources, for example, with only 4v CPU and 16 G memory. In this situation, the foreground of TiKV might process too many read and write requests so that the CPU resources used by the background are occupied to help process such requests, which affects the performance stability of TiKV. To avoid this situation, you can use the quota-related configuration items to limit the CPU resources to be used by the foreground. When a request triggers Quota Limiter, the request is forced to wait for a while for TiKV to free up CPU resources. The exact waiting time depends on the number of requests, and the maximum waiting time is no longer than the value of [<a href="#max-delay-duration-new-in-v600">`max-delay-duration`</a>](#max-delay-duration-new-in-v600).
 
 > **Warning:**
 >
@@ -1752,5 +1752,5 @@ To reduce write latency and avoid frequent access to PD, TiKV periodically fetch
 
 -   The minimum number of locally cached timestamps.
 -   TiKV adjusts the number of cached timestamps according to the timestamp consumption in the previous period. If the usage of locally cached timestamps is low, TiKV gradually reduces the number of cached timestamps until it reaches `renew-batch-min-size`. If large bursty write traffic often occurs in your application, you can set this parameter to a larger value as appropriate. Note that this parameter is the cache size for a single tikv-server. If you set the parameter to too large a value and the cluster contains many tikv-servers, the TSO consumption will be too fast.
--   In the **TiKV-RAW** > <strong>Causal timestamp</strong> panel in Grafana, <strong>TSO batch size</strong> is the number of locally cached timestamps that has been dynamically adjusted according to the application workload. You can refer to this metric to adjust `renew-batch-min-size`.
+-   In the **TiKV-RAW** > **Causal timestamp** panel in Grafana, **TSO batch size** is the number of locally cached timestamps that has been dynamically adjusted according to the application workload. You can refer to this metric to adjust `renew-batch-min-size`.
 -   Default value: `100`

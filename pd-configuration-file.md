@@ -8,13 +8,13 @@ aliases: ['/docs/stable/reference/configuration/pd-server/configuration-file/']
 
 <!-- markdownlint-disable MD001 -->
 
-The PD configuration file supports more options than command-line parameters. You can find the default configuration file [here](https://github.com/pingcap/pd/blob/master/conf/config.toml).
+The PD configuration file supports more options than command-line parameters. You can find the default configuration file [<a href="https://github.com/pingcap/pd/blob/master/conf/config.toml">here</a>](https://github.com/pingcap/pd/blob/master/conf/config.toml).
 
-This document only describes parameters that are not included in command-line parameters. Check [here](/command-line-flags-for-pd-configuration.md) for the command line parameters.
+This document only describes parameters that are not included in command-line parameters. Check [<a href="/command-line-flags-for-pd-configuration.md">here</a>](/command-line-flags-for-pd-configuration.md) for the command line parameters.
 
 > **Tip:**
 >
-> If you need to adjust the value of a configuration item, refer to [Modify the configuration](/maintain-tidb-using-tiup.md#modify-the-configuration).
+> If you need to adjust the value of a configuration item, refer to [<a href="/maintain-tidb-using-tiup.md#modify-the-configuration">Modify the configuration</a>](/maintain-tidb-using-tiup.md#modify-the-configuration).
 
 ### <code>name</code> {#code-name-code}
 
@@ -114,6 +114,13 @@ Configuration items related to pd-server
 > **Note:**
 >
 > If you have upgraded your cluster from a TiDB 4.0 version to the current version, the behavior of `flow-round-by-digit` after the upgrading and the behavior of `trace-region-flow` before the upgrading are consistent by default. This means that if the value of `trace-region-flow` is false before the upgrading, the value of `flow-round-by-digit` after the upgrading is 127; if the value of `trace-region-flow` is `true` before the upgrading, the value of `flow-round-by-digit` after the upgrading is `3`.
+
+### <code>min-resolved-ts-persistence-interval</code> <span class="version-mark">New in v6.0.0</span> {#code-min-resolved-ts-persistence-interval-code-span-class-version-mark-new-in-v6-0-0-span}
+
+-   Determines the interval at which the minimum resolved timestamp is persistent to the PD. If this value is set to `0`, it means that the persistence is disabled.
+-   Default value: `"0s"`
+-   Minimum value: `0`
+-   Unit: second
 
 ## security {#security}
 
@@ -301,7 +308,7 @@ Configuration items related to scheduling
 
 > **Note:**
 >
-> If you have upgraded your cluster from a TiDB 4.0 version to the current version, the new formula version is automatically disabled by default to ensure consistent PD behavior before and after the upgrading. If you want to change the formula version, you need to manually switch through the `pd-ctl` setting. For details, refer to [PD Control](/pd-control.md#config-show--set-option-value--placement-rules).
+> If you have upgraded your cluster from a TiDB 4.0 version to the current version, the new formula version is automatically disabled by default to ensure consistent PD behavior before and after the upgrading. If you want to change the formula version, you need to manually switch through the `pd-ctl` setting. For details, refer to [<a href="/pd-control.md#config-show--set-option-value--placement-rules">PD Control</a>](/pd-control.md#config-show--set-option-value--placement-rules).
 
 ### <code>enable-joint-consensus</code> <span class="version-mark">New in v5.0</span> {#code-enable-joint-consensus-code-span-class-version-mark-new-in-v5-0-span}
 
@@ -335,13 +342,13 @@ Configuration items related to replicas
 
 -   The topology information of a TiKV cluster
 -   Default value: `[]`
--   [Cluster topology configuration](/schedule-replicas-by-topology-labels.md)
+-   [<a href="/schedule-replicas-by-topology-labels.md">Cluster topology configuration</a>](/schedule-replicas-by-topology-labels.md)
 
 ### <code>isolation-level</code> {#code-isolation-level-code}
 
 -   The minimum topological isolation level of a TiKV cluster
 -   Default value: `""`
--   [Cluster topology configuration](/schedule-replicas-by-topology-labels.md)
+-   [<a href="/schedule-replicas-by-topology-labels.md">Cluster topology configuration</a>](/schedule-replicas-by-topology-labels.md)
 
 ### <code>strictly-match-label</code> {#code-strictly-match-label-code}
 
@@ -352,7 +359,7 @@ Configuration items related to replicas
 
 -   Enables `placement-rules`.
 -   Default value: `true`
--   See [Placement Rules](/configure-placement-rules.md).
+-   See [<a href="/configure-placement-rules.md">Placement Rules</a>](/configure-placement-rules.md).
 
 ## <code>label-property</code> {#code-label-property-code}
 
@@ -370,7 +377,7 @@ Configuration items related to labels
 
 ## <code>dashboard</code> {#code-dashboard-code}
 
-Configuration items related to the [TiDB Dashboard](/dashboard/dashboard-intro.md) built in PD.
+Configuration items related to the [<a href="/dashboard/dashboard-intro.md">TiDB Dashboard</a>](/dashboard/dashboard-intro.md) built in PD.
 
 ### <code>tidb-cacert-path</code> {#code-tidb-cacert-path-code}
 
@@ -391,14 +398,14 @@ Configuration items related to the [TiDB Dashboard](/dashboard/dashboard-intro.m
 
 -   When TiDB Dashboard is accessed behind a reverse proxy, this item sets the public URL path prefix for all web resources.
 -   Default value: `/dashboard`
--   Do **not** modify this configuration item when TiDB Dashboard is accessed not behind a reverse proxy; otherwise, access issues might occur. See [Use TiDB Dashboard behind a Reverse Proxy](/dashboard/dashboard-ops-reverse-proxy.md) for details.
+-   Do **not** modify this configuration item when TiDB Dashboard is accessed not behind a reverse proxy; otherwise, access issues might occur. See [<a href="/dashboard/dashboard-ops-reverse-proxy.md">Use TiDB Dashboard behind a Reverse Proxy</a>](/dashboard/dashboard-ops-reverse-proxy.md) for details.
 
 ### <code>enable-telemetry</code> {#code-enable-telemetry-code}
 
 -   Determines whether to enable the telemetry collection feature in TiDB Dashboard.
 -   Default value: `true` for v6.1.0 ~ v6.1.4; `false` for v6.1.5 and later v6.1.x versions
--   See [Telemetry](/telemetry.md) for details.
+-   See [<a href="/telemetry.md">Telemetry</a>](/telemetry.md) for details.
 
 ## <code>replication-mode</code> {#code-replication-mode-code}
 
-Configuration items related to the replication mode of all Regions. See [Enable the DR Auto-Sync mode](/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode) for details.
+Configuration items related to the replication mode of all Regions. See [<a href="/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode">Enable the DR Auto-Sync mode</a>](/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode) for details.
