@@ -3,46 +3,46 @@ title: Export Grafana Snapshots
 summary: Learn how to export snapshots of Grafana Dashboard, and how to visualize these files.
 ---
 
-# Grafanaスナップショットのエクスポート {#export-grafana-snapshots}
+# Export Grafana Snapshots {#export-grafana-snapshots}
 
-メトリックデータは、トラブルシューティングで重要です。リモートアシスタンスをリクエストする場合、サポートスタッフが問題を診断するためにGrafanaダッシュボードを表示する必要がある場合があります。 [MetricsTool](https://metricstool.pingcap.com/)は、Grafanaダッシュボードのスナップショットをローカルファイルとしてエクスポートし、これらのスナップショットを視覚化するのに役立ちます。これらのスナップショットを部外者と共有し、Grafanaサーバー上の他の機密情報へのアクセスを許可することなく、部外者がグラフを正確に読み取れるようにすることができます。
+> **Note:**
+>
+> Currently, MetricsTool can only be used with Grafana v6.x.x.
 
-## 使用法 {#usage}
+Metrics data is important in troubleshooting. When you request remote assistance, sometimes the support staff need to view the Grafana dashboards to diagnose problems. [<a href="https://metricstool.pingcap.com/">MetricsTool</a>](https://metricstool.pingcap.com/) can help export snapshots of Grafana dashboards as local files and visualize these snapshots. You can share these snapshots with outsiders and allow them to accurately read out the graphs, without giving out access to other sensitive information on the Grafana server.
 
-MetricsToolには[https://metricstool.pingcap.com/](https://metricstool.pingcap.com/)からアクセスできます。これは、次の3セットのツールで構成されています。
+## Usage {#usage}
 
--   **エクスポート**：ブラウザの開発者ツールで実行されているユーザースクリプト。Grafanav6.xxサーバーの現在のダッシュボードに表示されているすべてのパネルのスナップショットをダウンロードできます。
+MetricsTool can be accessed from [<a href="https://metricstool.pingcap.com/">https://metricstool.pingcap.com/</a>](https://metricstool.pingcap.com/). It consists of three sets of tools:
+
+-   **Export**: A user script running on the browser's Developer Tool, allowing you to download a snapshot of all visible panels in the current dashboard on any Grafana v6.x.x server.
 
     ![Screenshot of MetricsTool Exporter after running the user script](/media/metricstool-export.png)
 
--   **視覚化**：エクスポートされたスナップショットファイルを視覚化するWebページ。視覚化されたスナップショットは、ライブのGrafanaダッシュボードと同じ方法で操作できます。
+-   **Visualize**: A web page visualizing the exported snapshot files. The visualized snapshots can be operated in the same way as live Grafana dashboards.
 
     ![Screenshot of MetricsTool Visualizer](/media/metricstool-visualize.png)
 
--   **インポート**：エクスポートされたスナップショットを実際のGrafanaインスタンスにインポートして戻す手順。
+-   **Import**: Instructions to import the exported snapshot back into an actual Grafana instance.
 
-## よくある質問 {#faqs}
+## FAQs {#faqs}
 
-### スクリーンショットやPDF印刷と比較した場合のこのツールの利点は何ですか？ {#what-is-the-advantage-of-this-tool-compared-with-screenshot-or-pdf-printing}
+### What is the advantage of this tool compared with screenshot or PDF printing? {#what-is-the-advantage-of-this-tool-compared-with-screenshot-or-pdf-printing}
 
-MetricsToolによってエクスポートされたスナップショットファイルには、取得時の実際の値が含まれています。また、ビジュアライザーを使用すると、レンダリングされたグラフをライブのGrafanaダッシュボードであるかのように操作でき、シリーズの切り替え、より狭い時間範囲へのズームイン、特定の時間の正確な値の確認などの操作をサポートします。これにより、MetricsToolは画像やPDFよりもはるかに強力になります。
+The snapshot files exported by MetricsTool contain the actual values when they are taken. And the Visualizer allows you to interact with the rendered graphs as if it is a live Grafana dashboard, supporting operations like toggling series, zooming into a smaller time range, and checking the precise value at a given time. This makes MetricsTool much more powerful than images or PDFs.
 
-### スナップショットファイルには何が含まれていますか？ {#what-are-included-in-the-snapshot-file}
+### What are included in the snapshot file? {#what-are-included-in-the-snapshot-file}
 
-スナップショットファイルには、選択した時間範囲のすべてのグラフとパネルの値が含まれています。データソースからの元のメトリックは保存されません（したがって、ビジュアライザーでクエリ式を編集することはできません）。
+The snapshot file contains the values of all graphs and panels in the selected time range. It does not save the original metrics from the data sources (and thus you cannot edit the query expression in the Visualizer).
 
-### ビジュアライザーはアップロードされたスナップショットファイルをPingCAPのサーバーに保存しますか？ {#will-the-visualizer-save-the-uploaded-snapshot-files-in-pingcap-s-servers}
+### Will the Visualizer save the uploaded snapshot files in PingCAP's servers? {#will-the-visualizer-save-the-uploaded-snapshot-files-in-pingcap-s-servers}
 
-いいえ、ビジュアライザーはスナップショットファイルを完全にブラウザー内で解析します。 PingCAPには何も送信されません。機密性の高いソースから受信したスナップショットファイルを自由に表示でき、ビジュアライザーを介してこれらがサードパーティに漏洩することを心配する必要はありません。
+No, the Visualizer parses the snapshot files entirely inside your browser. Nothing will be sent to PingCAP. You are free to view snapshot files received from sensitive sources, and no need to worry about these leaking to third parties through the Visualizer.
 
-### Grafana以外のメトリックをエクスポートできますか？ {#can-it-export-metrics-besides-grafana}
+### Will there be problems to execute the script before all metrics are loaded? {#will-there-be-problems-to-execute-the-script-before-all-metrics-are-loaded}
 
-いいえ、現時点ではGrafanav6.xxのみをサポートしています。
+No, the script UI will notify you to wait for all metrics to be loaded. However, you can manually skip waiting and export the snapshot in case of some metrics loading for too long.
 
-### すべてのメトリックがロードされる前にスクリプトを実行するのに問題はありますか？ {#will-there-be-problems-to-execute-the-script-before-all-metrics-are-loaded}
+### Can we share a link to a visualized snapshot? {#can-we-share-a-link-to-a-visualized-snapshot}
 
-いいえ、スクリプトUIは、すべてのメトリックがロードされるのを待つように通知します。ただし、一部のメトリックのロードが長すぎる場合は、手動で待機をスキップしてスナップショットをエクスポートできます。
-
-### 視覚化されたスナップショットへのリンクを共有できますか？ {#can-we-share-a-link-to-a-visualized-snapshot}
-
-いいえ。ただし、スナップショットファイルを共有して、ビジュアライザーを使用して表示する方法を説明することはできます。世界中で読み取り可能なURLが本当に必要な場合は、Grafanaに組み込まれているパブリック`snapshot.raintank.io`サービスを試すこともできますが、そうする前に、プライバシーに関するすべての懸念事項がクリアされていることを確認してください。
+No, but you can share the snapshot file, with instruction on how to use the Visualizer to view it. If you truly need a world-readable URL, you may also try the public `snapshot.raintank.io` service built into Grafana, but make sure all privacy concerns are cleared before doing so.
