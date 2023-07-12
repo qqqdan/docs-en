@@ -86,9 +86,9 @@ The `tiup mirror clone` command provides many optional flags (might provide more
 
     If you want to clone only one version (not all versions) of a component, use `--<component>=<version>` to specify this version. For example:
 
-    -   Execute the `tiup mirror clone <target-dir> --tidb v6.1.6` command to clone the v6.1.6 version of the TiDB component.
-    -   Run the `tiup mirror clone <target-dir> --tidb v6.1.6 --tikv all` command to clone the v6.1.6 version of the TiDB component and all versions of the TiKV component.
-    -   Run the `tiup mirror clone <target-dir> v6.1.6` command to clone the v6.1.6 version of all components in a cluster.
+    -   Execute the `tiup mirror clone <target-dir> --tidb v6.1.7` command to clone the v6.1.7 version of the TiDB component.
+    -   Run the `tiup mirror clone <target-dir> --tidb v6.1.7 --tikv all` command to clone the v6.1.7 version of the TiDB component and all versions of the TiKV component.
+    -   Run the `tiup mirror clone <target-dir> v6.1.7` command to clone the v6.1.7 version of all components in a cluster.
 
 After cloning, signing keys are set up automatically.
 
@@ -115,7 +115,7 @@ export TIUP_MIRRORS=/shared_data/tiup
 tiup list
 ```
 
-`TIUP_MIRRORS` setting can permanently change the mirror configuration, for example, `tiup mirror set`. For details, see [tiup issue #651](https://github.com/pingcap/tiup/issues/651).
+`TIUP_MIRRORS` setting can permanently change the mirror configuration, for example, `tiup mirror set`. For details, see [<a href="https://github.com/pingcap/tiup/issues/651">tiup issue #651</a>](https://github.com/pingcap/tiup/issues/651).
 
 ### Update the private repository {#update-the-private-repository}
 
@@ -129,7 +129,7 @@ If you run the `tiup mirror clone` command again with the same `target-dir`, the
 
 You can create a custom repository to work with TiDB components like TiDB, TiKV, or PD that you build by yourself. It is also possible to create your own tiup components.
 
-To create your own components, run the `tiup package` command and perform as instructed in [Component packaging](https://github.com/pingcap/tiup/blob/master/doc/user/package.md).
+To create your own components, run the `tiup package` command and perform as instructed in [<a href="https://github.com/pingcap/tiup/blob/master/doc/user/package.md">Component packaging</a>](https://github.com/pingcap/tiup/blob/master/doc/user/package.md).
 
 ### Create a custom repository {#create-a-custom-repository}
 

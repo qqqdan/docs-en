@@ -7,28 +7,28 @@ summary: Learn how to manage a TiCDC cluster and replication tasks.
 
 This document describes how to upgrade TiCDC cluster and modify the configuration of TiCDC cluster using TiUP, and how to manage the TiCDC cluster and replication tasks using the command-line tool `cdc cli`.
 
-You can also use the HTTP interface (the TiCDC OpenAPI feature) to manage the TiCDC cluster and replication tasks. For details, see [TiCDC OpenAPI](/ticdc/ticdc-open-api.md).
+You can also use the HTTP interface (the TiCDC OpenAPI feature) to manage the TiCDC cluster and replication tasks. For details, see [<a href="/ticdc/ticdc-open-api.md">TiCDC OpenAPI</a>](/ticdc/ticdc-open-api.md).
 
 ## Upgrade TiCDC using TiUP {#upgrade-ticdc-using-tiup}
 
-This section introduces how to upgrade the TiCDC cluster using TiUP. In the following example, assume that you need to upgrade TiCDC and the entire TiDB cluster to v6.1.6.
+This section introduces how to upgrade the TiCDC cluster using TiUP. In the following example, assume that you need to upgrade TiCDC and the entire TiDB cluster to v6.1.7.
 
 {{< copyable "" >}}
 
 ```shell
 tiup update --self && \
 tiup update --all && \
-tiup cluster upgrade <cluster-name> v6.1.6
+tiup cluster upgrade <cluster-name> v6.1.7
 ```
 
 ### Notes for upgrade {#notes-for-upgrade}
 
--   The `changefeed` configuration has changed in TiCDC v4.0.2. See [Compatibility notes for the configuration file](/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file) for details.
--   If you encounter any issues, see [Upgrade TiDB using TiUP - FAQ](/upgrade-tidb-using-tiup.md#faq).
+-   The `changefeed` configuration has changed in TiCDC v4.0.2. See [<a href="/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file">Compatibility notes for the configuration file</a>](/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file) for details.
+-   If you encounter any issues, see [<a href="/upgrade-tidb-using-tiup.md#faq">Upgrade TiDB using TiUP - FAQ</a>](/upgrade-tidb-using-tiup.md#faq).
 
 ## Modify TiCDC configuration using TiUP {#modify-ticdc-configuration-using-tiup}
 
-This section introduces how to modify the configuration of TiCDC cluster using the  [`tiup cluster edit-config`](/tiup/tiup-component-cluster-edit-config.md) command of TiUP. The following example changes the value of `gc-ttl` from the default `86400` to `3600`, namely, one hour.
+This section introduces how to modify the configuration of TiCDC cluster using the  [<a href="/tiup/tiup-component-cluster-edit-config.md">`tiup cluster edit-config`</a>](/tiup/tiup-component-cluster-edit-config.md) command of TiUP. The following example changes the value of `gc-ttl` from the default `86400` to `3600`, namely, one hour.
 
 First, run the following command. You need to replace `<cluster-name>` with your actual cluster name.
 
@@ -38,7 +38,7 @@ First, run the following command. You need to replace `<cluster-name>` with your
 tiup cluster edit-config <cluster-name>
 ```
 
-Then, enter the vi editor page and modify the `cdc` configuraion under [`server-configs`](/tiup/tiup-cluster-topology-reference.md#server_configs). The configuration is shown below:
+Then, enter the vi editor page and modify the `cdc` configuraion under [<a href="/tiup/tiup-cluster-topology-reference.md#server_configs">`server-configs`</a>](/tiup/tiup-cluster-topology-reference.md#server_configs). The configuration is shown below:
 
 ```shell
  server_configs:
@@ -57,7 +57,7 @@ After the modification, run the `tiup cluster reload -R cdc` command to reload t
 
 ## Use TLS {#use-tls}
 
-For details about using encrypted data transmission (TLS), see [Enable TLS Between TiDB Components](/enable-tls-between-components.md).
+For details about using encrypted data transmission (TLS), see [<a href="/enable-tls-between-components.md">Enable TLS Between TiDB Components</a>](/enable-tls-between-components.md).
 
 ## Use <code>cdc cli</code> to manage cluster status and data replication task {#use-code-cdc-cli-code-to-manage-cluster-status-and-data-replication-task}
 
@@ -164,7 +164,7 @@ Info: {"sink-uri":"mysql://root:123456@127.0.0.1:3306/","opts":{},"create-time":
 
     -   `unified`: When `unified` is used, TiCDC prefers data sorting in memory. If the memory is insufficient, TiCDC automatically uses the disk to store the temporary data. This is the default value of `--sort-engine`.
     -   `memory`: Sorts data changes in memory. It is **NOT recommended** to use this sorting engine, because OOM is easily triggered when you replicate a large amount of data.
-    -   `file`: Entirely uses the disk to store the temporary data. This feature is **deprecated**. It is <strong>NOT recommended</strong> to use it in <strong>any</strong> situation.
+    -   `file`: Entirely uses the disk to store the temporary data. This feature is **deprecated**. It is **NOT recommended** to use it in **any** situation.
 
 -   `--config`: Specifies the configuration file of the `changefeed`.
 
@@ -276,7 +276,7 @@ The following are examples when using Kafka SASL authentication:
     --sink-uri="kafka://127.0.0.1:9092/topic-name?kafka-version=2.4.0&sasl-mechanism=gssapi&sasl-gssapi-auth-type=user&sasl-gssapi-kerberos-config-path=/etc/krb5.conf&sasl-gssapi-service-name=kafka&sasl-gssapi-user=alice/for-kafka&sasl-gssapi-password=alice-secret&sasl-gssapi-realm=example.com"
     ```
 
-    Values of `sasl-gssapi-user` and `sasl-gssapi-realm` are related to the [principle](https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-user/What-is-a-Kerberos-Principal_003f.html) specified in kerberos. For example, if the principle is set as `alice/for-kafka@example.com`, then `sasl-gssapi-user` and `sasl-gssapi-realm` are specified as `alice/for-kafka` and `example.com` respectively.
+    Values of `sasl-gssapi-user` and `sasl-gssapi-realm` are related to the [<a href="https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-user/What-is-a-Kerberos-Principal_003f.html">principle</a>](https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-user/What-is-a-Kerberos-Principal_003f.html) specified in kerberos. For example, if the principle is set as `alice/for-kafka@example.com`, then `sasl-gssapi-user` and `sasl-gssapi-realm` are specified as `alice/for-kafka` and `example.com` respectively.
 
     SASL/GSSAPI `keytab` authentication:
 
@@ -284,7 +284,7 @@ The following are examples when using Kafka SASL authentication:
     --sink-uri="kafka://127.0.0.1:9092/topic-name?kafka-version=2.4.0&sasl-mechanism=gssapi&sasl-gssapi-auth-type=keytab&sasl-gssapi-kerberos-config-path=/etc/krb5.conf&sasl-gssapi-service-name=kafka&sasl-gssapi-user=alice/for-kafka&sasl-gssapi-keytab-path=/var/lib/secret/alice.key&sasl-gssapi-realm=example.com"
     ```
 
-    For more information about SASL/GSSAPI authentication methods, see [Configuring GSSAPI](https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_gssapi.html).
+    For more information about SASL/GSSAPI authentication methods, see [<a href="https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_gssapi.html">Configuring GSSAPI</a>](https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_gssapi.html).
 
 -   TLS/SSL encryption
 
@@ -294,12 +294,12 @@ The following are examples when using Kafka SASL authentication:
 
     The minimum set of permissions required for TiCDC to function properly is as follows.
 
-    -   The `Create` and `Write` permissions for the Topic [resource type](https://docs.confluent.io/platform/current/kafka/authorization.html#resources).
+    -   The `Create` and `Write` permissions for the Topic [<a href="https://docs.confluent.io/platform/current/kafka/authorization.html#resources">resource type</a>](https://docs.confluent.io/platform/current/kafka/authorization.html#resources).
     -   The `DescribeConfigs` permission for the Cluster resource type.
 
 #### Integrate TiCDC with Kafka Connect (Confluent Platform) {#integrate-ticdc-with-kafka-connect-confluent-platform}
 
-To use the [data connectors](https://docs.confluent.io/current/connect/managing/connectors.html) provided by Confluent to stream data to relational or non-relational databases, you need to use the `avro` protocol and provide a URL for [Confluent Schema Registry](https://www.confluent.io/product/confluent-platform/data-compatibility/) in `schema-registry`.
+To use the [<a href="https://docs.confluent.io/current/connect/managing/connectors.html">data connectors</a>](https://docs.confluent.io/current/connect/managing/connectors.html) provided by Confluent to stream data to relational or non-relational databases, you need to use the `avro` protocol and provide a URL for [<a href="https://www.confluent.io/product/confluent-platform/data-compatibility/">Confluent Schema Registry</a>](https://www.confluent.io/product/confluent-platform/data-compatibility/) in `schema-registry`.
 
 Sample configuration:
 
@@ -316,7 +316,7 @@ dispatchers = [
 ]
 ```
 
-For detailed integration guide, see [Quick Start Guide on Integrating TiDB with Confluent Platform](/ticdc/integrate-confluent-using-ticdc.md).
+For detailed integration guide, see [<a href="/ticdc/integrate-confluent-using-ticdc.md">Quick Start Guide on Integrating TiDB with Confluent Platform</a>](/ticdc/integrate-confluent-using-ticdc.md).
 
 #### Configure sink URI with <code>pulsar</code> {#configure-sink-uri-with-code-pulsar-code}
 
@@ -353,11 +353,11 @@ The following are descriptions of parameters that can be configured for the sink
 | `hashingScheme`              | The hash algorithm used for choosing the partition to which a message is sent (optional). The value options are `JavaStringHash` (default) and `Murmur3`.              |
 | `properties.*`               | The customized properties added to the Pulsar producer in TiCDC (optional). For example, `properties.location=Hangzhou`.                                               |
 
-For more parameters of Pulsar, see [pulsar-client-go ClientOptions](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ClientOptions) and [pulsar-client-go ProducerOptions](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ProducerOptions).
+For more parameters of Pulsar, see [<a href="https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ClientOptions">pulsar-client-go ClientOptions</a>](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ClientOptions) and [<a href="https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ProducerOptions">pulsar-client-go ProducerOptions</a>](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ProducerOptions).
 
 #### Use the task configuration file {#use-the-task-configuration-file}
 
-For more replication configuration (for example, specify replicating a single table), see [Task configuration file](#task-configuration-file).
+For more replication configuration (for example, specify replicating a single table), see [<a href="#task-configuration-file">Task configuration file</a>](#task-configuration-file).
 
 You can use a configuration file to create a replication task in the following way:
 
@@ -661,7 +661,7 @@ worker-num = 16
 ### Notes for compatibility {#notes-for-compatibility}
 
 -   In TiCDC v4.0.0, `ignore-txn-commit-ts` is removed and `ignore-txn-start-ts` is added, which uses start_ts to filter transactions.
--   In TiCDC v4.0.2, `db-dbs`/`db-tables`/`ignore-dbs`/`ignore-tables` are removed and `rules` is added, which uses new filter rules for databases and tables. For detailed filter syntax, see [Table Filter](/table-filter.md).
+-   In TiCDC v4.0.2, `db-dbs`/`db-tables`/`ignore-dbs`/`ignore-tables` are removed and `rules` is added, which uses new filter rules for databases and tables. For detailed filter syntax, see [<a href="/table-filter.md">Table Filter</a>](/table-filter.md).
 
 ## Customize the rules for Topic and Partition dispatchers of Kafka Sink {#customize-the-rules-for-topic-and-partition-dispatchers-of-kafka-sink}
 
@@ -753,11 +753,11 @@ Starting from v4.0.5, TiCDC supports outputting the historical value of a Row Ch
 enable-old-value = true
 ```
 
-This feature is enabled by default since v5.0. To learn the output format of the TiCDC Open Protocol after this feature is enabled, see [TiCDC Open Protocol - Row Changed Event](/ticdc/ticdc-open-protocol.md#row-changed-event).
+This feature is enabled by default since v5.0. To learn the output format of the TiCDC Open Protocol after this feature is enabled, see [<a href="/ticdc/ticdc-open-protocol.md#row-changed-event">TiCDC Open Protocol - Row Changed Event</a>](/ticdc/ticdc-open-protocol.md#row-changed-event).
 
 ## Replicate tables with the new framework for collations enabled {#replicate-tables-with-the-new-framework-for-collations-enabled}
 
-Starting from v4.0.15, v5.0.4, v5.1.1 and v5.2.0, TiCDC supports tables that have enabled [new framework for collations](/character-set-and-collation.md#new-framework-for-collations).
+Starting from v4.0.15, v5.0.4, v5.1.1 and v5.2.0, TiCDC supports tables that have enabled [<a href="/character-set-and-collation.md#new-framework-for-collations">new framework for collations</a>](/character-set-and-collation.md#new-framework-for-collations).
 
 ## Replicate tables without a valid index {#replicate-tables-without-a-valid-index}
 
@@ -798,7 +798,7 @@ In the output of the above command, if the value of `sort-engine` is "unified", 
 > -   If your servers use mechanical hard drives or other storage devices that have high latency or limited bandwidth, use the unified sorter with caution.
 > -   By default, Unified Sorter uses `data_dir` to store temporary files. It is recommended to ensure that the free disk space is greater than or equal to 500 GiB. For production environments, it is recommended to ensure that the free disk space on each node is greater than (the maximum `checkpoint-ts` delay allowed by the business) * (upstream write traffic at business peak hours). In addition, if you plan to replicate a large amount of historical data after `changefeed` is created, make sure that the free space on each node is greater than the amount of replicated data.
 > -   Unified sorter is enabled by default. If your servers do not match the above requirements and you want to disable the unified sorter, you need to manually set `sort-engine` to `memory` for the changefeed.
-> -   To enable Unified Sorter on an existing changefeed that uses `memory` to sort, see the methods provided in [How do I handle the OOM that occurs after TiCDC is restarted after a task interruption?](/ticdc/troubleshoot-ticdc.md#what-should-i-do-to-handle-the-oom-that-occurs-after-ticdc-is-restarted-after-a-task-interruption).
+> -   To enable Unified Sorter on an existing changefeed that uses `memory` to sort, see the methods provided in [<a href="/ticdc/troubleshoot-ticdc.md#what-should-i-do-to-handle-the-oom-that-occurs-after-ticdc-is-restarted-after-a-task-interruption">How do I handle the OOM that occurs after TiCDC is restarted after a task interruption?</a>](/ticdc/troubleshoot-ticdc.md#what-should-i-do-to-handle-the-oom-that-occurs-after-ticdc-is-restarted-after-a-task-interruption).
 
 ## Eventually consistent replication in disaster scenarios {#eventually-consistent-replication-in-disaster-scenarios}
 

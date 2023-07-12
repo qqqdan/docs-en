@@ -28,7 +28,7 @@ Before running the `tiup cluster patch` command, you need to pack the binary pac
 1.  Determine the following variables:
 
     -   `${component}`: the name of the component to be replaced (such as `tidb`, `tikv`, or `pd`).
-    -   `${version}`: the version of the component (such as `v6.1.6`).
+    -   `${version}`: the version of the component (such as `v6.1.7`).
     -   `${os}`: the operating system (`linux`).
     -   `${arch}`: the platform on which the component runs (`amd64`, `arm64`).
 
@@ -86,7 +86,7 @@ After you have completed the preceding steps, you can use `/tmp/${component}-hot
 
 ### -N, --node {#n-node}
 
--   Specifies nodes to be replaced. The value of this option is a comma-separated list of node IDs. You can get the node ID from the first column of the [cluster status table](/tiup/tiup-component-cluster-display.md) returned by the `tiup cluster display` command.
+-   Specifies nodes to be replaced. The value of this option is a comma-separated list of node IDs. You can get the node ID from the first column of the [<a href="/tiup/tiup-component-cluster-display.md">cluster status table</a>](/tiup/tiup-component-cluster-display.md) returned by the `tiup cluster display` command.
 -   Data type: `STRINGS`
 -   If this option is not specified, TiUP does not select any nodes to replace by default.
 
@@ -96,7 +96,7 @@ After you have completed the preceding steps, you can use `/tmp/${component}-hot
 
 ### -R, --role {#r-role}
 
--   Specifies the roles to be replaced. The value of this option is a comma-separated list of the roles of the nodes. You can get the role deployed on a node from the second column of the [cluster status table](/tiup/tiup-component-cluster-display.md) returned by the `tiup cluster display` command.
+-   Specifies the roles to be replaced. The value of this option is a comma-separated list of the roles of the nodes. You can get the role deployed on a node from the second column of the [<a href="/tiup/tiup-component-cluster-display.md">cluster status table</a>](/tiup/tiup-component-cluster-display.md) returned by the `tiup cluster display` command.
 -   Data type: `STRINGS`
 -   If this option is not specified, TiUP does not select any roles to replace by default.
 
@@ -120,4 +120,4 @@ After you have completed the preceding steps, you can use `/tmp/${component}-hot
 
 The execution log of the tiup-cluster.
 
-[&#x3C;&#x3C; Back to the previous page - TiUP Cluster command list](/tiup/tiup-component-cluster.md#command-list)
+[<a href="/tiup/tiup-component-cluster.md#command-list">&#x3C;&#x3C; Back to the previous page - TiUP Cluster command list</a>](/tiup/tiup-component-cluster.md#command-list)

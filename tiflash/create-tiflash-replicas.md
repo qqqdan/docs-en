@@ -136,7 +136,7 @@ Before TiFlash replicas are added, each TiKV instance performs a full table scan
       server.snap-max-write-bytes-per-sec: 300MiB  # Default to 100MiB.
     ```
 
-    The configuration change takes effect after restarting the TiFlash and TiKV instances. The TiKV configuration can be also changed online by using the [Dynamic Config SQL statement](https://docs.pingcap.com/tidb/stable/dynamic-config), which takes effect immediately without restarting TiKV instances:
+    The configuration change takes effect after restarting the TiFlash and TiKV instances. The TiKV configuration can be also changed online by using the [<a href="https://docs.pingcap.com/tidb/stable/dynamic-config">Dynamic Config SQL statement</a>](https://docs.pingcap.com/tidb/stable/dynamic-config), which takes effect immediately without restarting TiKV instances:
 
     ```sql
     SET CONFIG tikv `server.snap-max-write-bytes-per-sec` = '300MiB';
@@ -144,7 +144,7 @@ Before TiFlash replicas are added, each TiKV instance performs a full table scan
 
     After adjusting the preceding configurations, you cannot observe the acceleration for now, as the replication speed is still restricted by the PD limit globally.
 
-2.  Use [PD Control](https://docs.pingcap.com/tidb/stable/pd-control) to progressively ease the new replica speed limit.
+2.  Use [<a href="https://docs.pingcap.com/tidb/stable/pd-control">PD Control</a>](https://docs.pingcap.com/tidb/stable/pd-control) to progressively ease the new replica speed limit.
 
     The default new replica speed limit is 30, which means, approximately 30 Regions add TiFlash replicas every minute. Executing the following command will adjust the limit to 60 for all TiFlash instances, which doubles the original speed:
 
@@ -155,7 +155,7 @@ Before TiFlash replicas are added, each TiKV instance performs a full table scan
     > In the preceding command, you need to replace `<CLUSTER_VERSION>` with the actual cluster version and `<PD_ADDRESS>:2379` with the address of any PD node. For example:
     >
     > ```shell
-    > tiup ctl:v6.1.6 pd -u http://192.168.1.4:2379 store limit all engine tiflash 60 add-peer
+    > tiup ctl:v6.1.7 pd -u http://192.168.1.4:2379 store limit all engine tiflash 60 add-peer
     > ```
 
     Within a few minutes, you will observe a significant increase in CPU and disk IO resource usage of the TiFlash nodes, and TiFlash should create replicas faster. At the same time, the TiKV nodes' CPU and disk IO resource usage increases as well.
@@ -267,6 +267,6 @@ When configuring replicas, if you need to distribute TiFlash replicas to multipl
 
 <CustomContent platform="tidb">
 
-For more information about scheduling replicas by using labels, see [Schedule Replicas by Topology Labels](/schedule-replicas-by-topology-labels.md), [Multiple Data Centers in One City Deployment](/multi-data-centers-in-one-city-deployment.md), and [Three Data Centers in Two Cities Deployment](/three-data-centers-in-two-cities-deployment.md).
+For more information about scheduling replicas by using labels, see [<a href="/schedule-replicas-by-topology-labels.md">Schedule Replicas by Topology Labels</a>](/schedule-replicas-by-topology-labels.md), [<a href="/multi-data-centers-in-one-city-deployment.md">Multiple Data Centers in One City Deployment</a>](/multi-data-centers-in-one-city-deployment.md), and [<a href="/three-data-centers-in-two-cities-deployment.md">Three Data Centers in Two Cities Deployment</a>](/three-data-centers-in-two-cities-deployment.md).
 
 </CustomContent>

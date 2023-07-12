@@ -27,12 +27,12 @@ To obtain `pd-ctl` of the latest version, download the TiDB server installation 
 
 > **Note:**
 >
-> `{version}` indicates the version number of TiDB. For example, if `{version}` is `v6.1.6`, the package download link is `https://download.pingcap.org/tidb-community-server-v6.1.6-linux-amd64.tar.gz`.
+> `{version}` indicates the version number of TiDB. For example, if `{version}` is `v6.1.7`, the package download link is `https://download.pingcap.org/tidb-community-server-v6.1.7-linux-amd64.tar.gz`.
 
 ### Compile from source code {#compile-from-source-code}
 
-1.  [Go](https://golang.org/) Version 1.19 or later because the Go modules are used.
-2.  In the root directory of the [PD project](https://github.com/pingcap/pd), use the `make` or `make pd-ctl` command to compile and generate `bin/pd-ctl`.
+1.  [<a href="https://golang.org/">Go</a>](https://golang.org/) Version 1.19 or later because the Go modules are used.
+2.  In the root directory of the [<a href="https://github.com/pingcap/pd">PD project</a>](https://github.com/pingcap/pd), use the `make` or `make pd-ctl` command to compile and generate `bin/pd-ctl`.
 
 ## Usage {#usage}
 
@@ -310,7 +310,7 @@ Usage:
     config set cluster-version 1.0.8              // Set the version of the cluster to 1.0.8
     ```
 
--   `replication-mode` controls the replication mode of Regions in the dual data center scenario. See [Enable the DR Auto-Sync mode](/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode) for details.
+-   `replication-mode` controls the replication mode of Regions in the dual data center scenario. See [<a href="/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode">Enable the DR Auto-Sync mode</a>](/two-data-centers-in-one-city-deployment.md#enable-the-dr-auto-sync-mode) for details.
 
 -   `leader-schedule-policy` is used to select the scheduling strategy for the leader. You can schedule the leader according to `size` or `count`.
 
@@ -344,7 +344,7 @@ Usage:
 
 #### <code>config placement-rules [disable | enable | load | save | show | rule-group]</code> {#code-config-placement-rules-disable-enable-load-save-show-rule-group-code}
 
-For the usage of `config placement-rules [disable | enable | load | save | show | rule-group]`, see [Configure placement rules](/configure-placement-rules.md#configure-rules).
+For the usage of `config placement-rules [disable | enable | load | save | show | rule-group]`, see [<a href="/configure-placement-rules.md#configure-rules">Configure placement rules</a>](/configure-placement-rules.md#configure-rules).
 
 ### <code>health</code> {#code-health-code}
 
@@ -503,7 +503,7 @@ time: 43.12698ms
 
 ### <code>region &#x3C;region_id> [--jq="&#x3C;query string>"]</code> {#code-region-x3c-region-id-jq-x3c-query-string-code}
 
-Use this command to view the Region information. For a jq formatted output, see [jq-formatted-json-output-usage](#jq-formatted-json-output-usage).
+Use this command to view the Region information. For a jq formatted output, see [<a href="#jq-formatted-json-output-usage">jq-formatted-json-output-usage</a>](#jq-formatted-json-output-usage).
 
 Usage:
 
@@ -778,7 +778,7 @@ Use this command to view and control the `balance-leader-scheduler` policy.
 
 Since TiDB v6.0.0, PD introduces the `Batch` parameter for `balance-leader-scheduler` to control the speed at which the balance-leader processes tasks. To use this parameter, you can modify the `balance-leader batch` configuration item using pd-ctl.
 
-Before v6.0.0, PD does not have this configuration item, which means `balance-leader batch=1`. In v6.0.0 or later versions, the default value of `balance-leader batch` is `4`. To set this configuration item to a value greater than `4`, you need to set a greater value for [`scheduler-max-waiting-operator`](#config-show--set-option-value--placement-rules) (whose default value is `5`) at the same time. You can get the expected acceleration effect only after modifying both configuration items.
+Before v6.0.0, PD does not have this configuration item, which means `balance-leader batch=1`. In v6.0.0 or later versions, the default value of `balance-leader batch` is `4`. To set this configuration item to a value greater than `4`, you need to set a greater value for [<a href="#config-show--set-option-value--placement-rules">`scheduler-max-waiting-operator`</a>](#config-show--set-option-value--placement-rules) (whose default value is `5`) at the same time. You can get the expected acceleration effect only after modifying both configuration items.
 
 ```bash
 scheduler config balance-leader-scheduler set batch 3 // Set the size of the operator that the balance-leader scheduler can execute in a batch to 3
@@ -910,7 +910,7 @@ Use this command to query the current GC safepoint and service GC safepoint. The
 
 ### <code>store [delete | cancel-delete | label | weight | remove-tombstone | limit ] &#x3C;store_id> [--jq="&#x3C;query string>"]</code> {#code-store-delete-cancel-delete-label-weight-remove-tombstone-limit-x3c-store-id-jq-x3c-query-string-code}
 
-Use this command to view the store information or remove a specified store. For a jq formatted output, see [jq-formatted-json-output-usage](#jq-formatted-json-output-usage).
+Use this command to view the store information or remove a specified store. For a jq formatted output, see [<a href="#jq-formatted-json-output-usage">jq-formatted-json-output-usage</a>](#jq-formatted-json-output-usage).
 
 Usage:
 
@@ -941,7 +941,7 @@ Usage:
 
 > **Note:**
 >
-> You can use `pd-ctl` to check the status (Up, Disconnect, Offline, Down, or Tombstone) of a TiKV store. For the relationship between each status, refer to [Relationship between each status of a TiKV store](/tidb-scheduling.md#information-collection).
+> You can use `pd-ctl` to check the status (Up, Disconnect, Offline, Down, or Tombstone) of a TiKV store. For the relationship between each status, refer to [<a href="/tidb-scheduling.md#information-collection">Relationship between each status of a TiKV store</a>](/tidb-scheduling.md#information-collection).
 
 ### <code>log [fatal | error | warn | info | debug]</code> {#code-log-fatal-error-warn-info-debug-code}
 
@@ -972,7 +972,7 @@ logic:  120102
 > -   This feature is a lossy recovery, so TiKV cannot guarantee data integrity and data indexes integrity after using the feature.
 > -   It is recommended to perform the feature-related operations with the support from the TiDB team. If any misoperation is performed, it might be hard to recover the cluster.
 
-Use this command to perform lossy recovery operations when permanently damaged replicas cause data to be unavailable. See the following example. The details are described in [Online Unsafe Recovery](/online-unsafe-recovery.md)
+Use this command to perform lossy recovery operations when permanently damaged replicas cause data to be unavailable. See the following example. The details are described in [<a href="/online-unsafe-recovery.md">Online Unsafe Recovery</a>](/online-unsafe-recovery.md)
 
 Execute Online Unsafe Recovery to remove permanently damaged stores:
 

@@ -73,7 +73,7 @@ To run a TiDB server, use the following command:
 {{< copyable "" >}}
 
 ```bash
-wget https://download.pingcap.org/tidb-community-server-v6.1.6-linux-amd64.tar.gz
+wget https://download.pingcap.org/tidb-community-server-v6.1.7-linux-amd64.tar.gz
 tar -xzvf tidb-latest-linux-amd64.tar.gz
 mv tidb-latest-linux-amd64/bin/tidb-server ./
 ./tidb-server
@@ -143,7 +143,7 @@ For MySQL2, replace the configuration file in the above command with that of MyS
 
 ## Create a data migration task {#create-a-data-migration-task}
 
-After importing [prepared data](#prepare-data), there are several sharded tables on both MySQL1 and MySQL2 instances. These tables have identical structure and the same prefix "t" in the table names; the databases where these tables are located are all prefixed with "sharding"; and there is no conflict between the primary keys or the unique keys (in each sharded table, the primary keys or the unique keys are different from those of other tables).
+After importing [<a href="#prepare-data">prepared data</a>](#prepare-data), there are several sharded tables on both MySQL1 and MySQL2 instances. These tables have identical structure and the same prefix "t" in the table names; the databases where these tables are located are all prefixed with "sharding"; and there is no conflict between the primary keys or the unique keys (in each sharded table, the primary keys or the unique keys are different from those of other tables).
 
 Now, suppose that you need to migrate these sharded tables to the `db_target.t_target` table in TiDB. The steps are as follows.
 
@@ -225,4 +225,4 @@ Now, you have successfully created a task to migrate the sharded tables from the
 
 ## Verify data {#verify-data}
 
-You can modify data in the upstream MySQL sharded tables. Then use [sync-diff-inspector](/sync-diff-inspector/shard-diff.md) to check whether the upstream and downstream data are consistent. Consistent data means that the migration task works well, which also indicates that the cluster works well.
+You can modify data in the upstream MySQL sharded tables. Then use [<a href="/sync-diff-inspector/shard-diff.md">sync-diff-inspector</a>](/sync-diff-inspector/shard-diff.md) to check whether the upstream and downstream data are consistent. Consistent data means that the migration task works well, which also indicates that the cluster works well.

@@ -5,14 +5,14 @@ summary: Learn the use cases of backing up and restoring data using BR.
 
 # BR Use Cases {#br-use-cases}
 
-[Backup &#x26; Restore (BR)](/br/backup-and-restore-overview.md) is a tool for distributed backup and restoration of the TiDB cluster data.
+[<a href="/br/backup-and-restore-overview.md">Backup &#x26; Restore (BR)</a>](/br/backup-and-restore-overview.md) is a tool for distributed backup and restoration of the TiDB cluster data.
 
 This document describes common backup and restoration scenarios:
 
--   [Back up a single table to a network disk (recommended for production environments)](#back-up-a-single-table-to-a-network-disk-recommended-for-production-environments)
--   [Restore data from a network disk (recommended for production environments)](#restore-data-from-a-network-disk-recommended-for-production-environments)
--   [Back up a single table to a local disk](#back-up-a-single-table-to-a-local-disk-recommended-for-testing-environments)
--   [Restore data from a local disk](#restore-data-from-a-local-disk-recommended-for-testing-environments)
+-   [<a href="#back-up-a-single-table-to-a-network-disk-recommended-for-production-environments">Back up a single table to a network disk (recommended for production environments)</a>](#back-up-a-single-table-to-a-network-disk-recommended-for-production-environments)
+-   [<a href="#restore-data-from-a-network-disk-recommended-for-production-environments">Restore data from a network disk (recommended for production environments)</a>](#restore-data-from-a-network-disk-recommended-for-production-environments)
+-   [<a href="#back-up-a-single-table-to-a-local-disk-recommended-for-testing-environments">Back up a single table to a local disk</a>](#back-up-a-single-table-to-a-local-disk-recommended-for-testing-environments)
+-   [<a href="#restore-data-from-a-local-disk-recommended-for-testing-environments">Restore data from a local disk</a>](#restore-data-from-a-local-disk-recommended-for-testing-environments)
 
 This document aims to help you achieve the following goals:
 
@@ -23,9 +23,9 @@ This document aims to help you achieve the following goals:
 
 ## Audience {#audience}
 
-You are expected to have a basic understanding of TiDB and [TiKV](https://tikv.org/).
+You are expected to have a basic understanding of TiDB and [<a href="https://tikv.org/">TiKV</a>](https://tikv.org/).
 
-Before reading on, make sure you have read [BR Overview](/br/backup-and-restore-overview.md), especially [Usage Restrictions](/br/backup-and-restore-overview.md#usage-restrictions) and [Some tips](/br/backup-and-restore-overview.md#some-tips).
+Before reading on, make sure you have read [<a href="/br/backup-and-restore-overview.md">BR Overview</a>](/br/backup-and-restore-overview.md), especially [<a href="/br/backup-and-restore-overview.md#usage-restrictions">Usage Restrictions</a>](/br/backup-and-restore-overview.md#usage-restrictions) and [<a href="/br/backup-and-restore-overview.md#some-tips">Some tips</a>](/br/backup-and-restore-overview.md#some-tips).
 
 ## Prerequisites {#prerequisites}
 
@@ -35,18 +35,18 @@ You can estimate the performance of your backup or restoration operation based o
 
 ### Deployment method {#deployment-method}
 
-It is recommended that you deploy the TiDB cluster using [TiUP](/tiup/tiup-cluster.md) and install BR using TiUP.
+It is recommended that you deploy the TiDB cluster using [<a href="/tiup/tiup-cluster.md">TiUP</a>](/tiup/tiup-cluster.md) and install BR using TiUP.
 
 ### Cluster versions {#cluster-versions}
 
--   TiDB: v6.1.6
--   TiKV: v6.1.6
--   PD: v6.1.6
--   BR: v6.1.6
+-   TiDB: v6.1.7
+-   TiKV: v6.1.7
+-   PD: v6.1.7
+-   BR: v6.1.7
 
 > **Note:**
 >
-> It is recommended that you use the latest version of [TiDB/TiKV/PD/BR](/releases/release-notes.md) and make sure that the BR version is **consistent with** the TiDB version.
+> It is recommended that you use the latest version of [<a href="/releases/release-notes.md">TiDB/TiKV/PD/BR</a>](/releases/release-notes.md) and make sure that the BR version is **consistent with** the TiDB version.
 
 ### TiKV hardware information {#tikv-hardware-information}
 
@@ -71,11 +71,11 @@ In addition to the preceding prerequisites, you should also perform the followin
 
 The BR tool already supports self-adapting to GC. It automatically registers `backupTS` (the latest PD timestamp by default) to PD's `safePoint` to ensure that TiDB's GC Safe Point does not move forward during the backup, thus avoiding manually setting GC configurations.
 
-Before running the [`br backup` command](/br/use-br-command-line-tool.md#br-command-line-description), make sure that the target storage device has required space (no less than 1/3 of the disk space of the backup cluster).
+Before running the [<a href="/br/use-br-command-line-tool.md#br-command-line-description">`br backup` command</a>](/br/use-br-command-line-tool.md#br-command-line-description), make sure that the target storage device has required space (no less than 1/3 of the disk space of the backup cluster).
 
 #### Check before restoration {#check-before-restoration}
 
-Before running the [`br restore` command](/br/use-br-command-line-tool.md#br-command-line-description), check the target cluster to ensure that the table in this cluster does not have a duplicate name.
+Before running the [<a href="/br/use-br-command-line-tool.md#br-command-line-description">`br restore` command</a>](/br/use-br-command-line-tool.md#br-command-line-description), check the target cluster to ensure that the table in this cluster does not have a duplicate name.
 
 ## Back up a single table to a network disk (recommended for production environments) {#back-up-a-single-table-to-a-network-disk-recommended-for-production-environments}
 
@@ -83,7 +83,7 @@ Run the `br backup` command to back up the single table data `--db batchmark --t
 
 ### Backup prerequisites {#backup-prerequisites}
 
--   [Check before backup](#check-before-backup)
+-   [<a href="#check-before-backup">Check before backup</a>](#check-before-backup)
 -   Configure a high-performance SSD hard disk host as the NFS server to store data, and all BR nodes, TiKV nodes, and TiFlash nodes as NFS clients. Mount the same path (for example, `/br_data`) to the NFS server for NFS clients to access the server.
 -   The total transfer rate between the NFS server and all NFS clients must reach at least `the number of TiKV instances * 150MB/s`. Otherwise, the network I/O might become the performance bottleneck.
 
@@ -190,7 +190,7 @@ From the preceding information, the throughput of a single TiKV instance can be 
 
 ### Performance tuning {#performance-tuning}
 
-If the resource usage of TiKV does not become an obvious bottleneck during the backup process (for example, in the [Monitoring metrics for the backup](#monitoring-metrics-for-the-backup), the highest CPU usage rate of backup-worker is around `1500%` and the overall I/O usage rate is below `30%`), you can try to increase the value of `--concurrency` (`4` by default) to tune the performance. But this performance tuning method is not suitable for the use cases of many small tables. See the following example:
+If the resource usage of TiKV does not become an obvious bottleneck during the backup process (for example, in the [<a href="#monitoring-metrics-for-the-backup">Monitoring metrics for the backup</a>](#monitoring-metrics-for-the-backup), the highest CPU usage rate of backup-worker is around `1500%` and the overall I/O usage rate is below `30%`), you can try to increase the value of `--concurrency` (`4` by default) to tune the performance. But this performance tuning method is not suitable for the use cases of many small tables. See the following example:
 
 {{< copyable "" >}}
 
@@ -220,7 +220,7 @@ Use the `br restore` command to restore the complete backup data to an offline c
 
 ### Restoration prerequisites {#restoration-prerequisites}
 
--   [Check before restore](#check-before-restoration)
+-   [<a href="#check-before-restoration">Check before restore</a>](#check-before-restoration)
 
 ### Topology {#topology}
 
@@ -330,7 +330,7 @@ Run the `br backup` command to back up a single table `--db batchmark --table or
 
 ### Backup prerequisites {#backup-prerequisites}
 
--   [Check before backup](#check-before-backup)
+-   [<a href="#check-before-backup">Check before backup</a>](#check-before-backup)
 -   Each TiKV node has a separate disk to store backupSST files.
 -   The `backup_endpoint` node has a separate disk to store `backupmeta` files.
 -   TiKV and the `backup_endpoint` node share the same directory (for example, `/home/tidb/backup_local`) for backup.
@@ -356,7 +356,7 @@ bin/br backup table \
     --log-file backup_local.log
 ```
 
-During the backup process, pay attention to the metrics on the monitoring panels to get the status of the backup process. See [Monitoring metrics for the backup](#monitoring-metrics-for-the-backup) for details.
+During the backup process, pay attention to the metrics on the monitoring panels to get the status of the backup process. See [<a href="#monitoring-metrics-for-the-backup">Monitoring metrics for the backup</a>](#monitoring-metrics-for-the-backup) for details.
 
 #### Backup results explanation {#backup-results-explanation}
 
@@ -391,7 +391,7 @@ Run the `br restore` command to restore the complete backup data to an offline c
 
 ### Restoration prerequisites {#restoration-prerequisites}
 
--   [Check before restore](#check-before-restoration)
+-   [<a href="#check-before-restoration">Check before restore</a>](#check-before-restoration)
 -   The TiKV cluster and the backup data do not have a duplicate database or table. Currently, BR does not support table route.
 -   Each TiKV node has a separate disk to store backupSST files.
 -   The `restore_endpoint` node has a separate disk to store `backupmeta` files.
@@ -419,7 +419,7 @@ Run the `br restore` command:
 bin/br restore table --db batchmark --table order_line -s local:///home/tidb/backup_local/ --pd 172.16.5.198:2379 --log-file restore_local.log
 ```
 
-During the restoration process, pay attention to the metrics on the monitoring panels to get the status of the restoration process. See [Monitoring metrics for the restoration](#monitoring-metrics-for-the-restoration) for details.
+During the restoration process, pay attention to the metrics on the monitoring panels to get the status of the restoration process. See [<a href="#monitoring-metrics-for-the-restoration">Monitoring metrics for the restoration</a>](#monitoring-metrics-for-the-restoration) for details.
 
 ### Restoration results explanation {#restoration-results-explanation}
 

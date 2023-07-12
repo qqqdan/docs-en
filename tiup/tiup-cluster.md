@@ -5,9 +5,9 @@ summary: Learns how to deploy and maintain an online TiDB cluster using TiUP.
 
 # Deploy and Maintain an Online TiDB Cluster Using TiUP {#deploy-and-maintain-an-online-tidb-cluster-using-tiup}
 
-This document focuses on how to use the TiUP cluster component. For the complete steps of online deployment, refer to [Deploy a TiDB Cluster Using TiUP](/production-deployment-using-tiup.md).
+This document focuses on how to use the TiUP cluster component. For the complete steps of online deployment, refer to [<a href="/production-deployment-using-tiup.md">Deploy a TiDB Cluster Using TiUP</a>](/production-deployment-using-tiup.md).
 
-Similar to [the TiUP playground component](/tiup/tiup-playground.md) used for a local test deployment, the TiUP cluster component quickly deploys TiDB for production environment. Compared with playground, the cluster component provides more powerful production cluster management features, including upgrading, scaling, and even operation and auditing.
+Similar to [<a href="/tiup/tiup-playground.md">the TiUP playground component</a>](/tiup/tiup-playground.md) used for a local test deployment, the TiUP cluster component quickly deploys TiDB for production environment. Compared with playground, the cluster component provides more powerful production cluster management features, including upgrading, scaling, and even operation and auditing.
 
 For the help information of the cluster component, run the following command:
 
@@ -63,11 +63,11 @@ tiup cluster deploy <cluster-name> <version> <topology.yaml> [flags]
 
 This command requires you to provide the cluster name, the TiDB cluster version, and a topology file of the cluster.
 
-To write a topology file, refer to [the example](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml). The following file is an example of the simplest topology:
+To write a topology file, refer to [<a href="https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml">the example</a>](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml). The following file is an example of the simplest topology:
 
 > **Note:**
 >
-> The topology file used by the TiUP cluster component for deployment and scaling is written using [yaml](https://yaml.org/spec/1.2/spec.html) syntax, so make sure that the indentation is correct.
+> The topology file used by the TiUP cluster component for deployment and scaling is written using [<a href="https://yaml.org/spec/1.2/spec.html">yaml</a>](https://yaml.org/spec/1.2/spec.html) syntax, so make sure that the indentation is correct.
 
 ```yaml
 ---
@@ -118,12 +118,12 @@ tidb_servers:
 ...
 ```
 
-Save the file as `/tmp/topology.yaml`. If you want to use TiDB v6.1.6 and your cluster name is `prod-cluster`, run the following command:
+Save the file as `/tmp/topology.yaml`. If you want to use TiDB v6.1.7 and your cluster name is `prod-cluster`, run the following command:
 
 {{< copyable "" >}}
 
 ```shell
-tiup cluster deploy -p prod-cluster v6.1.6 /tmp/topology.yaml
+tiup cluster deploy -p prod-cluster v6.1.7 /tmp/topology.yaml
 ```
 
 During the execution, TiUP asks you to confirm your topology again and requires the root password of the target machine (the `-p` flag means inputting password):
@@ -131,7 +131,7 @@ During the execution, TiUP asks you to confirm your topology again and requires 
 ```bash
 Please confirm your topology:
 TiDB Cluster: prod-cluster
-TiDB Version: v6.1.6
+TiDB Version: v6.1.7
 Type        Host          Ports        Directories
 ----        ----          -----        -----------
 pd          172.16.5.134  2379/2380    deploy/pd-2379,data/pd-2379
@@ -171,7 +171,7 @@ tiup cluster list
 Starting /root/.tiup/components/cluster/v1.10.0/cluster list
 Name          User  Version    Path                                               PrivateKey
 ----          ----  -------    ----                                               ----------
-prod-cluster  tidb  v6.1.6    /root/.tiup/storage/cluster/clusters/prod-cluster  /root/.tiup/storage/cluster/clusters/prod-cluster/ssh/id_rsa
+prod-cluster  tidb  v6.1.7    /root/.tiup/storage/cluster/clusters/prod-cluster  /root/.tiup/storage/cluster/clusters/prod-cluster/ssh/id_rsa
 ```
 
 ## Start the cluster {#start-the-cluster}
@@ -201,7 +201,7 @@ tiup cluster display prod-cluster
 ```
 Starting /root/.tiup/components/cluster/v1.10.0/cluster display prod-cluster
 TiDB Cluster: prod-cluster
-TiDB Version: v6.1.6
+TiDB Version: v6.1.7
 ID                  Role        Host          Ports        Status     Data Dir              Deploy Dir
 --                  ----        ----          -----        ------     --------              ----------
 172.16.5.134:3000   grafana     172.16.5.134  3000         Up         -                     deploy/grafana-3000
@@ -219,13 +219,13 @@ ID                  Role        Host          Ports        Status     Data Dir  
 
 The `Status` column uses `Up` or `Down` to indicate whether the service is running normally.
 
-For the PD component, `|L` or `|UI` might be appended to `Up` or `Down`. `|L` indicates that the PD node is a Leader, and `|UI` indicates that [TiDB Dashboard](/dashboard/dashboard-intro.md) is running on the PD node.
+For the PD component, `|L` or `|UI` might be appended to `Up` or `Down`. `|L` indicates that the PD node is a Leader, and `|UI` indicates that [<a href="/dashboard/dashboard-intro.md">TiDB Dashboard</a>](/dashboard/dashboard-intro.md) is running on the PD node.
 
 ## Scale in a cluster {#scale-in-a-cluster}
 
 > **Note:**
 >
-> This section describes only the syntax of the scale-in command. For detailed steps of online scaling, refer to [Scale a TiDB Cluster Using TiUP](/scale-tidb-using-tiup.md).
+> This section describes only the syntax of the scale-in command. For detailed steps of online scaling, refer to [<a href="/scale-tidb-using-tiup.md">Scale a TiDB Cluster Using TiUP</a>](/scale-tidb-using-tiup.md).
 
 Scaling in a cluster means making some node(s) offline. This operation removes the specific node(s) from the cluster and deletes the remaining files.
 
@@ -272,7 +272,7 @@ tiup cluster display prod-cluster
 ```
 Starting /root/.tiup/components/cluster/v1.10.0/cluster display prod-cluster
 TiDB Cluster: prod-cluster
-TiDB Version: v6.1.6
+TiDB Version: v6.1.7
 ID                  Role        Host          Ports        Status     Data Dir              Deploy Dir
 --                  ----        ----          -----        ------     --------              ----------
 172.16.5.134:3000   grafana     172.16.5.134  3000         Up         -                     deploy/grafana-3000
@@ -294,7 +294,7 @@ After PD schedules the data on the node to other TiKV nodes, this node will be d
 
 > **Note:**
 >
-> This section describes only the syntax of the scale-out command. For detailed steps of online scaling, refer to [Scale a TiDB Cluster Using TiUP](/scale-tidb-using-tiup.md).
+> This section describes only the syntax of the scale-out command. For detailed steps of online scaling, refer to [<a href="/scale-tidb-using-tiup.md">Scale a TiDB Cluster Using TiUP</a>](/scale-tidb-using-tiup.md).
 
 The scale-out operation has an inner logic similar to that of deployment: the TiUP cluster component firstly ensures the SSH connection of the node, creates the required directories on the target node, then executes the deployment operation, and starts the node service.
 
@@ -334,7 +334,7 @@ To add a TiKV node and a PD node in the `tidb-test` cluster, take the following 
 
 > **Note:**
 >
-> This section describes only the syntax of the upgrade command. For detailed steps of online upgrade, refer to [Upgrade TiDB Using TiUP](/upgrade-tidb-using-tiup.md).
+> This section describes only the syntax of the upgrade command. For detailed steps of online upgrade, refer to [<a href="/upgrade-tidb-using-tiup.md">Upgrade TiDB Using TiUP</a>](/upgrade-tidb-using-tiup.md).
 
 The rolling upgrade feature leverages the distributed capabilities of TiDB. The upgrade process is made as transparent as possible to the application, and does not affect the business.
 
@@ -380,12 +380,12 @@ Global Flags:
   -y, --yes               Skip all confirmations and assumes 'yes'
 ```
 
-For example, the following command upgrades the cluster to v6.1.6:
+For example, the following command upgrades the cluster to v6.1.7:
 
 {{< copyable "" >}}
 
 ```bash
-tiup cluster upgrade tidb-test v6.1.6
+tiup cluster upgrade tidb-test v6.1.7
 ```
 
 ## Update configuration {#update-configuration}
@@ -434,7 +434,7 @@ The content and format requirements for files under the specified path are as fo
 
 -   The folder specified in the `dashboard_dir` field of `grafana_servers` must contain full `*.json` files.
 -   The folder specified in the `rule_dir` field of `monitoring_servers` must contain full `*.rules.yml` files.
--   For the format of files specified in the `config_file` field of `alertmanager_servers`, refer to [the Alertmanager configuration template](https://github.com/pingcap/tiup/blob/master/embed/templates/config/alertmanager.yml).
+-   For the format of files specified in the `config_file` field of `alertmanager_servers`, refer to [<a href="https://github.com/pingcap/tiup/blob/master/embed/templates/config/alertmanager.yml">the Alertmanager configuration template</a>](https://github.com/pingcap/tiup/blob/master/embed/templates/config/alertmanager.yml).
 
 When you execute `tiup reload`, TiUP first deletes all old configuration files in the target machine and then uploads the corresponding configuration from the control machine to the corresponding configuration directory of the target machine. Therefore, if you want to modify a particular configuration file, make sure that all configuration files (including the unmodified ones) are in the same directory. For example, to modify Grafana's `tidb.json` file, you need to first copy all the `*.json` files from Grafana's `dashboards` directory to your local directory. Otherwise, other JSON files will be missing from the target machine.
 
@@ -567,11 +567,11 @@ tiup cluster audit
 Starting component `cluster`: /home/tidb/.tiup/components/cluster/v1.10.0/cluster audit
 ID      Time                       Command
 --      ----                       -------
-4BLhr0  2023-02-28T23:55:09+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.6 /tmp/topology.yaml
-4BKWjF  2023-02-28T23:36:57+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.6 /tmp/topology.yaml
-4BKVwH  2023-02-28T23:02:08+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.6 /tmp/topology.yaml
-4BKKH1  2023-02-28T16:39:04+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster destroy test
-4BKKDx  2023-02-28T16:36:57+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.6 /tmp/topology.yaml
+4BLhr0  2023-07-12T23:55:09+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.7 /tmp/topology.yaml
+4BKWjF  2023-07-12T23:36:57+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.7 /tmp/topology.yaml
+4BKVwH  2023-07-12T23:02:08+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.7 /tmp/topology.yaml
+4BKKH1  2023-07-12T16:39:04+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster destroy test
+4BKKDx  2023-07-12T16:36:57+08:00  /home/tidb/.tiup/components/cluster/v1.11.3/cluster deploy test v6.1.7 /tmp/topology.yaml
 ```
 
 The first column is `audit-id`. To view the execution log of a certain command, pass the `audit-id` of a command as the flag as follows:

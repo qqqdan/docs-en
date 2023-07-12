@@ -7,7 +7,7 @@ summary: Learn to deploy TiDB Binlog with a simple TiDB cluster.
 
 This tutorial starts with a simple TiDB Binlog deployment with a single node of each component (Placement Driver, TiKV Server, TiDB Server, Pump, and Drainer), set up to push data into a MariaDB Server instance.
 
-This tutorial is targeted toward users who have some familiarity with the [TiDB Architecture](/tidb-architecture.md), who may have already set up a TiDB cluster (not mandatory), and who wants to gain hands-on experience with TiDB Binlog. This tutorial is a good way to "kick the tires" of TiDB Binlog and to familiarize yourself with the concepts of its architecture.
+This tutorial is targeted toward users who have some familiarity with the [<a href="/tidb-architecture.md">TiDB Architecture</a>](/tidb-architecture.md), who may have already set up a TiDB cluster (not mandatory), and who wants to gain hands-on experience with TiDB Binlog. This tutorial is a good way to "kick the tires" of TiDB Binlog and to familiarize yourself with the concepts of its architecture.
 
 > **Warning:**
 >
@@ -23,11 +23,11 @@ You can use TiDB Binlog for incremental backups, to replicate data from one TiDB
 
 TiDB Binlog is particularly useful when you migrate data from MySQL or MariaDB to TiDB, in which case you may use the TiDB DM (Data Migration) platform to get data from a MySQL/MariaDB cluster into TiDB, and then use TiDB Binlog to keep a separate, downstream MySQL/MariaDB instance/cluster in sync with your TiDB cluster. TiDB Binlog enables application traffic to TiDB to be pushed to a downstream MySQL or MariaDB instance/cluster, which reduces the risk of a migration to TiDB because you can easily revert the application to MySQL or MariaDB without downtime or data loss.
 
-See [TiDB Binlog Cluster User Guide](/tidb-binlog/tidb-binlog-overview.md) for more information.
+See [<a href="/tidb-binlog/tidb-binlog-overview.md">TiDB Binlog Cluster User Guide</a>](/tidb-binlog/tidb-binlog-overview.md) for more information.
 
 ## Architecture {#architecture}
 
-TiDB Binlog comprises two components: the **Pump** and the <strong>Drainer</strong>. Several Pump nodes make up a pump cluster. Each Pump node connects to TiDB Server instances and receives updates made to each of the TiDB Server instances in a cluster. A Drainer connects to the Pump cluster and transforms the received updates into the correct format for a particular downstream destination, for example, Kafka, another TiDB Cluster or a MySQL/MariaDB server.
+TiDB Binlog comprises two components: the **Pump** and the **Drainer**. Several Pump nodes make up a pump cluster. Each Pump node connects to TiDB Server instances and receives updates made to each of the TiDB Server instances in a cluster. A Drainer connects to the Pump cluster and transforms the received updates into the correct format for a particular downstream destination, for example, Kafka, another TiDB Cluster or a MySQL/MariaDB server.
 
 ![TiDB-Binlog architecture](/media/tidb-binlog-cluster-architecture.png)
 
@@ -42,7 +42,7 @@ sudo yum install -y mariadb-server
 ```
 
 ```bash
-curl -L https://download.pingcap.org/tidb-community-server-v6.1.6-linux-amd64.tar.gz | tar xzf -
+curl -L https://download.pingcap.org/tidb-community-server-v6.1.7-linux-amd64.tar.gz | tar xzf -
 cd tidb-latest-linux-amd64
 ```
 
@@ -325,7 +325,7 @@ You should see the same rows that you inserted into TiDB when querying the Maria
 
 ## binlogctl {#binlogctl}
 
-Information about Pumps and Drainers that have joined the cluster is stored in PD. You can use the binlogctl tool query and manipulate information about their states. See [binlogctl guide](/tidb-binlog/binlog-control.md) for more information.
+Information about Pumps and Drainers that have joined the cluster is stored in PD. You can use the binlogctl tool query and manipulate information about their states. See [<a href="/tidb-binlog/binlog-control.md">binlogctl guide</a>](/tidb-binlog/binlog-control.md) for more information.
 
 Use `binlogctl` to get a view of the current status of Pumps and Drainers in the cluster:
 
@@ -399,7 +399,7 @@ kolbe@localhost tidb-latest-linux-amd64]$ for p in tidb-server drainer pump tikv
 [1]+  Done                    ./bin/pd-server --config=pd.toml &>pd.out
 ```
 
-If you wish to restart the cluster after all services exit, use the same commands you ran originally to start the services. As discussed in the [`binlogctl`](#binlogctl) section above, you'll need to start `drainer` before `pump`, and `pump` before `tidb-server`.
+If you wish to restart the cluster after all services exit, use the same commands you ran originally to start the services. As discussed in the [<a href="#binlogctl">`binlogctl`</a>](#binlogctl) section above, you'll need to start `drainer` before `pump`, and `pump` before `tidb-server`.
 
 ```bash
 ./bin/pd-server --config=pd.toml &>pd.out &

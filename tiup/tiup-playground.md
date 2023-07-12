@@ -21,9 +21,9 @@ This command actually performs the following operations:
 
 -   Because this command does not specify the version of the playground component, TiUP first checks the latest version of the installed playground component. Assume that the latest version is v1.10.0, then this command works the same as `tiup playground:v1.10.0`.
 -   If you have not used TiUP playground to install the TiDB, TiKV, and PD components, the playground component installs the latest stable version of these components, and then start these instances.
--   Because this command does not specify the version of the TiDB, PD, and TiKV component, TiUP playground uses the latest version of each component by default. Assume that the latest version is v6.1.6, then this command works the same as `tiup playground:v1.10.0 v6.1.6`.
+-   Because this command does not specify the version of the TiDB, PD, and TiKV component, TiUP playground uses the latest version of each component by default. Assume that the latest version is v6.1.7, then this command works the same as `tiup playground:v1.10.0 v6.1.7`.
 -   Because this command does not specify the number of each component, TiUP playground, by default, starts a smallest cluster that consists of one TiDB instance, one TiKV instance, one PD instance, and one TiFlash instance.
--   After starting each TiDB component, TiUP playground reminds you that the cluster is successfully started and provides you some useful information, such as how to connect to the TiDB cluster through the MySQL client and how to access the [TiDB Dashboard](/dashboard/dashboard-intro.md).
+-   After starting each TiDB component, TiUP playground reminds you that the cluster is successfully started and provides you some useful information, such as how to connect to the TiDB cluster through the MySQL client and how to access the [<a href="/dashboard/dashboard-intro.md">TiDB Dashboard</a>](/dashboard/dashboard-intro.md).
 
 The command-line flags of the playground component are described as follows:
 
@@ -95,7 +95,7 @@ In the command above, `nightly` indicates the latest development version of TiDB
 
 ### Override PD's default configuration {#override-pd-s-default-configuration}
 
-First, you need to copy the [PD configuration template](https://github.com/pingcap/pd/blob/master/conf/config.toml). Assume you place the copied file to `~/config/pd.toml` and make some changes according to your need, then you can execute the following command to override PD's default configuration:
+First, you need to copy the [<a href="https://github.com/pingcap/pd/blob/master/conf/config.toml">PD configuration template</a>](https://github.com/pingcap/pd/blob/master/conf/config.toml). Assume you place the copied file to `~/config/pd.toml` and make some changes according to your need, then you can execute the following command to override PD's default configuration:
 
 {{< copyable "" >}}
 

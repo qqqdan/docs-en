@@ -7,7 +7,7 @@ summary: Learn how to scale the TiDB cluster using TiUP.
 
 The capacity of a TiDB cluster can be increased or decreased without interrupting the online services.
 
-This document describes how to scale the TiDB, TiKV, PD, TiCDC, or TiFlash cluster using TiUP. If you have not installed TiUP, refer to the steps in [Step 2. Deploy TiUP on the control machine](/production-deployment-using-tiup.md#step-2-deploy-tiup-on-the-control-machine).
+This document describes how to scale the TiDB, TiKV, PD, TiCDC, or TiFlash cluster using TiUP. If you have not installed TiUP, refer to the steps in [<a href="/production-deployment-using-tiup.md#step-2-deploy-tiup-on-the-control-machine">Step 2. Deploy TiUP on the control machine</a>](/production-deployment-using-tiup.md#step-2-deploy-tiup-on-the-control-machine).
 
 To view the current cluster name list, run `tiup cluster list`.
 
@@ -134,7 +134,7 @@ This section exemplifies how to add a TiDB node to the `10.0.1.5` host.
     tiup cluster display <cluster-name>
     ```
 
-    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser to monitor the status of the cluster and the new node.
+    Access the monitoring platform at [<a href="http://10.0.1.5:3000">http://10.0.1.5:3000</a>](http://10.0.1.5:3000) using your browser to monitor the status of the cluster and the new node.
 
 After the scale-out, the cluster topology is as follows:
 
@@ -155,7 +155,7 @@ This section exemplifies how to add a TiFlash node to the `10.0.1.4` host.
 > When adding a TiFlash node to an existing TiDB cluster, note the following:
 >
 > -   Confirm that the current TiDB version supports using TiFlash. Otherwise, upgrade your TiDB cluster to v5.0 or later versions.
-> -   Run the `tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> config set enable-placement-rules true` command to enable the Placement Rules feature. Or run the corresponding command in [pd-ctl](/pd-control.md).
+> -   Run the `tiup ctl:<cluster-version> pd -u http://<pd_ip>:<pd_port> config set enable-placement-rules true` command to enable the Placement Rules feature. Or run the corresponding command in [<a href="/pd-control.md">pd-ctl</a>](/pd-control.md).
 
 1.  Add the node information to the `scale-out.yml` file:
 
@@ -190,7 +190,7 @@ This section exemplifies how to add a TiFlash node to the `10.0.1.4` host.
     tiup cluster display <cluster-name>
     ```
 
-    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new node.
+    Access the monitoring platform at [<a href="http://10.0.1.5:3000">http://10.0.1.5:3000</a>](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new node.
 
 After the scale-out, the cluster topology is as follows:
 
@@ -242,7 +242,7 @@ This section exemplifies how to add two TiCDC nodes to the `10.0.1.3` and `10.0.
     tiup cluster display <cluster-name>
     ```
 
-    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new nodes.
+    Access the monitoring platform at [<a href="http://10.0.1.5:3000">http://10.0.1.5:3000</a>](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new nodes.
 
 After the scale-out, the cluster topology is as follows:
 
@@ -261,7 +261,7 @@ This section exemplifies how to remove a TiKV node from the `10.0.1.5` host.
 > **Note:**
 >
 > -   You can take similar steps to remove a TiDB or PD node.
-> -   Because the TiKV, TiFlash, and TiDB Binlog components are taken offline asynchronously and the stopping process takes a long time, TiUP takes them offline in different methods. For details, see [Particular handling of components' offline process](/tiup/tiup-component-cluster-scale-in.md#particular-handling-of-components-offline-process).
+> -   Because the TiKV, TiFlash, and TiDB Binlog components are taken offline asynchronously and the stopping process takes a long time, TiUP takes them offline in different methods. For details, see [<a href="/tiup/tiup-component-cluster-scale-in.md#particular-handling-of-components-offline-process">Particular handling of components' offline process</a>](/tiup/tiup-component-cluster-scale-in.md#particular-handling-of-components-offline-process).
 > -   The PD Client in TiKV caches the list of PD nodes. The current version of TiKV has a mechanism to automatically and regularly update PD nodes, which can help mitigate the issue of an expired list of PD nodes cached by TiKV. However, after scaling out PD, you should try to avoid directly removing all PD nodes at once that exist before the scaling. If necessary, before making all the previously existing PD nodes offline, make sure to switch the PD leader to a newly added PD node.
 
 1.  View the node ID information:
@@ -275,7 +275,7 @@ This section exemplifies how to remove a TiKV node from the `10.0.1.5` host.
     ```
     Starting /root/.tiup/components/cluster/v1.10.0/cluster display <cluster-name>
     TiDB Cluster: <cluster-name>
-    TiDB Version: v6.1.6
+    TiDB Version: v6.1.7
     ID              Role         Host        Ports                            Status  Data Dir                Deploy Dir
     --              ----         ----        -----                            ------  --------                ----------
     10.0.1.3:8300   cdc          10.0.1.3    8300                             Up      data/cdc-8300           deploy/cdc-8300
@@ -318,7 +318,7 @@ This section exemplifies how to remove a TiKV node from the `10.0.1.5` host.
 
     If the node to be scaled in becomes `Tombstone`, the scale-in operation succeeds.
 
-    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster.
+    Access the monitoring platform at [<a href="http://10.0.1.5:3000">http://10.0.1.5:3000</a>](http://10.0.1.5:3000) using your browser, and view the status of the cluster.
 
 The current topology is as follows:
 
@@ -378,7 +378,7 @@ In special cases (such as when a node needs to be forcibly taken down), or if th
 
 1.  Use the store command of pd-ctl to view the store ID corresponding to this TiFlash node.
 
-    -   Enter the store command in [pd-ctl](/pd-control.md) (the binary file is under `resources/bin` in the tidb-ansible directory).
+    -   Enter the store command in [<a href="/pd-control.md">pd-ctl</a>](/pd-control.md) (the binary file is under `resources/bin` in the tidb-ansible directory).
 
     -   If you use TiUP deployment, replace `pd-ctl` with `tiup ctl:<cluster-version> pd`:
 
@@ -473,7 +473,7 @@ The steps to manually clean up the replication rules in PD are below:
     tiup cluster display <cluster-name>
     ```
 
-    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new nodes.
+    Access the monitoring platform at [<a href="http://10.0.1.5:3000">http://10.0.1.5:3000</a>](http://10.0.1.5:3000) using your browser, and view the status of the cluster and the new nodes.
 
 After the scale-out, the cluster topology is as follows:
 
@@ -505,7 +505,7 @@ This section exemplifies how to remove the TiCDC node from the `10.0.1.4` host.
     tiup cluster display <cluster-name>
     ```
 
-    Access the monitoring platform at [http://10.0.1.5:3000](http://10.0.1.5:3000) using your browser, and view the status of the cluster.
+    Access the monitoring platform at [<a href="http://10.0.1.5:3000">http://10.0.1.5:3000</a>](http://10.0.1.5:3000) using your browser, and view the status of the cluster.
 
 The current topology is as follows:
 
