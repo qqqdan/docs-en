@@ -9,7 +9,7 @@ This document provides samples for global configuration and task configuration, 
 
 ## Configuration files {#configuration-files}
 
-TiDB Lightning has two configuration classes: "global" and "task", and they have compatible structures. Their distinction arises only when the [server mode](/tidb-lightning/tidb-lightning-web-interface.md) is enabled. When server mode is disabled (the default), TiDB Lightning will only execute one task, and the same configuration file is used for both global and task configurations.
+TiDB Lightning has two configuration classes: "global" and "task", and they have compatible structures. Their distinction arises only when the [<a href="/tidb-lightning/tidb-lightning-web-interface.md">server mode</a>](/tidb-lightning/tidb-lightning-web-interface.md) is enabled. When server mode is disabled (the default), TiDB Lightning will only execute one task, and the same configuration file is used for both global and task configurations.
 
 ### TiDB Lightning (Global) {#tidb-lightning-global}
 
@@ -39,7 +39,7 @@ max-backups = 14
 ### tidb-lightning task configuration
 
 [lightning]
-# Checks whether the cluster satisfies the minimum requirement before starting.
+# Checks whether the cluster satisfies the minimum requirement before starting the task, and check whether TiKV has more than 10% free space left during running time.
 #check-requirements = true
 
 # The maximum number of engines to be opened concurrently.
@@ -254,8 +254,8 @@ pd-addr = "172.16.31.4:2379"
 # This setting controls the log level of the TiDB library.
 log-level = "error"
 
-# Sets the TiDB session variable to speed up the Checksum and Analyze operations.
-# See https://pingcap.com/docs/dev/reference/performance/statistics/#control-analyze-concurrency
+# Sets the TiDB session variable to speed up the Checksum and Analyze operations. Note that if checksum-via-sql is set to "true", TiDB Lightning will execute the ADMIN CHECKSUM TABLE <table> SQL statement to perform the Checksum operation on TiDB. In this case, the following parameters `distsql-scan-concurrency` and `checksum-table-concurrency` will not take effect.
+# See https://docs.pingcap.com/tidb/stable/statistics#control-analyze-concurrency
 # for the meaning of each setting
 build-stats-concurrency = 20
 distsql-scan-concurrency = 100
@@ -302,6 +302,11 @@ max-allowed-packet = 67_108_864
 # For backward compatibility, bool values "true" and "false" are also allowed for this field.
 # "true" is equivalent to "required" and "false" is equivalent to "off".
 checksum = "required"
+# Specifies whether the ADMIN CHECKSUM TABLE <table> operation is executed via TiDB.
+# The default value is "false", which means that the ADMIN CHECKSUM TABLE <table> command is sent to TiKV for execution via TiDB Lightning.
+# It is recommended that you set this value to "true" to make it easier to locate the problem if checksum fails.
+# Meanwhile, if you want to adjust concurrency when this value is "true", you need to set the `tidb_checksum_table_concurrency` variable in TiDB (https://docs.pingcap.com/tidb/stable/system-variables#tidb_checksum_table_concurrency).
+checksum-via-sql = "false"
 # Specifies whether to perform `ANALYZE TABLE <table>` for each table after checksum is done.
 # Options available for this field are the same as `checksum`. However, the default value for this field is "optional".
 analyze = "optional"
@@ -330,31 +335,31 @@ log-progress = "5m"
 
 ### Usage of <code>tidb-lightning</code> {#usage-of-code-tidb-lightning-code}
 
-| Parameter                                                                    | Explanation                                                                                                                             | Corresponding setting          |
-| :--------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------- |
-| --config *file*                                                              | Reads global configuration from *file*. If not specified, the default configuration would be used.                                      |                                |
-| -V                                                                           | Prints program version                                                                                                                  |                                |
-| -d *directory*                                                               | Directory or [external storage URL](/br/backup-and-restore-storages.md) of the data dump to read from                                   | `mydumper.data-source-dir`     |
-| -L *level*                                                                   | Log level: debug, info, warn, error, fatal (default = info)                                                                             | `lightning.log-level`          |
-| -f *rule*                                                                    | [Table filter rules](/table-filter.md) (can be specified multiple times)                                                                | `mydumper.filter`              |
-| --backend *<a href="/tidb-lightning/tidb-lightning-overview.md">backend</a>* | Select an import mode. `local` refers to the physical import mode; `tidb` refers to the logical import mode.                            | `local`                        |
-| --log-file *file*                                                            | Log file path. By default, it is `/tmp/lightning.log.{timestamp}`. If set to '-', it means that the log files will be output to stdout. | `lightning.log-file`           |
-| --status-addr *ip:port*                                                      | Listening address of the TiDB Lightning server                                                                                          | `lightning.status-port`        |
-| --importer *host:port*                                                       | Address of TiKV Importer                                                                                                                | `tikv-importer.addr`           |
-| --pd-urls *host:port*                                                        | PD endpoint address                                                                                                                     | `tidb.pd-addr`                 |
-| --tidb-host *host*                                                           | TiDB server host                                                                                                                        | `tidb.host`                    |
-| --tidb-port *port*                                                           | TiDB server port (default = 4000)                                                                                                       | `tidb.port`                    |
-| --tidb-status *port*                                                         | TiDB status port (default = 10080)                                                                                                      | `tidb.status-port`             |
-| --tidb-user *user*                                                           | User name to connect to TiDB                                                                                                            | `tidb.user`                    |
-| --tidb-password *password*                                                   | Password to connect to TiDB. The password can either be plaintext or Base64 encoded.                                                    | `tidb.password`                |
-| --enable-checkpoint *bool*                                                   | Whether to enable checkpoints (default = true)                                                                                          | `checkpoint.enable`            |
-| --analyze *level*                                                            | Analyze tables after importing. Available values are "required", "optional" (default value), and "off"                                  | `post-restore.analyze`         |
-| --checksum *level*                                                           | Compare checksum after importing. Available values are "required" (default value), "optional", and "off"                                | `post-restore.checksum`        |
-| --check-requirements *bool*                                                  | Check cluster version compatibility before starting (default = true)                                                                    | `lightning.check-requirements` |
-| --ca *file*                                                                  | CA certificate path for TLS connection                                                                                                  | `security.ca-path`             |
-| --cert *file*                                                                | Certificate path for TLS connection                                                                                                     | `security.cert-path`           |
-| --key *file*                                                                 | Private key path for TLS connection                                                                                                     | `security.key-path`            |
-| --server-mode                                                                | Start TiDB Lightning in server mode                                                                                                     | `lightning.server-mode`        |
+| Parameter                                                                    | Explanation                                                                                                                                                  | Corresponding setting          |
+| :--------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------------------- |
+| --config *file*                                                              | Reads global configuration from *file*. If not specified, the default configuration would be used.                                                           |                                |
+| -V                                                                           | Prints program version                                                                                                                                       |                                |
+| -d *directory*                                                               | Directory or [<a href="/br/backup-and-restore-storages.md">external storage URL</a>](/br/backup-and-restore-storages.md) of the data dump to read from       | `mydumper.data-source-dir`     |
+| -L *level*                                                                   | Log level: debug, info, warn, error, fatal (default = info)                                                                                                  | `lightning.log-level`          |
+| -f *rule*                                                                    | [<a href="/table-filter.md">Table filter rules</a>](/table-filter.md) (can be specified multiple times)                                                      | `mydumper.filter`              |
+| --backend *<a href="/tidb-lightning/tidb-lightning-overview.md">backend</a>* | Select an import mode. `local` refers to the physical import mode; `tidb` refers to the logical import mode.                                                 | `local`                        |
+| --log-file *file*                                                            | Log file path. By default, it is `/tmp/lightning.log.{timestamp}`. If set to '-', it means that the log files will be output to stdout.                      | `lightning.log-file`           |
+| --status-addr *ip:port*                                                      | Listening address of the TiDB Lightning server                                                                                                               | `lightning.status-port`        |
+| --importer *host:port*                                                       | Address of TiKV Importer                                                                                                                                     | `tikv-importer.addr`           |
+| --pd-urls *host:port*                                                        | PD endpoint address                                                                                                                                          | `tidb.pd-addr`                 |
+| --tidb-host *host*                                                           | TiDB server host                                                                                                                                             | `tidb.host`                    |
+| --tidb-port *port*                                                           | TiDB server port (default = 4000)                                                                                                                            | `tidb.port`                    |
+| --tidb-status *port*                                                         | TiDB status port (default = 10080)                                                                                                                           | `tidb.status-port`             |
+| --tidb-user *user*                                                           | User name to connect to TiDB                                                                                                                                 | `tidb.user`                    |
+| --tidb-password *password*                                                   | Password to connect to TiDB. The password can either be plaintext or Base64 encoded.                                                                         | `tidb.password`                |
+| --enable-checkpoint *bool*                                                   | Whether to enable checkpoints (default = true)                                                                                                               | `checkpoint.enable`            |
+| --analyze *level*                                                            | Analyze tables after importing. Available values are "required", "optional" (default value), and "off"                                                       | `post-restore.analyze`         |
+| --checksum *level*                                                           | Compare checksum after importing. Available values are "required" (default value), "optional", and "off"                                                     | `post-restore.checksum`        |
+| --check-requirements *bool*                                                  | Check cluster version compatibility before starting the task, and check whether TiKV has more than 10% free space left during running time. (default = true) | `lightning.check-requirements` |
+| --ca *file*                                                                  | CA certificate path for TLS connection                                                                                                                       | `security.ca-path`             |
+| --cert *file*                                                                | Certificate path for TLS connection                                                                                                                          | `security.cert-path`           |
+| --key *file*                                                                 | Private key path for TLS connection                                                                                                                          | `security.key-path`            |
+| --server-mode                                                                | Start TiDB Lightning in server mode                                                                                                                          | `lightning.server-mode`        |
 
 If a command line parameter and the corresponding setting in the configuration file are both provided, the command line parameter will be used. For example, running `./tidb-lightning -L debug --config cfg.toml` would always set the log level to "debug" regardless of the content of `cfg.toml`.
 
