@@ -4,7 +4,7 @@ title: How to Test TiDB Using Sysbench
 
 # How to Test TiDB Using Sysbench {#how-to-test-tidb-using-sysbench}
 
-It is recommended to use Sysbench 1.0 or later, which can be [downloaded here](https://github.com/akopytov/sysbench/releases/tag/1.0.20).
+It is recommended to use Sysbench 1.0 or later, which can be [<a href="https://github.com/akopytov/sysbench/releases/tag/1.0.20">downloaded here</a>](https://github.com/akopytov/sysbench/releases/tag/1.0.20).
 
 ## Test plan {#test-plan}
 
@@ -18,7 +18,11 @@ server_configs:
     log.level: "error"
 ```
 
-It is also recommended to make sure [`tidb_enable_prepared_plan_cache`](/system-variables.md#tidb_enable_prepared_plan_cache-new-in-v610) is enabled and that you allow sysbench to use prepared statements by *not* using `--db-ps-mode=disabled`. See the [SQL Prepared Execution Plan Cache](/sql-prepared-plan-cache.md) for documentation about what the SQL plan cache does and how to monitor it.
+It is also recommended to make sure [<a href="/system-variables.md#tidb_enable_prepared_plan_cache-new-in-v610">`tidb_enable_prepared_plan_cache`</a>](/system-variables.md#tidb_enable_prepared_plan_cache-new-in-v610) is enabled and that you allow sysbench to use prepared statements by using `--db-ps-mode=auto`. See the [<a href="/sql-prepared-plan-cache.md">SQL Prepared Execution Plan Cache</a>](/sql-prepared-plan-cache.md) for documentation about what the SQL plan cache does and how to monitor it.
+
+> **Note:**
+>
+> In different versions of Sysbench, the default value of `db-ps-mode` might be different. It is recommended to explicitly specify it in the command.
 
 ### TiKV configuration {#tikv-configuration}
 
@@ -46,7 +50,7 @@ server_configs:
     storage.block-cache.capacity: "30GB"
 ```
 
-For more detailed information on TiKV performance tuning, see [Tune TiKV Performance](/tune-tikv-memory-performance.md).
+For more detailed information on TiKV performance tuning, see [<a href="/tune-tikv-memory-performance.md">Tune TiKV Performance</a>](/tune-tikv-memory-performance.md).
 
 ## Test process {#test-process}
 
@@ -110,10 +114,10 @@ Restart MySQL client and execute the following SQL statement to create a databas
 create database sbtest;
 ```
 
-Adjust the order in which Sysbench scripts create indexes. Sysbench imports data in the order of "Build Table -> Insert Data -> Create Index", which takes more time for TiDB to import data. Users can adjust the order to speed up the import of data. Suppose that you use the Sysbench version [1.0.20](https://github.com/akopytov/sysbench/tree/1.0.20). You can adjust the order in either of the following two ways:
+Adjust the order in which Sysbench scripts create indexes. Sysbench imports data in the order of "Build Table -> Insert Data -> Create Index", which takes more time for TiDB to import data. Users can adjust the order to speed up the import of data. Suppose that you use the Sysbench version [<a href="https://github.com/akopytov/sysbench/tree/1.0.20">1.0.20</a>](https://github.com/akopytov/sysbench/tree/1.0.20). You can adjust the order in either of the following two ways:
 
--   Download the modified [oltp_common.lua](https://raw.githubusercontent.com/pingcap/tidb-bench/master/sysbench/sysbench-patch/oltp_common.lua) file for TiDB and overwrite the `/usr/share/sysbench/oltp_common.lua` file with it.
--   In `/usr/share/sysbench/oltp_common.lua`, move the lines [235-240](https://github.com/akopytov/sysbench/blob/1.0.20/src/lua/oltp_common.lua#L235-L240) to be right behind the line 198.
+-   Download the modified [<a href="https://raw.githubusercontent.com/pingcap/tidb-bench/master/sysbench/sysbench-patch/oltp_common.lua">oltp_common.lua</a>](https://raw.githubusercontent.com/pingcap/tidb-bench/master/sysbench/sysbench-patch/oltp_common.lua) file for TiDB and overwrite the `/usr/share/sysbench/oltp_common.lua` file with it.
+-   In `/usr/share/sysbench/oltp_common.lua`, move the lines [<a href="https://github.com/akopytov/sysbench/blob/1.0.20/src/lua/oltp_common.lua#L235-L240">235-240</a>](https://github.com/akopytov/sysbench/blob/1.0.20/src/lua/oltp_common.lua#L235-L240) to be right behind the line 198.
 
 > **Note:**
 >
@@ -140,7 +144,7 @@ sysbench --config-file=config oltp_point_select --tables=32 --table-size=1000000
 {{< copyable "" >}}
 
 ```bash
-sysbench --config-file=config oltp_point_select --tables=32 --table-size=10000000 run
+sysbench --config-file=config oltp_point_select --tables=32 --table-size=10000000 --db-ps-mode=auto --rand-type=uniform run
 ```
 
 ### Update index test command {#update-index-test-command}
@@ -148,7 +152,7 @@ sysbench --config-file=config oltp_point_select --tables=32 --table-size=1000000
 {{< copyable "" >}}
 
 ```bash
-sysbench --config-file=config oltp_update_index --tables=32 --table-size=10000000 run
+sysbench --config-file=config oltp_update_index --tables=32 --table-size=10000000 --db-ps-mode=auto --rand-type=uniform run
 ```
 
 ### Read-only test command {#read-only-test-command}
@@ -156,7 +160,7 @@ sysbench --config-file=config oltp_update_index --tables=32 --table-size=1000000
 {{< copyable "" >}}
 
 ```bash
-sysbench --config-file=config oltp_read_only --tables=32 --table-size=10000000 run
+sysbench --config-file=config oltp_read_only --tables=32 --table-size=10000000 --db-ps-mode=auto --rand-type=uniform run
 ```
 
 ## Common issues {#common-issues}
@@ -179,4 +183,4 @@ The actual CPU usage can be observed through Grafana's TiKV Thread CPU monitor p
 
 CPU of NUMA architecture is used on some high-end equipment where cross-CPU access to remote memory will greatly reduce performance. By default, TiDB will use all CPUs of the server, and goroutine scheduling will inevitably lead to cross-CPU memory access.
 
-Therefore, it is recommended to deploy *n* TiDBs (<em>n</em> is the number of NUMA CPUs) on the server of NUMA architecture, and meanwhile set the TiDB parameter `max-procs` to a value that is the same as the number of NUMA CPU cores.
+Therefore, it is recommended to deploy *n* TiDBs (*n* is the number of NUMA CPUs) on the server of NUMA architecture, and meanwhile set the TiDB parameter `max-procs` to a value that is the same as the number of NUMA CPU cores.
