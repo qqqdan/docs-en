@@ -7,16 +7,16 @@ summary: Learn how to quickly get started with the TiDB platform and see if TiDB
 
 This guide walks you through the quickest way to get started with TiDB. For non-production environments, you can deploy your TiDB database by either of the following methods:
 
--   [<a href="#deploy-a-local-test-cluster">Deploy a local test cluster</a>](#deploy-a-local-test-cluster) (for macOS and Linux)
--   [<a href="#simulate-production-deployment-on-a-single-machine">Simulate production deployment on a single machine</a>](#simulate-production-deployment-on-a-single-machine) (for Linux only)
+-   [Deploy a local test cluster](#deploy-a-local-test-cluster) (for macOS and Linux)
+-   [Simulate production deployment on a single machine](#simulate-production-deployment-on-a-single-machine) (for Linux only)
 
 > **Note:**
 >
 > The deployment method provided in this guide is **ONLY FOR** quick start, **NOT FOR** production.
 >
-> -   To deploy a self-hosted production cluster, see [<a href="/production-deployment-using-tiup.md">production installation guide</a>](/production-deployment-using-tiup.md).
-> -   To deploy TiDB on Kubernetes, see [<a href="https://docs.pingcap.com/tidb-in-kubernetes/stable/get-started">Get Started with TiDB on Kubernetes</a>](https://docs.pingcap.com/tidb-in-kubernetes/stable/get-started).
-> -   To manage TiDB in the cloud, see [<a href="https://docs.pingcap.com/tidbcloud/tidb-cloud-quickstart">TiDB Cloud Quick Start</a>](https://docs.pingcap.com/tidbcloud/tidb-cloud-quickstart).
+> -   To deploy a self-hosted production cluster, see [production installation guide](/production-deployment-using-tiup.md).
+> -   To deploy TiDB on Kubernetes, see [Get Started with TiDB on Kubernetes](https://docs.pingcap.com/tidb-in-kubernetes/stable/get-started).
+> -   To manage TiDB in the cloud, see [TiDB Cloud Quick Start](https://docs.pingcap.com/tidbcloud/tidb-cloud-quickstart).
 
 ## Deploy a local test cluster {#deploy-a-local-test-cluster}
 
@@ -99,7 +99,7 @@ As a distributed system, a basic TiDB test cluster usually consists of 2 TiDB in
         >
         > -   Since v5.2.0, TiDB supports running `tiup playground` on the machine that uses the Apple M1 chip.
         > -   For the playground operated in this way, after the test deployment is finished, TiUP will clean up the original cluster data. You will get a new cluster after re-running the command.
-        > -   If you want the data to be persisted on storage, run `tiup --tag <your-tag> playground ...`. For details, refer to [<a href="/tiup/tiup-reference.md#-t---tag">TiUP Reference Guide</a>](/tiup/tiup-reference.md#-t---tag).
+        > -   If you want the data to be persisted on storage, run `tiup --tag <your-tag> playground ...`. For details, refer to [TiUP Reference Guide](/tiup/tiup-reference.md#-t---tag).
 
 4.  Start a new session to access TiDB:
 
@@ -119,13 +119,13 @@ As a distributed system, a basic TiDB test cluster usually consists of 2 TiDB in
         mysql --host 127.0.0.1 --port 4000 -u root
         ```
 
-5.  Access the Prometheus dashboard of TiDB at [<a href="http://127.0.0.1:9090">http://127.0.0.1:9090</a>](http://127.0.0.1:9090).
+5.  Access the Prometheus dashboard of TiDB at [http://127.0.0.1:9090](http://127.0.0.1:9090).
 
-6.  Access the [<a href="/dashboard/dashboard-intro.md">TiDB Dashboard</a>](/dashboard/dashboard-intro.md) at [<a href="http://127.0.0.1:2379/dashboard">http://127.0.0.1:2379/dashboard</a>](http://127.0.0.1:2379/dashboard). The default username is `root`, with an empty password.
+6.  Access the [TiDB Dashboard](/dashboard/dashboard-intro.md) at [http://127.0.0.1:2379/dashboard](http://127.0.0.1:2379/dashboard). The default username is `root`, with an empty password.
 
-7.  Access the Grafana dashboard of TiDB through [<a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a>](http://127.0.0.1:3000). Both the default username and password are `admin`.
+7.  Access the Grafana dashboard of TiDB through [http://127.0.0.1:3000](http://127.0.0.1:3000). Both the default username and password are `admin`.
 
-8.  (Optional) [<a href="/tiflash/tiflash-overview.md#use-tiflash">Load data to TiFlash</a>](/tiflash/tiflash-overview.md#use-tiflash) for analysis.
+8.  (Optional) [Load data to TiFlash](/tiflash/tiflash-overview.md#use-tiflash) for analysis.
 
 9.  Clean up the cluster after the test deployment:
 
@@ -218,7 +218,7 @@ As a distributed system, a basic TiDB test cluster usually consists of 2 TiDB in
         > **Note:**
         >
         > For the playground operated in this way, after the test deployment is finished, TiUP will clean up the original cluster data. You will get a new cluster after re-running the command.
-        > If you want the data to be persisted on storage, run `tiup --tag <your-tag> playground ...`. For details, refer to [<a href="/tiup/tiup-reference.md#-t---tag">TiUP Reference Guide</a>](/tiup/tiup-reference.md#-t---tag).
+        > If you want the data to be persisted on storage, run `tiup --tag <your-tag> playground ...`. For details, refer to [TiUP Reference Guide](/tiup/tiup-reference.md#-t---tag).
 
 4.  Start a new session to access TiDB:
 
@@ -238,13 +238,13 @@ As a distributed system, a basic TiDB test cluster usually consists of 2 TiDB in
         mysql --host 127.0.0.1 --port 4000 -u root
         ```
 
-5.  Access the Prometheus dashboard of TiDB at [<a href="http://127.0.0.1:9090">http://127.0.0.1:9090</a>](http://127.0.0.1:9090).
+5.  Access the Prometheus dashboard of TiDB at [http://127.0.0.1:9090](http://127.0.0.1:9090).
 
-6.  Access the [<a href="/dashboard/dashboard-intro.md">TiDB Dashboard</a>](/dashboard/dashboard-intro.md) at [<a href="http://127.0.0.1:2379/dashboard">http://127.0.0.1:2379/dashboard</a>](http://127.0.0.1:2379/dashboard). The default username is `root`, with an empty password.
+6.  Access the [TiDB Dashboard](/dashboard/dashboard-intro.md) at [http://127.0.0.1:2379/dashboard](http://127.0.0.1:2379/dashboard). The default username is `root`, with an empty password.
 
-7.  Access the Grafana dashboard of TiDB through [<a href="http://127.0.0.1:3000">http://127.0.0.1:3000</a>](http://127.0.0.1:3000). Both the default username and password are `admin`.
+7.  Access the Grafana dashboard of TiDB through [http://127.0.0.1:3000](http://127.0.0.1:3000). Both the default username and password are `admin`.
 
-8.  (Optional) [<a href="/tiflash/tiflash-overview.md#use-tiflash">Load data to TiFlash</a>](/tiflash/tiflash-overview.md#use-tiflash) for analysis.
+8.  (Optional) [Load data to TiFlash](/tiflash/tiflash-overview.md#use-tiflash) for analysis.
 
 9.  Clean up the cluster after the test deployment:
 
@@ -295,7 +295,7 @@ The smallest TiDB cluster topology is as follows:
 Other requirements for the target machine:
 
 -   The `root` user and its password is required
--   [<a href="/check-before-deployment.md#check-and-stop-the-firewall-service-of-target-machines">Stop the firewall service of the target machine</a>](/check-before-deployment.md#check-and-stop-the-firewall-service-of-target-machines), or open the port needed by the TiDB cluster nodes
+-   [Stop the firewall service of the target machine](/check-before-deployment.md#check-and-stop-the-firewall-service-of-target-machines), or open the port needed by the TiDB cluster nodes
 -   Currently, the TiUP cluster supports deploying TiDB on the x86_64 (AMD64) and ARM architectures:
 
     -   It is recommended to use CentOS 7.3 or later versions on AMD64
@@ -376,7 +376,7 @@ Other requirements for the target machine:
 
     server_configs:
      tidb:
-       log.slow-threshold: 300
+       instance.tidb_slow_log_threshold: 300
      tikv:
        readpool.storage.use-unified-pool: false
        readpool.coprocessor.use-unified-pool: true
@@ -474,9 +474,9 @@ Other requirements for the target machine:
         mysql -h 10.0.1.1 -P 4000 -u root
         ```
 
-    -   Access the Grafana monitoring dashboard at [<a href="http://%7Bgrafana-ip%7D:3000">http://{grafana-ip}:3000</a>](http://%7Bgrafana-ip%7D:3000). The default username and password are both `admin`.
+    -   Access the Grafana monitoring dashboard at [http://{grafana-ip}:3000](http://%7Bgrafana-ip%7D:3000). The default username and password are both `admin`.
 
-    -   Access the [<a href="/dashboard/dashboard-intro.md">TiDB Dashboard</a>](/dashboard/dashboard-intro.md) at [<a href="http://%7Bpd-ip%7D:2379/dashboard">http://{pd-ip}:2379/dashboard</a>](http://%7Bpd-ip%7D:2379/dashboard). The default username is `root`, and the password is empty.
+    -   Access the [TiDB Dashboard](/dashboard/dashboard-intro.md) at [http://{pd-ip}:2379/dashboard](http://%7Bpd-ip%7D:2379/dashboard). The default username is `root`, and the password is empty.
 
     -   To view the currently deployed cluster list:
 
@@ -498,15 +498,15 @@ Other requirements for the target machine:
 
 -   If you have just deployed a TiDB cluster for the local test environment:
 
-    -   Learn [<a href="/basic-sql-operations.md">Basic SQL operations in TiDB</a>](/basic-sql-operations.md)
-    -   [<a href="/migration-overview.md">Migrate data to TiDB</a>](/migration-overview.md)
+    -   Learn [Basic SQL operations in TiDB](/basic-sql-operations.md)
+    -   [Migrate data to TiDB](/migration-overview.md)
 
 -   If you are ready to deploy a TiDB cluster for the production environment:
 
-    -   [<a href="/production-deployment-using-tiup.md">Deploy TiDB using TiUP</a>](/production-deployment-using-tiup.md)
-    -   [<a href="https://docs.pingcap.com/tidb-in-kubernetes/stable">Deploy TiDB on Cloud using TiDB Operator</a>](https://docs.pingcap.com/tidb-in-kubernetes/stable)
+    -   [Deploy TiDB using TiUP](/production-deployment-using-tiup.md)
+    -   [Deploy TiDB on Cloud using TiDB Operator](https://docs.pingcap.com/tidb-in-kubernetes/stable)
 
 -   If you're looking for analytics solution with TiFlash:
 
-    -   [<a href="/tiflash/tiflash-overview.md#use-tiflash">Use TiFlash</a>](/tiflash/tiflash-overview.md#use-tiflash)
-    -   [<a href="/tiflash/tiflash-overview.md">TiFlash Overview</a>](/tiflash/tiflash-overview.md)
+    -   [Use TiFlash](/tiflash/tiflash-overview.md#use-tiflash)
+    -   [TiFlash Overview](/tiflash/tiflash-overview.md)
