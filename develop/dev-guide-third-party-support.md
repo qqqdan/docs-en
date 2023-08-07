@@ -7,9 +7,9 @@ summary: Learn about third-party tools supported by TiDB.
 
 > **Note:**
 >
-> This document only lists common [<a href="https://en.wikipedia.org/wiki/Third-party_source">third-party tools</a>](https://en.wikipedia.org/wiki/Third-party_source) supported by TiDB. Some other third-party tools are not listed, not because they are not supported, but because PingCAP is not sure whether they use features that are incompatible with TiDB.
+> This document only lists common [third-party tools](https://en.wikipedia.org/wiki/Third-party_source) supported by TiDB. Some other third-party tools are not listed, not because they are not supported, but because PingCAP is not sure whether they use features that are incompatible with TiDB.
 
-TiDB is [<a href="/mysql-compatibility.md">highly compatible with the MySQL protocol</a>](/mysql-compatibility.md), so most of the MySQL drivers, ORM frameworks, and other tools that adapt to MySQL are compatible with TiDB. This document focuses on these tools and their support levels for TiDB.
+TiDB is [highly compatible with the MySQL protocol](/mysql-compatibility.md), so most of the MySQL drivers, ORM frameworks, and other tools that adapt to MySQL are compatible with TiDB. This document focuses on these tools and their support levels for TiDB.
 
 ## Support Level {#support-level}
 
@@ -20,9 +20,9 @@ PingCAP works with the community and provides the following support levels for t
 
 > **Note:**
 >
-> Unless specified, support for [<a href="/develop/dev-guide-transaction-troubleshoot.md#application-retry-and-error-handling">Application retry and error handling</a>](/develop/dev-guide-transaction-troubleshoot.md#application-retry-and-error-handling) is not included for **Driver** or **ORM frameworks**.
+> Unless specified, support for [Application retry and error handling](/develop/dev-guide-transaction-troubleshoot.md#application-retry-and-error-handling) is not included for **Driver** or **ORM frameworks**.
 
-If you encounter problems when connecting to TiDB using the tools listed in this document, please submit an [<a href="https://github.com/pingcap/tidb/issues/new?assignees=&#x26;labels=type%2Fquestion&#x26;template=general-question.md">issue</a>](https://github.com/pingcap/tidb/issues/new?assignees=&#x26;labels=type%2Fquestion&#x26;template=general-question.md) on GitHub with details to promote support on this tool.
+If you encounter problems when connecting to TiDB using the tools listed in this document, please submit an [issue](https://github.com/pingcap/tidb/issues/new?assignees=&#x26;labels=type%2Fquestion&#x26;template=general-question.md) on GitHub with details to promote support on this tool.
 
 ## Driver {#driver}
 
@@ -228,8 +228,8 @@ If you encounter problems when connecting to TiDB using the tools listed in this
       </tr>
       <tr>
          <td><a href="https://www.prisma.io/" target="_blank" referrerpolicy="no-referrer-when-downgrade">Prisma Client</a></td>
-         <td>3.15.1</td>
-         <td>Compatible</td>
+         <td>4.16.2</td>
+         <td>Full</td>
          <td>N/A</td>
          <td>N/A</td>
       </tr>
@@ -275,11 +275,11 @@ If you encounter problems when connecting to TiDB using the tools listed in this
 
 ## GUI {#gui}
 
-| GUI                                                                                                                  | Latest tested version | Support level | Tutorial |
-| -------------------------------------------------------------------------------------------------------------------- | --------------------- | ------------- | -------- |
-| [<a href="https://dbeaver.io/">DBeaver</a>](https://dbeaver.io/)                                                     | 22.1.0                | Compatible    | N/A      |
-| [<a href="https://www.navicat.com/">Navicat for MySQL</a>](https://www.navicat.com/)                                 | 16.0.14               | Compatible    | N/A      |
-| [<a href="https://www.mysql.com/products/workbench/">MySQL Workbench</a>](https://www.mysql.com/products/workbench/) | 8.0                   | Compatible    | N/A      |
+| GUI                                                          | Latest tested version | Support level | Tutorial |
+| ------------------------------------------------------------ | --------------------- | ------------- | -------- |
+| [DBeaver](https://dbeaver.io/)                               | 22.1.0                | Compatible    | N/A      |
+| [Navicat for MySQL](https://www.navicat.com/)                | 16.0.14               | Compatible    | N/A      |
+| [MySQL Workbench](https://www.mysql.com/products/workbench/) | 8.0                   | Compatible    | N/A      |
 
 <table>
    <thead>
