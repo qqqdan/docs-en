@@ -12,24 +12,18 @@ SQL Plan Management is a set of functions that execute SQL bindings to manually 
 An SQL binding is the basis of SPM. The [Optimizer Hints](/optimizer-hints.md) document introduces how to select a specific execution plan using hints. However, sometimes you need to interfere with execution selection without modifying SQL statements. With SQL bindings, you can select a specified execution plan without modifying SQL statements.
 
 <CustomContent platform="tidb">
-
-> **Note:**
->
-> To use SQL bindings, you need to have the `SUPER` privilege. If TiDB prompts that you do not have sufficient privileges, see [Privilege Management](/privilege-management.md) to add the required privileges.
-
+  > **Note:**
+  >
+  > To use SQL bindings, you need to have the `SUPER` privilege. If TiDB prompts that you do not have sufficient privileges, see [Privilege Management](/privilege-management.md) to add the required privileges.
 </CustomContent>
 
 <CustomContent platform="tidb-cloud">
-
-> **Note:**
->
-> To use SQL bindings, you need to have the `SUPER` privilege. If TiDB prompts that you do not have sufficient privileges, see [Privilege Management](https://docs.pingcap.com/tidb/stable/privilege-management) to add the required privileges.
-
+  > **Note:**
+  >
+  > To use SQL bindings, you need to have the `SUPER` privilege. If TiDB prompts that you do not have sufficient privileges, see [Privilege Management](https://docs.pingcap.com/tidb/stable/privilege-management) to add the required privileges.
 </CustomContent>
 
 ### Create a binding {#create-a-binding}
-
-{{< copyable "" >}}
 
 ```sql
 CREATE [GLOBAL | SESSION] BINDING FOR BindableStmt USING BindableStmt
@@ -128,6 +122,69 @@ SELECT * FROM test . t WHERE a > ?
 > ```
 >
 > When bindings are created, TiDB treats SQL statements that contain a single constant and SQL statements that contain multiple constants joined by commas differently. Therefore, you need to create bindings for the two SQL types separately.
+>
+> For example:
+>
+> ```sql
+> CREATE TABLE t(a INT, b INT, KEY idx(a));
+> CREATE SESSION BINDING for SELECT * FROM t WHERE a IN (?) USING SELECT /*+ use_index(t, idx) */ * FROM t WHERE a in (?);
+> SHOW BINDINGS;
+> +-----------------------------------------------+----------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> | Original_sql                                  | Bind_sql                                                             | Default_db | Status  | Create_time             | Update_time             | Charset | Collation          | Source | Sql_digest                                                       | Plan_digest |
+> +-----------------------------------------------+----------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> | SELECT * FROM `test` . `t` WHERE `a` IN ( ? ) | SELECT /*+ use_index(`t` `idx`)*/ * FROM `test`.`t` WHERE `a` IN (?) | test       | enabled | 2023-08-23 14:15:31.472 | 2023-08-23 14:15:31.472 | utf8mb4 | utf8mb4_general_ci | manual | 8b9c4e6ab8fad5ba29b034311dcbfc8a8ce57dde2e2d5d5b65313b90ebcdebf7 |             |
+> +-----------------------------------------------+----------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> SELECT * FROM t WHERE a IN (1);
+> SELECT @@LAST_PLAN_FROM_BINDING;
+> +--------------------------+
+> | @@LAST_PLAN_FROM_BINDING |
+> +--------------------------+
+> |                        1 |
+> +--------------------------+
+> SELECT * FROM t WHERE a IN (1,2);
+> SELECT @@LAST_PLAN_FROM_BINDING;
+> +--------------------------+
+> | @@LAST_PLAN_FROM_BINDING |
+> +--------------------------+
+> |                        0 |
+> +--------------------------+
+> CREATE SESSION BINDING for SELECT * FROM t WHERE a IN (?,?) USING SELECT /*+ use_index(t, idx) */ * FROM t WHERE a IN (?,?);
+> show bindings;
+> +-------------------------------------------------+------------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> | Original_sql                                    | Bind_sql                                                               | Default_db | Status  | Create_time             | Update_time             | Charset | Collation          | Source | Sql_digest                                                       | Plan_digest |
+> +-------------------------------------------------+------------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> | SELECT * FROM `test` . `t` WHERE `a` IN ( ... ) | SELECT /*+ use_index(`t` `idx`)*/ * FROM `test`.`t` WHERE `a` IN (?,?) | test       | enabled | 2023-08-23 14:16:30.762 | 2023-08-23 14:16:30.762 | utf8mb4 | utf8mb4_general_ci | manual | da38bf216db4a53e1a1e01c79ffa42306419442ad7238480bb7ac510723c8bdf |             |
+> | SELECT * FROM `test` . `t` WHERE `a` IN ( ? )   | SELECT /*+ use_index(`t` `idx`)*/ * FROM `test`.`t` WHERE `a` IN (?)   | test       | enabled | 2023-08-23 14:15:31.472 | 2023-08-23 14:15:31.472 | utf8mb4 | utf8mb4_general_ci | manual | 8b9c4e6ab8fad5ba29b034311dcbfc8a8ce57dde2e2d5d5b65313b90ebcdebf7 |             |
+> +-------------------------------------------------+------------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> SELECT * FROM t WHERE a IN (1,2);
+> SELECT @@LAST_PLAN_FROM_BINDING;
+> +--------------------------+
+> | @@LAST_PLAN_FROM_BINDING |
+> +--------------------------+
+> |                        1 |
+> +--------------------------+
+> SELECT * FROM t WHERE a IN (1,2,3);
+> SELECT @@LAST_PLAN_FROM_BINDING;
+> +--------------------------+
+> | @@LAST_PLAN_FROM_BINDING |
+> +--------------------------+
+> |                        1 |
+> +--------------------------+
+> DROP SESSION BINDING for SELECT * FROM t WHERE a IN (?);
+> SHOW BINDINGS;
+> +-------------------------------------------------+------------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> | Original_sql                                    | Bind_sql                                                               | Default_db | Status  | Create_time             | Update_time             | Charset | Collation          | Source | Sql_digest                                                       | Plan_digest |
+> +-------------------------------------------------+------------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> | SELECT * FROM `test` . `t` WHERE `a` IN ( ... ) | SELECT /*+ use_index(`t` `idx`)*/ * FROM `test`.`t` WHERE `a` IN (?,?) | test       | enabled | 2023-08-23 14:16:30.762 | 2023-08-23 14:16:30.762 | utf8mb4 | utf8mb4_general_ci | manual | da38bf216db4a53e1a1e01c79ffa42306419442ad7238480bb7ac510723c8bdf |             |
+> +-------------------------------------------------+------------------------------------------------------------------------+------------+---------+-------------------------+-------------------------+---------+--------------------+--------+------------------------------------------------------------------+-------------+
+> SELECT * FROM t WHERE a IN (1);
+> SELECT @@LAST_PLAN_FROM_BINDING;
+> +--------------------------+
+> | @@LAST_PLAN_FROM_BINDING |
+> +--------------------------+
+> |                        0 |
+> +--------------------------+
+> ```
 
 When a SQL statement has bound execution plans in both GLOBAL and SESSION scopes, because the optimizer ignores the bound execution plan in the GLOBAL scope when it encounters the SESSION binding, the bound execution plan of this statement in the SESSION scope shields the execution plan in the GLOBAL scope.
 
@@ -179,8 +236,6 @@ The original SQL statement and the bound statement must have the same text after
 
 ### Remove binding {#remove-binding}
 
-{{< copyable "" >}}
-
 ```sql
 DROP [GLOBAL | SESSION] BINDING FOR BindableStmt;
 ```
@@ -207,8 +262,6 @@ In the example above, the dropped binding in the SESSION scope shields the corre
 
 ## Change binding status {#change-binding-status}
 
-{{< copyable "" >}}
-
 ```sql
 SET BINDING [ENABLED | DISABLED] FOR BindableStmt;
 ```
@@ -218,8 +271,6 @@ You can execute this statement to change the status of a binding. The default st
 When executing this statement, you can only change the status of a binding from `Disabled` to `Enabled` or from `Enabled` to `Disabled`. If no binding is available for status changes, a warning message is returned, saying `There are no bindings can be set the status. Please check the SQL text`. Note that a binding in `Disabled` status is not used by any query.
 
 ### View bindings {#view-bindings}
-
-{{< copyable "" >}}
 
 ```sql
 SHOW [GLOBAL | SESSION] BINDINGS [ShowLikeOrWhere]
@@ -244,8 +295,6 @@ This statement outputs the execution plan bindings at the GLOBAL or SESSION leve
 You can use either of the following methods to troubleshoot a binding:
 
 -   Use the system variable [`last_plan_from_binding`](/system-variables.md#last_plan_from_binding-new-in-v40) to show whether the execution plan used by the last executed statement is from the binding.
-
-    {{< copyable "" >}}
 
     ```sql
     -- Create a global binding
@@ -301,8 +350,6 @@ You can use either of the following methods to troubleshoot a binding:
 Each TiDB instance has a least recently used (LRU) cache for bindings. The cache capacity is controlled by the system variable [`tidb_mem_quota_binding_cache`](/system-variables.md#tidb_mem_quota_binding_cache-new-in-v600). You can view bindings that are cached in the TiDB instance.
 
 To view the cache status of bindings, run the `SHOW binding_cache status` statement. In this statement, the effective scope is GLOBAL by default and cannot be modified. This statement returns the number of available bindings in the cache, the total number of available bindings in the system, memory usage of all cached bindings, and the total memory for the cache.
-
-{{< copyable "" >}}
 
 ```sql
 
@@ -430,8 +477,6 @@ In addition, baseline evolution, to a certain extent, can also avoid the jitter 
 
 Use the following statement to enable automatic binding evolution:
 
-{{< copyable "" >}}
-
 ```sql
 SET GLOBAL tidb_evolve_plan_baselines = ON;
 ```
@@ -439,28 +484,22 @@ SET GLOBAL tidb_evolve_plan_baselines = ON;
 The default value of `tidb_evolve_plan_baselines` is `off`.
 
 <CustomContent platform="tidb">
-
-> **Warning:**
->
-> -   Baseline evolution is an experimental feature. Unknown risks might exist. It is **NOT** recommended that you use it in the production environment.
-> -   This variable is forcibly set to `off` until the baseline evolution feature becomes generally available (GA). If you try to enable this feature, an error is returned. If you have already used this feature in a production environment, disable it as soon as possible. If you find that the binding status is not as expected, [get support](/support.md) from PingCAP or the community.
-
+  > **Warning:**
+  >
+  > -   Baseline evolution is an experimental feature. Unknown risks might exist. It is **NOT** recommended that you use it in the production environment.
+  > -   This variable is forcibly set to `off` until the baseline evolution feature becomes generally available (GA). If you try to enable this feature, an error is returned. If you have already used this feature in a production environment, disable it as soon as possible. If you find that the binding status is not as expected, [get support](/support.md) from PingCAP or the community.
 </CustomContent>
 
 <CustomContent platform="tidb-cloud">
-
-> **Warning:**
->
-> -   Baseline evolution is an experimental feature. Unknown risks might exist. It is **NOT** recommended that you use it in the production environment.
-> -   This variable is forcibly set to `off` until the baseline evolution feature becomes generally available (GA). If you try to enable this feature, an error is returned. If you have already used this feature in a production environment, disable it as soon as possible. If you find that the binding status is not as expected, [contact TiDB Cloud Support](/tidb-cloud/tidb-cloud-support.md).
-
+  > **Warning:**
+  >
+  > -   Baseline evolution is an experimental feature. Unknown risks might exist. It is **NOT** recommended that you use it in the production environment.
+  > -   This variable is forcibly set to `off` until the baseline evolution feature becomes generally available (GA). If you try to enable this feature, an error is returned. If you have already used this feature in a production environment, disable it as soon as possible. If you find that the binding status is not as expected, [contact TiDB Cloud Support](/tidb-cloud/tidb-cloud-support.md).
 </CustomContent>
 
 After the automatic binding evolution feature is enabled, if the optimal execution plan selected by the optimizer is not among the binding execution plans, the optimizer marks the plan as an execution plan that waits for verification. At every `bind-info-lease` (the default value is `3s`) interval, an execution plan to be verified is selected and compared with the binding execution plan that has the least cost in terms of the actual execution time. If the plan to be verified has shorter execution time (the current criterion for the comparison is that the execution time of the plan to be verified is no longer than 2/3 that of the binding execution plan), this plan is marked as a usable binding. The following example describes the process above.
 
 Assume that table `t` is defined as follows:
-
-{{< copyable "" >}}
 
 ```sql
 CREATE TABLE t(a INT, b INT, KEY(a), KEY(b));
@@ -468,15 +507,11 @@ CREATE TABLE t(a INT, b INT, KEY(a), KEY(b));
 
 Perform the following query on table `t`:
 
-{{< copyable "" >}}
-
 ```sql
 SELECT * FROM t WHERE a < 100 AND b < 100;
 ```
 
 In the table defined above, few rows meet the `a < 100` condition. But for some reason, the optimizer mistakenly selects the full table scan instead of the optimal execution plan that uses index `a`. You can first use the following statement to create a binding:
-
-{{< copyable "" >}}
 
 ```sql
 CREATE GLOBAL BINDING for SELECT * FROM t WHERE a < 100 AND b < 100 using SELECT * FROM t use index(a) WHERE a < 100 AND b < 100;
@@ -520,8 +555,6 @@ During cluster upgrade, SQL Plan Management (SPM) might cause compatibility issu
 
 -   When you upgrade from a version earlier than v5.2.0 (that is, v4.0, v5.0, and v5.1) to the current version, make sure that `tidb_evolve_plan_baselines` is disabled before the upgrade. To disable this variable, perform the following steps.
 
-    {{< copyable "" >}}
-
     ```sql
     -- Check whether `tidb_evolve_plan_baselines` is disabled in the earlier version.
 
@@ -533,8 +566,6 @@ During cluster upgrade, SQL Plan Management (SPM) might cause compatibility issu
     ```
 
 -   Before you upgrade from v4.0 to the current version, you need to check whether the syntax of all queries corresponding to the available SQL bindings is correct in the new version. If any syntax errors exist, delete the corresponding SQL binding. To do that, perform the following steps.
-
-    {{< copyable "" >}}
 
     ```sql
     -- Check the query corresponding to the available SQL binding in the version to be upgraded.
