@@ -17,8 +17,6 @@ TiKV Control (`tikv-ctl`) is a command line tool of TiKV, used to manage the clu
 
 `tikv-ctl` is also integrated in the `tiup` command. Execute the following command to call the `tikv-ctl` tool:
 
-{{< copyable "" >}}
-
 ```bash
 tiup ctl:<cluster-version> tikv
 ```
@@ -131,7 +129,7 @@ This section describes the subcommands that `tikv-ctl` supports in detail. Some 
 
 ### View information of the Raft state machine {#view-information-of-the-raft-state-machine}
 
-Use the `raft` subcommand to view the status of the Raft state machine at a specific moment. The status information includes two parts: three structs (**RegionLocalState**, <strong>RaftLocalState</strong>, and <strong>RegionApplyState</strong>) and the corresponding Entries of a certain piece of log.
+Use the `raft` subcommand to view the status of the Raft state machine at a specific moment. The status information includes two parts: three structs (**RegionLocalState**, **RaftLocalState**, and **RegionApplyState**) and the corresponding Entries of a certain piece of log.
 
 Use the `region` and `log` subcommands to obtain the above information respectively. The two subcommands both support the remote mode and the local mode at the same time. Their usage and output are as follows:
 
@@ -230,7 +228,9 @@ Use the `compact` command to manually compact data of each TiKV.
 
 -   Use the `--region` option to compact the range of a specific region. If set, `--from` and `--to` will be ignored.
 
--   Use the `--db` option to specify the RocksDB that performs compaction. The optional values are `kv` and `raft`.
+-   Use the `-c` option to specify the column family name. The default value is `default`. The optional values are `default`, `lock`, and `write`.
+
+-   Use the `-d` option to specify the RocksDB that performs compaction. The default value is `kv`. The optional values are `kv` and `raft`.
 
 -   Use the `--threads` option allows you to specify the concurrency for the TiKV compaction and its default value is `8`. Generally, a higher concurrency comes with a faster compaction speed, which might yet affect the service. You need to choose an appropriate concurrency count based on your scenario.
 
@@ -242,18 +242,21 @@ Use the `compact` command to manually compact data of each TiKV.
 -   To compact data in the local mode, use the following command:
 
     ```shell
-    tikv-ctl --data-dir /path/to/tikv compact --db kv
+    tikv-ctl --data-dir /path/to/tikv compact -d kv
     ```
 
 -   To compact data in the remote mode, use the following command:
 
     ```shell
-    tikv-ctl --host ip:port compact --db kv
+    tikv-ctl --host ip:port compact -d kv
     ```
 
 ### Compact data of the whole TiKV cluster manually {#compact-data-of-the-whole-tikv-cluster-manually}
 
-Use the `compact-cluster` command to manually compact data of the whole TiKV cluster. The flags of this command have the same meanings and usage as those of the `compact` command.
+Use the `compact-cluster` command to manually compact data of the whole TiKV cluster. The flags of this command have the same meanings and usage as those of the `compact` command. The only difference is as follows:
+
+-   For the `compact-cluster` command, use `--pd` to specify the address of the PD, so that `tikv-ctl` can locate all TiKV nodes in the cluster as the compact target.
+-   For the `compact` command, use `--data-dir` or `--host` to specify a single TiKV as the compact target.
 
 ### Set a Region to tombstone {#set-a-region-to-tombstone}
 
@@ -263,15 +266,11 @@ In a TiKV instance, you can use this command to set the status of some Regions t
 
 In general cases, you can remove the corresponding Peer of this Region using the `remove-peer` command:
 
-{{< copyable "" >}}
-
 ```shell
 pd-ctl operator add remove-peer <region_id> <store_id>
 ```
 
 Then use the `tikv-ctl` tool to set a Region to tombstone on the corresponding TiKV instance to skip the health check for this Region at startup:
-
-{{< copyable "" >}}
 
 ```shell
 tikv-ctl --data-dir /path/to/tikv tombstone -p 127.0.0.1:2379 -r <region_id>
@@ -282,8 +281,6 @@ success!
 ```
 
 However, in some cases, you cannot easily remove this Peer of this Region from PD, so you can specify the `--force` option in `tikv-ctl` to forcibly set the Peer to tombstone:
-
-{{< copyable "" >}}
 
 ```shell
 tikv-ctl --data-dir /path/to/tikv tombstone -p 127.0.0.1:2379 -r <region_id>,<region_id> --force
@@ -353,8 +350,6 @@ You can use the `modify-tikv-config` command to dynamically modify the configura
 
 Set the size of `shared block cache`:
 
-{{< copyable "" >}}
-
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n storage.block-cache.capacity -v 10GB
 ```
@@ -365,8 +360,6 @@ success
 
 When `shared block cache` is disabled, set `block cache size` for the `write` CF:
 
-{{< copyable "" >}}
-
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n rocksdb.writecf.block-cache-size -v 256MB
 ```
@@ -375,8 +368,6 @@ tikv-ctl --host ip:port modify-tikv-config -n rocksdb.writecf.block-cache-size -
 success
 ```
 
-{{< copyable "" >}}
-
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n raftdb.defaultcf.disable-auto-compactions -v true
 ```
@@ -384,8 +375,6 @@ tikv-ctl --host ip:port modify-tikv-config -n raftdb.defaultcf.disable-auto-comp
 ```
 success
 ```
-
-{{< copyable "" >}}
 
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n raftstore.sync-log -v false
@@ -397,8 +386,6 @@ success
 
 When the compaction rate limit causes accumulated compaction pending bytes, disable the `rate-limiter-auto-tuned` mode or set a higher limit for the compaction flow:
 
-{{< copyable "" >}}
-
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n rocksdb.rate-limiter-auto-tuned -v false
 ```
@@ -406,8 +393,6 @@ tikv-ctl --host ip:port modify-tikv-config -n rocksdb.rate-limiter-auto-tuned -v
 ```
 success
 ```
-
-{{< copyable "" >}}
 
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n rocksdb.rate-bytes-per-sec -v "1GB"
@@ -429,8 +414,6 @@ The `-s` option accepts multiple `store_id` separated by comma and uses the `-r`
 > -   If the `--all-regions` option is used, you are expected to run this command on all the remaining stores connected to the cluster. You need to ensure that these healthy stores stop providing services before recovering the damaged stores. Otherwise, the inconsistent peer lists in Region replicas will cause errors when you run `split-region` or `remove-peer`. This further causes inconsistency between other metadata, and finally, the Regions will become unavailable.
 > -   Once you have run `remove-fail-stores`, you cannot restart the removed nodes or add these nodes to the cluster. Otherwise, the metadata will be inconsistent, and finally, the Regions will be unavailable.
 
-{{< copyable "" >}}
-
 ```shell
 tikv-ctl --data-dir /path/to/tikv unsafe-recover remove-fail-stores -s 3 -r 1001,1002
 ```
@@ -438,8 +421,6 @@ tikv-ctl --data-dir /path/to/tikv unsafe-recover remove-fail-stores -s 3 -r 1001
 ```
 success!
 ```
-
-{{< copyable "" >}}
 
 ```shell
 tikv-ctl --data-dir /path/to/tikv unsafe-recover remove-fail-stores -s 4,5 --all-regions
