@@ -1,7 +1,3 @@
-<!-- markdownlint-disable MD007 -->
-
-<!-- markdownlint-disable MD041 -->
-
 -   [Docs Home](https://docs.pingcap.com/)
 -   About TiDB
     -   [TiDB Introduction](/overview.md)
@@ -548,7 +544,7 @@
             -   [`KILL [TIDB]`](/sql-statements/sql-statement-kill.md)
             -   [`LOAD DATA`](/sql-statements/sql-statement-load-data.md)
             -   [`LOAD STATS`](/sql-statements/sql-statement-load-stats.md)
-            -   [`LOCK TABLES` and <code>UNLOCK TABLES</code>](/sql-statements/sql-statement-lock-tables-and-unlock-tables.md)
+            -   [`LOCK TABLES` and `UNLOCK TABLES`](/sql-statements/sql-statement-lock-tables-and-unlock-tables.md)
             -   [`MODIFY COLUMN`](/sql-statements/sql-statement-modify-column.md)
             -   [`PREPARE`](/sql-statements/sql-statement-prepare.md)
             -   [`RECOVER TABLE`](/sql-statements/sql-statement-recover-table.md)
@@ -748,7 +744,7 @@
                 -   [Configure SSO](/dashboard/dashboard-session-sso.md)
             -   [FAQ](/dashboard/dashboard-faq.md)
     -   [Telemetry](/telemetry.md)
-    -   [Errors Codes](/error-codes.md)
+    -   [Error Codes](/error-codes.md)
     -   [Table Filter](/table-filter.md)
     -   [Schedule Replicas by Topology Labels](/schedule-replicas-by-topology-labels.md)
 -   FAQs
