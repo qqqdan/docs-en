@@ -23,16 +23,12 @@ This document details these tables and introduces how to use them to troubleshoo
 
 The "SQL digest" here means the same as used in slow logs, which is a unique identifier calculated through normalized SQL statements. The normalization process ignores constant, blank characters, and is case insensitive. Therefore, statements with consistent syntaxes have the same digest. For example:
 
-{{< copyable "" >}}
-
 ```sql
 SELECT * FROM employee WHERE id IN (1, 2, 3) AND salary BETWEEN 1000 AND 2000;
 select * from EMPLOYEE where ID in (4, 5) and SALARY between 3000 and 4000;
 ```
 
 After normalization, they are both of the following category:
-
-{{< copyable "" >}}
 
 ```sql
 select * from employee where id in (...) and salary between ? and ?;
@@ -118,8 +114,6 @@ The following system variables are used to control the statement summary:
 
 An example of the statement summary configuration is shown as follows:
 
-{{< copyable "" >}}
-
 ```sql
 set global tidb_enable_stmt_summary = true;
 set global tidb_stmt_summary_refresh_interval = 1800;
@@ -176,7 +170,7 @@ select * from information_schema.statements_summary_evicted;
 2 row in set (0.001 sec)
 ```
 
-From the result above, you can see that a maximum of 59 SQL categories are evicted, which indicates that the proper size of the statement summary is 59 records.
+From the preceding result, you can see that a maximum of 59 SQL categories are evicted. In this case, it is recommended that you increase the size of the `statement_summary` table by at least 59 records, which means increasing the size to at least 3059 records.
 
 ## Limitation {#limitation}
 
@@ -192,8 +186,6 @@ This section provides two examples to show how to use the statement summary feat
 
 In this example, the client shows slow performance with point queries on the `employee` table. You can perform a fuzzy search on SQL texts:
 
-{{< copyable "" >}}
-
 ```sql
 SELECT avg_latency, exec_count, query_sample_text
     FROM information_schema.statements_summary
@@ -201,8 +193,6 @@ SELECT avg_latency, exec_count, query_sample_text
 ```
 
 `1ms` and `0.3ms` are considered within the normal range of `avg_latency`. Therefore, it can be concluded that the server end is not the cause. You can troubleshoot with the client or the network.
-
-{{< copyable "" >}}
 
 ```sql
 +-------------+------------+------------------------------------------+
@@ -218,8 +208,6 @@ SELECT avg_latency, exec_count, query_sample_text
 
 If the QPS decrease significantly from 10:00 to 10:30, you can find out the three categories of SQL statements with the longest time consumption from the history table:
 
-{{< copyable "" >}}
-
 ```sql
 SELECT sum_latency, avg_latency, exec_count, query_sample_text
     FROM information_schema.statements_summary_history
@@ -228,8 +216,6 @@ SELECT sum_latency, avg_latency, exec_count, query_sample_text
 ```
 
 The result shows that the following three categories of SQL statements consume the longest time in total, which need to be optimized with high priority.
-
-{{< copyable "" >}}
 
 ```sql
 +-------------+-------------+------------+-----------------------------------------------------------------------+
