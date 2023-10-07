@@ -24,30 +24,30 @@ Starting from v6.1.1, TiDB provides multi-level support for different quality st
 
 -   For the following combinations of operating systems and CPU architectures, TiDB **provides enterprise-level production quality**, and the product features have been comprehensively and systematically verified:
 
-    | Operating systems                                                                                               | Supported CPU architectures              |
-    | :-------------------------------------------------------------------------------------------------------------- | :--------------------------------------- |
-    | Red Hat Enterprise Linux 8.4 or a later 8.x version                                                             | <ul><li>x86\_64</li><li>ARM 64</li></ul> |
-    | <ul><li>Red Hat Enterprise Linux 7.3 or a later 7.x version</li><li>CentOS 7.3 or a later 7.x version</li></ul> | <ul><li>x86\_64</li><li>ARM 64</li></ul> |
-    | Amazon Linux 2                                                                                                  | <ul><li>x86\_64</li><li>ARM 64</li></ul> |
-    | Kylin Euler V10 SP1/SP2                                                                                         | <ul><li>x86\_64</li><li>ARM 64</li></ul> |
-    | UOS V20                                                                                                         | <ul><li>x86\_64</li><li>ARM 64</li></ul> |
+    | Operating systems                                                                                      | Supported CPU architectures     |
+    | :----------------------------------------------------------------------------------------------------- | :------------------------------ |
+    | Red Hat Enterprise Linux 8.4 or a later 8.x version                                                    | <li>x86\_64</li><li>ARM 64</li> |
+    | <li>Red Hat Enterprise Linux 7.3 or a later 7.x version</li><li>CentOS 7.3 or a later 7.x version</li> | <li>x86\_64</li><li>ARM 64</li> |
+    | Amazon Linux 2                                                                                         | <li>x86\_64</li><li>ARM 64</li> |
+    | Kylin Euler V10 SP1/SP2                                                                                | <li>x86\_64</li><li>ARM 64</li> |
+    | UnionTech OS (UOS) V20                                                                                 | <li>x86\_64</li><li>ARM 64</li> |
 
     > **Note:**
     >
-    > According to [<a href="https://www.centos.org/centos-linux-eol/">CentOS Linux EOL</a>](https://www.centos.org/centos-linux-eol/), the upstream support for CentOS Linux 8 ended on December 31, 2021. CentOS Stream 8 continues to be supported by the CentOS organization.
+    > According to [CentOS Linux EOL](https://www.centos.org/centos-linux-eol/), the upstream support for CentOS Linux 8 ended on December 31, 2021. CentOS Stream 8 continues to be supported by the CentOS organization.
 
 -   For the following combinations of operating systems and CPU architectures, you can compile, build, and deploy TiDB. In addition, you can also use the basic features of OLTP, OLAP, and the data tools. However, TiDB **does not guarantee enterprise-level production quality**:
 
-    | Operating systems                                                                                       | Supported CPU architectures              |
-    | :------------------------------------------------------------------------------------------------------ | :--------------------------------------- |
-    | macOS Catalina or later (For v6.1.2 and later versions, only macOS 12 (Monterey) or later is supported) | <ul><li>x86\_64</li><li>ARM 64</li></ul> |
-    | Oracle Enterprise Linux 7.3 or a later 7.x version                                                      | x86_64                                   |
-    | Ubuntu LTS 18.04 or later                                                                               | x86_64                                   |
-    | CentOS 8 Stream                                                                                         | <ul><li>x86\_64</li><li>ARM 64</li></ul> |
-    | Debian 9 (Stretch) or later                                                                             | x86_64                                   |
-    | Fedora 35 or later                                                                                      | x86_64                                   |
-    | openSUSE Leap later than v15.3 (not including Tumbleweed)                                               | x86_64                                   |
-    | SUSE Linux Enterprise Server 15                                                                         | x86_64                                   |
+    | Operating systems                                                                                       | Supported CPU architectures     |
+    | :------------------------------------------------------------------------------------------------------ | :------------------------------ |
+    | macOS Catalina or later (For v6.1.2 and later versions, only macOS 12 (Monterey) or later is supported) | <li>x86\_64</li><li>ARM 64</li> |
+    | Oracle Enterprise Linux 7.3 or a later 7.x version                                                      | x86_64                          |
+    | Ubuntu LTS 18.04 or later                                                                               | x86_64                          |
+    | CentOS 8 Stream                                                                                         | <li>x86\_64</li><li>ARM 64</li> |
+    | Debian 9 (Stretch) or later                                                                             | x86_64                          |
+    | Fedora 35 or later                                                                                      | x86_64                          |
+    | openSUSE Leap later than v15.3 (not including Tumbleweed)                                               | x86_64                          |
+    | SUSE Linux Enterprise Server 15                                                                         | x86_64                          |
 
     > **Note:**
     >
@@ -75,7 +75,7 @@ Starting from v6.1.1, TiDB provides multi-level support for different quality st
 > -   A large number of TiDB tests have been run on the CentOS 7.3 system, and in our community there are a lot of best practices in which TiDB is deployed on the Linux operating system. Therefore, it is recommended to deploy TiDB on CentOS 7.3 or later.
 > -   The support for the Linux operating systems above includes the deployment and operation in physical servers as well as in major virtualized environments like VMware, KVM and XEN.
 > -   Red Hat Enterprise Linux 8.0, CentOS 8 Stream, and Oracle Enterprise Linux 8.0 are not supported yet as the testing of these platforms is in progress.
-> -   According to [<a href="https://www.centos.org/centos-linux-eol/">CentOS Linux EOL</a>](https://www.centos.org/centos-linux-eol/), the upstream support for CentOS ended on December 31, 2021.
+> -   According to [CentOS Linux EOL](https://www.centos.org/centos-linux-eol/), the upstream support for CentOS ended on December 31, 2021.
 > -   Support for Ubuntu 16.04 will be removed in future versions of TiDB. Upgrading to Ubuntu 18.04 or later is strongly recommended.
 
 Other Linux OS versions such as Debian Linux and Fedora Linux might work but are not officially supported.
@@ -85,12 +85,12 @@ Other Linux OS versions such as Debian Linux and Fedora Linux might work but are
 
 ### Libraries required for compiling and running TiDB {#libraries-required-for-compiling-and-running-tidb}
 
-| Libraries required for compiling and building TiDB | Version                                                                                                       |
-| :------------------------------------------------- | :------------------------------------------------------------------------------------------------------------ |
-| Golang                                             | <ul><li>For TiDB v6.1.0, v6.1.1, and v6.1.2: 1.18 or later</li><li>For TiDB v6.1.3: 1.19.3 or later</li></ul> |
-| Rust                                               | nightly-2022-07-31 or later                                                                                   |
-| GCC                                                | 7.x                                                                                                           |
-| LLVM                                               | 13.0 or later                                                                                                 |
+| Libraries required for compiling and building TiDB | Version                                                                                              |
+| :------------------------------------------------- | :--------------------------------------------------------------------------------------------------- |
+| Golang                                             | <li>For TiDB v6.1.0, v6.1.1, and v6.1.2: 1.18 or later</li><li>For TiDB v6.1.3: 1.19.3 or later</li> |
+| Rust                                               | nightly-2022-07-31 or later                                                                          |
+| GCC                                                | 7.x                                                                                                  |
+| LLVM                                               | 13.0 or later                                                                                        |
 
 Library required for running TiDB: glibc (2.28-151.el8 version）
 
@@ -105,7 +105,7 @@ Library required for running TiDB: glibc (2.28-151.el8 version）
 
 > **Note:**
 >
-> It is required that you [<a href="/production-deployment-using-tiup.md#step-2-deploy-tiup-on-the-control-machine">deploy TiUP on the control machine</a>](/production-deployment-using-tiup.md#step-2-deploy-tiup-on-the-control-machine) to operate and manage TiDB clusters.
+> It is required that you [deploy TiUP on the control machine](/production-deployment-using-tiup.md#step-2-deploy-tiup-on-the-control-machine) to operate and manage TiDB clusters.
 
 ### Target machines {#target-machines}
 
@@ -134,7 +134,7 @@ You can deploy and run TiDB on the 64-bit generic hardware server platform in th
 > -   In the test environment, the TiDB and PD instances can be deployed on the same server.
 > -   For performance-related test, do not use low-performance storage and network hardware configuration, in order to guarantee the correctness of the test result.
 > -   For the TiKV server, it is recommended to use NVMe SSDs to ensure faster reads and writes.
-> -   If you only want to test and verify the features, follow [<a href="/quick-start-with-tidb.md">Quick Start Guide for TiDB</a>](/quick-start-with-tidb.md) to deploy TiDB on a single machine.
+> -   If you only want to test and verify the features, follow [Quick Start Guide for TiDB](/quick-start-with-tidb.md) to deploy TiDB on a single machine.
 > -   The TiDB server uses the disk to store server logs, so there are no special requirements for the disk type and capacity in the test environment.
 
 ### Production environment {#production-environment}
@@ -156,7 +156,7 @@ You can deploy and run TiDB on the 64-bit generic hardware server platform in th
 
 Before you deploy TiFlash, note the following items:
 
--   TiFlash can be [<a href="/tiflash/tiflash-configuration.md#multi-disk-deployment">deployed on multiple disks</a>](/tiflash/tiflash-configuration.md#multi-disk-deployment).
+-   TiFlash can be [deployed on multiple disks](/tiflash/tiflash-configuration.md#multi-disk-deployment).
 -   It is recommended to use a high-performance SSD as the first disk of the TiFlash data directory to buffer the real-time replication of TiKV data. The performance of this disk should not be lower than that of TiKV, such as PCI-E SSD. The disk capacity should be no less than 10% of the total capacity; otherwise, it might become the bottleneck of this node. You can deploy ordinary SSDs for other disks, but note that a better PCI-E SSD brings better performance.
 -   It is recommended to deploy TiFlash on different nodes from TiKV. If you must deploy TiFlash and TiKV on the same node, increase the number of CPU cores and memory, and try to deploy TiFlash and TiKV on different disks to avoid interfering each other.
 -   The total capacity of the TiFlash disks is calculated in this way: `the data volume of the entire TiKV cluster to be replicated / the number of TiKV replicas * the number of TiFlash replicas`. For example, if the overall planned capacity of TiKV is 1 TB, the number of TiKV replicas is 3, and the number of TiFlash replicas is 2, then the recommended total capacity of TiFlash is `1024 GB / 3 * 2`. You can replicate only the data of some tables. In such case, determine the TiFlash capacity according to the data volume of the tables to be replicated.
@@ -202,15 +202,15 @@ As an open-source distributed SQL database, TiDB requires the following network 
 
 ## Disk space requirements {#disk-space-requirements}
 
-| Component    | Disk space requirement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Healthy disk usage |
-| :----------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
-| TiDB         | At least 30 GB for the log disk                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Lower than 90%     |
-| PD           | At least 20 GB for the data disk and for the log disk, respectively                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Lower than 90%     |
-| TiKV         | At least 100 GB for the data disk and for the log disk, respectively                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            | Lower than 80%     |
-| TiFlash      | At least 100 GB for the data disk and at least 30 GB for the log disk, respectively                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | Lower than 80%     |
-| TiUP         | <ul><li>Control machine: No more than 1 GB space is required for deploying a TiDB cluster of a single version. The space required increases if TiDB clusters of multiple versions are deployed. </li> <li> Deployment servers (machines where the TiDB components run): TiFlash occupies about 700 MB space and other components (such as PD, TiDB, and TiKV) occupy about 200 MB space respectively. During the cluster deployment process, the TiUP cluster requires less than 1 MB of temporary space (`/tmp` directory) to store temporary files.</li></ul> | N/A                |
-| Ngmonitoring | <ul><li>Conprof: 3 x 1 GB x Number of components (each component occupies about 1 GB per day, 3 days in total) + 20 GB reserved space </li><li> Top SQL: 30 x 50 MB x Number of components (each component occupies about 50 MB per day, 30 days in total) </li><li> Conprof and Top SQL share the reserved space</li></ul>                                                                                                                                                                                                                                     | N/A                |
+| Component    | Disk space requirement                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Healthy disk usage |
+| :----------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :----------------- |
+| TiDB         | At least 30 GB for the log disk                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        | Lower than 90%     |
+| PD           | At least 20 GB for the data disk and for the log disk, respectively                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Lower than 90%     |
+| TiKV         | At least 100 GB for the data disk and for the log disk, respectively                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   | Lower than 80%     |
+| TiFlash      | At least 100 GB for the data disk and at least 30 GB for the log disk, respectively                                                                                                                                                                                                                                                                                                                                                                                                                                                                    | Lower than 80%     |
+| TiUP         | <li>Control machine: No more than 1 GB space is required for deploying a TiDB cluster of a single version. The space required increases if TiDB clusters of multiple versions are deployed. </li> <li> Deployment servers (machines where the TiDB components run): TiFlash occupies about 700 MB space and other components (such as PD, TiDB, and TiKV) occupy about 200 MB space respectively. During the cluster deployment process, the TiUP cluster requires less than 1 MB of temporary space (`/tmp` directory) to store temporary files.</li> | N/A                |
+| Ngmonitoring | <li>Conprof: 3 x 1 GB x Number of components (each component occupies about 1 GB per day, 3 days in total) + 20 GB reserved space </li><li> Top SQL: 30 x 50 MB x Number of components (each component occupies about 50 MB per day, 30 days in total) </li><li> Conprof and Top SQL share the reserved space</li>                                                                                                                                                                                                                                     | N/A                |
 
 ## Web browser requirements {#web-browser-requirements}
 
-TiDB relies on [<a href="https://grafana.com/">Grafana</a>](https://grafana.com/) to provide visualization of database metrics. A recent version of Internet Explorer, Chrome or Firefox with Javascript enabled is sufficient.
+TiDB relies on [Grafana](https://grafana.com/) to provide visualization of database metrics. A recent version of Internet Explorer, Chrome or Firefox with Javascript enabled is sufficient.
