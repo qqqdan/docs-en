@@ -79,7 +79,7 @@ For the complete configuration file, refer to [the configuration file and comman
 
 Conflicting data refers to two or more records with the same PK/UK column data. When the data source contains conflicting data, the actual number of rows in the table is different from the total number of rows returned by the query using unique index.
 
-TiDB Lightning offers three strategies for detecting conflicting data:
+TiDB Lightning offers the following strategies for detecting conflicting data:
 
 -   `remove` (recommended): records and removes all conflicting records from the target table to ensure a consistent state in the target TiDB.
 -   `none`: does not detect duplicate records. `none` has the best performance in the two strategies, but might lead to inconsistent data in the target TiDB.
@@ -136,25 +136,23 @@ You can manually identify the records that need to be retained and insert these 
 
 TiDB Lightning provides some concurrency-related configurations to affect import performance in the physical import mode. However, from long-term experience, it is recommended to keep the following four configuration items in the default value. Adjusting the four configuration items does not bring significant performance boost.
 
-```
-[lightning]
-# The maximum concurrency of engine files.
-# Each table is split into one "index engine" to store indices, and multiple
-# "data engines" to store row data. These settings control the maximum
-# concurrent number for each type of engines.
-# The two settings controls the maximum concurrency of the two engine files.
-index-concurrency = 2
-table-concurrency = 6
+    [lightning]
+    # The maximum concurrency of engine files.
+    # Each table is split into one "index engine" to store indices, and multiple
+    # "data engines" to store row data. These settings control the maximum
+    # concurrent number for each type of engines.
+    # The two settings controls the maximum concurrency of the two engine files.
+    index-concurrency = 2
+    table-concurrency = 6
 
-# The concurrency of data. The default value is the number of logical CPUs.
-region-concurrency =
+    # The concurrency of data. The default value is the number of logical CPUs.
+    region-concurrency =
 
-# The maximum concurrency of I/O. When the concurrency is too high, the disk
-# cache may be frequently refreshed, causing the cache miss and read speed
-# to slow down. For different storage mediums, this parameter may need to be
-# adjusted to achieve the best performance.
-io-concurrency = 5
-```
+    # The maximum concurrency of I/O. When the concurrency is too high, the disk
+    # cache may be frequently refreshed, causing the cache miss and read speed
+    # to slow down. For different storage mediums, this parameter may need to be
+    # adjusted to achieve the best performance.
+    io-concurrency = 5
 
 During the import, each table is split into one "index engine" to store indices, and multiple "data engines" to store row data.
 
