@@ -24,16 +24,12 @@ Assume that the TiDB cluster topology is as follows:
 
 ### Step 1: Download the binary package {#step-1-download-the-binary-package}
 
-{{< copyable "" >}}
-
 ```bash
 # Downloads the package.
 wget https://download.pingcap.org/prometheus-2.27.1.linux-amd64.tar.gz
 wget https://download.pingcap.org/node_exporter-0.17.0.linux-amd64.tar.gz
 wget https://download.pingcap.org/grafana-7.5.11.linux-amd64.tar.gz
 ```
-
-{{< copyable "" >}}
 
 ```bash
 # Extracts the package.
@@ -43,8 +39,6 @@ tar -xzf grafana-7.5.11.linux-amd64.tar.gz
 ```
 
 ### Step 2: Start <code>node_exporter</code> on Node1, Node2, Node3, and Node4 {#step-2-start-code-node-exporter-code-on-node1-node2-node3-and-node4}
-
-{{< copyable "" >}}
 
 ```bash
 cd node_exporter-0.17.0.linux-amd64
@@ -57,8 +51,6 @@ $ ./node_exporter --web.listen-address=":9100" \
 ### Step 3: Start Prometheus on Node1 {#step-3-start-prometheus-on-node1}
 
 Edit the Prometheus configuration file:
-
-{{< copyable "" >}}
 
 ```bash
 cd prometheus-2.27.1.linux-amd64 &&
@@ -131,8 +123,6 @@ $ ./prometheus \
 
 Edit the Grafana configuration file:
 
-{{< copyable "" >}}
-
 ```ini
 cd grafana-7.5.11 &&
 vi conf/grafana.ini
@@ -181,8 +171,6 @@ url = https://grafana.net
 
 Start the Grafana service:
 
-{{< copyable "" >}}
-
 ```bash
 ./bin/grafana-server \
     --config="./conf/grafana.ini" &
@@ -204,16 +192,16 @@ This section describes how to configure Grafana.
 
     > **Note:**
     >
-    > For the **Change Password** step, you can choose <strong>Skip</strong>.
+    > For the **Change Password** step, you can choose **Skip**.
 
-2.  In the Grafana sidebar menu, click **Data Source** within the <strong>Configuration</strong>.
+2.  In the Grafana sidebar menu, click **Data Source** within the **Configuration**.
 
 3.  Click **Add data source**.
 
 4.  Specify the data source information.
 
     -   Specify a **Name** for the data source.
-    -   For **Type**, select <strong>Prometheus</strong>.
+    -   For **Type**, select **Prometheus**.
     -   For **URL**, specify the Prometheus address.
     -   Specify other fields as needed.
 
@@ -225,9 +213,9 @@ To import a Grafana dashboard for the PD server, the TiKV server, and the TiDB s
 
 1.  Click the Grafana logo to open the sidebar menu.
 
-2.  In the sidebar menu, click **Dashboards** -> <strong>Import</strong> to open the <strong>Import Dashboard</strong> window.
+2.  In the sidebar menu, click **Dashboards** -> **Import** to open the **Import Dashboard** window.
 
-3.  Click **Upload .json File** to upload a JSON file (Download TiDB Grafana configuration files from [pingcap/tidb](https://github.com/pingcap/tidb/tree/master/metrics/grafana), [tikv/tikv](https://github.com/tikv/tikv/tree/master/metrics/grafana), and [tikv/pd](https://github.com/tikv/pd/tree/master/metrics/grafana)).
+3.  Click **Upload .json File** to upload a JSON file (Download TiDB Grafana configuration files from [pingcap/tidb](https://github.com/pingcap/tidb/tree/release-6.1/metrics/grafana), [tikv/tikv](https://github.com/tikv/tikv/tree/master/metrics/grafana), and [tikv/pd](https://github.com/tikv/pd/tree/master/metrics/grafana)).
 
     > **Note:**
     >

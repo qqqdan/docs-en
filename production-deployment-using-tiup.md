@@ -5,7 +5,7 @@ summary: Learn how to easily deploy a TiDB cluster using TiUP.
 
 # Deploy a TiDB Cluster Using TiUP {#deploy-a-tidb-cluster-using-tiup}
 
-[<a href="https://github.com/pingcap/tiup">TiUP</a>](https://github.com/pingcap/tiup) is a cluster operation and maintenance tool introduced in TiDB 4.0. TiUP provides [<a href="https://github.com/pingcap/tiup/tree/master/components/cluster">TiUP cluster</a>](https://github.com/pingcap/tiup/tree/master/components/cluster), a cluster management component written in Golang. By using TiUP cluster, you can easily perform daily database operations, including deploying, starting, stopping, destroying, scaling, and upgrading a TiDB cluster, and manage TiDB cluster parameters.
+[TiUP](https://github.com/pingcap/tiup) is a cluster operation and maintenance tool introduced in TiDB 4.0. TiUP provides [TiUP cluster](https://github.com/pingcap/tiup/tree/master/components/cluster), a cluster management component written in Golang. By using TiUP cluster, you can easily perform daily database operations, including deploying, starting, stopping, destroying, scaling, and upgrading a TiDB cluster, and manage TiDB cluster parameters.
 
 TiUP supports deploying TiDB, TiFlash, TiDB Binlog, TiCDC, and the monitoring system. This document introduces how to deploy TiDB clusters of different topologies.
 
@@ -13,8 +13,8 @@ TiUP supports deploying TiDB, TiFlash, TiDB Binlog, TiCDC, and the monitoring sy
 
 Make sure that you have read the following documents:
 
--   [<a href="/hardware-and-software-requirements.md">Hardware and software requirements</a>](/hardware-and-software-requirements.md)
--   [<a href="/check-before-deployment.md">Environment and system configuration check</a>](/check-before-deployment.md)
+-   [Hardware and software requirements](/hardware-and-software-requirements.md)
+-   [Environment and system configuration check](/check-before-deployment.md)
 
 ## Step 2. Deploy TiUP on the control machine {#step-2-deploy-tiup-on-the-control-machine}
 
@@ -26,8 +26,6 @@ Log in to the control machine using a regular user account (take the `tidb` user
 
 1.  Install TiUP by running the following command:
 
-    {{< copyable "" >}}
-
     ```shell
     curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
     ```
@@ -36,15 +34,11 @@ Log in to the control machine using a regular user account (take the `tidb` user
 
     1.  Redeclare the global environment variables:
 
-        {{< copyable "" >}}
-
         ```shell
         source .bash_profile
         ```
 
     2.  Confirm whether TiUP is installed:
-
-        {{< copyable "" >}}
 
         ```shell
         which tiup
@@ -52,15 +46,11 @@ Log in to the control machine using a regular user account (take the `tidb` user
 
 3.  Install the TiUP cluster component:
 
-    {{< copyable "" >}}
-
     ```shell
     tiup cluster
     ```
 
 4.  If TiUP is already installed, update the TiUP cluster component to the latest version:
-
-    {{< copyable "" >}}
 
     ```shell
     tiup update --self && tiup update cluster
@@ -69,8 +59,6 @@ Log in to the control machine using a regular user account (take the `tidb` user
     If `Update successfully!` is displayed, the TiUP cluster is updated successfully.
 
 5.  Verify the current version of your TiUP cluster:
-
-    {{< copyable "" >}}
 
     ```shell
     tiup --binary cluster
@@ -82,7 +70,7 @@ Perform the following steps in this section to deploy a TiDB cluster offline usi
 
 #### Prepare the TiUP offline component package {#prepare-the-tiup-offline-component-package}
 
-Method 1: On the [<a href="https://www.pingcap.com/download/">official download page</a>](https://www.pingcap.com/download/), select the offline mirror package (TiUP offline package included) of the target TiDB version. Note that you need to download the server package and toolkit package at the same time.
+Method 1: On the [official download page](https://www.pingcap.com/download/), select the offline mirror package (TiUP offline package included) of the target TiDB version. Note that you need to download the server package and toolkit package at the same time.
 
 Method 2: Manually pack an offline component package using `tiup mirror clone`. The detailed steps are as follows:
 
@@ -90,23 +78,17 @@ Method 2: Manually pack an offline component package using `tiup mirror clone`. 
 
     1.  Install the TiUP tool:
 
-        {{< copyable "" >}}
-
         ```shell
         curl --proto '=https' --tlsv1.2 -sSf https://tiup-mirrors.pingcap.com/install.sh | sh
         ```
 
     2.  Redeclare the global environment variables:
 
-        {{< copyable "" >}}
-
         ```shell
         source .bash_profile
         ```
 
     3.  Confirm whether TiUP is installed:
-
-        {{< copyable "" >}}
 
         ```shell
         which tiup
@@ -116,8 +98,6 @@ Method 2: Manually pack an offline component package using `tiup mirror clone`. 
 
     1.  Pull the needed components on a machine that has access to the Internet:
 
-        {{< copyable "" >}}
-
         ```shell
         tiup mirror clone tidb-community-server-${version}-linux-amd64 ${version} --os=linux --arch=amd64
         ```
@@ -125,8 +105,6 @@ Method 2: Manually pack an offline component package using `tiup mirror clone`. 
         The command above creates a directory named `tidb-community-server-${version}-linux-amd64` in the current directory, which contains the component package necessary for starting a cluster.
 
     2.  Pack the component package by using the `tar` command and send the package to the control machine in the isolated environment:
-
-        {{< copyable "" >}}
 
         ```bash
         tar czvf tidb-community-server-${version}-linux-amd64.tar.gz tidb-community-server-${version}-linux-amd64
@@ -140,8 +118,6 @@ Method 2: Manually pack an offline component package using `tiup mirror clone`. 
 
     1.  When pulling an offline mirror, you can get an incomplete offline mirror by specifying specific information via parameters, such as the component and version information. For example, you can pull an offline mirror that includes only the offline mirror of TiUP v1.10.0 and TiUP Cluster v1.10.0 by running the following command:
 
-        {{< copyable "" >}}
-
         ```bash
         tiup mirror clone tiup-custom-mirror-v1.10.0 --tiup v1.10.0 --cluster v1.10.0
         ```
@@ -151,8 +127,6 @@ Method 2: Manually pack an offline component package using `tiup mirror clone`. 
     2.  Refer to the step 2 of "Pull the mirror using TiUP", and send this incomplete offline mirror to the control machine in the isolated environment.
 
     3.  Check the path of the current offline mirror on the control machine in the isolated environment. If your TiUP tool is of a recent version, you can get the current mirror address by running the following command:
-
-        {{< copyable "" >}}
 
         ```bash
         tiup mirror show
@@ -164,15 +138,11 @@ Method 2: Manually pack an offline component package using `tiup mirror clone`. 
 
         First, copy the `keys` directory in the current offline mirror to the `$HOME/.tiup` directory:
 
-        {{< copyable "" >}}
-
         ```bash
         cp -r ${base_mirror}/keys $HOME/.tiup/
         ```
 
         Then use the TiUP command to merge the incomplete offline mirror into the mirror in use:
-
-        {{< copyable "" >}}
 
         ```bash
         tiup mirror merge tiup-custom-mirror-v1.10.0
@@ -184,8 +154,6 @@ Method 2: Manually pack an offline component package using `tiup mirror clone`. 
 
 After sending the package to the control machine of the target cluster, install the TiUP component by running the following commands:
 
-{{< copyable "" >}}
-
 ```bash
 tar xzvf tidb-community-server-${version}-linux-amd64.tar.gz && \
 sh tidb-community-server-${version}-linux-amd64/local_install.sh && \
@@ -196,7 +164,7 @@ The `local_install.sh` script automatically runs the `tiup mirror set tidb-commu
 
 #### Merge offline packages {#merge-offline-packages}
 
-If you download the offline packages from the [<a href="https://www.pingcap.com/download/">official download page</a>](https://www.pingcap.com/download/), you need to merge the server package and the toolkit package into an offline mirror. If you manually package the offline component packages using the `tiup mirror clone` command, you can skip this step.
+If you download the offline packages from the [official download page](https://www.pingcap.com/download/), you need to merge the server package and the toolkit package into an offline mirror. If you manually package the offline component packages using the `tiup mirror clone` command, you can skip this step.
 
 Run the following commands to merge the offline toolkit package into the server package directory:
 
@@ -214,33 +182,25 @@ To switch the mirror to another directory, run the `tiup mirror set <mirror-dir>
 
 Run the following command to create a cluster topology file:
 
-{{< copyable "" >}}
-
 ```shell
 tiup cluster template > topology.yaml
 ```
 
 In the following two common scenarios, you can generate recommended topology templates by running commands:
 
--   For hybrid deployment: Multiple instances are deployed on a single machine. For details, see [<a href="/hybrid-deployment-topology.md">Hybrid Deployment Topology</a>](/hybrid-deployment-topology.md).
-
-    {{< copyable "" >}}
+-   For hybrid deployment: Multiple instances are deployed on a single machine. For details, see [Hybrid Deployment Topology](/hybrid-deployment-topology.md).
 
     ```shell
     tiup cluster template --full > topology.yaml
     ```
 
--   For geo-distributed deployment: TiDB clusters are deployed in geographically distributed data centers. For details, see [<a href="/geo-distributed-deployment-topology.md">Geo-Distributed Deployment Topology</a>](/geo-distributed-deployment-topology.md).
-
-    {{< copyable "" >}}
+-   For geo-distributed deployment: TiDB clusters are deployed in geographically distributed data centers. For details, see [Geo-Distributed Deployment Topology](/geo-distributed-deployment-topology.md).
 
     ```shell
     tiup cluster template --multi-dc > topology.yaml
     ```
 
 Run `vi topology.yaml` to see the configuration file content:
-
-{{< copyable "" >}}
 
 ```shell
 global:
@@ -271,29 +231,29 @@ alertmanager_servers:
 
 The following examples cover seven common scenarios. You need to modify the configuration file (named `topology.yaml`) according to the topology description and templates in the corresponding links. For other scenarios, edit the configuration template accordingly.
 
-| Application                                                                                                                             | Configuration task                                                                                                                            | Configuration file template                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          | Topology description                                                                                                                                                                                                                              |
-| :-------------------------------------------------------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------- | :--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| OLTP                                                                                                                                    | [<a href="/minimal-deployment-topology.md">Deploy minimal topology</a>](/minimal-deployment-topology.md)                                      | [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-mini.yaml">Simple minimal configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-mini.yaml) <br/> [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-mini.yaml">Full minimal configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-mini.yaml)                                                                                                                                                                                                                                                                                                                                      | This is the basic cluster topology, including tidb-server, tikv-server, and pd-server.                                                                                                                                                            |
-| HTAP                                                                                                                                    | [<a href="/tiflash-deployment-topology.md">Deploy the TiFlash topology</a>](/tiflash-deployment-topology.md)                                  | [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tiflash.yaml">Simple TiFlash configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tiflash.yaml) <br/> [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tiflash.yaml">Full TiFlash configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tiflash.yaml)                                                                                                                                                                                                                                                                                                                          | This is to deploy TiFlash along with the minimal cluster topology. TiFlash is a columnar storage engine, and gradually becomes a standard cluster topology.                                                                                       |
-| Replicate incremental data using [<a href="/ticdc/ticdc-overview.md">TiCDC</a>](/ticdc/ticdc-overview.md)                               | [<a href="/ticdc-deployment-topology.md">Deploy the TiCDC topology</a>](/ticdc-deployment-topology.md)                                        | [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-cdc.yaml">Simple TiCDC configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-cdc.yaml) <br/> [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-cdc.yaml">Full TiCDC configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-cdc.yaml)                                                                                                                                                                                                                                                                                                                                              | This is to deploy TiCDC along with the minimal cluster topology. TiCDC supports multiple downstream platforms, such as TiDB, MySQL, and MQ.                                                                                                       |
-| Replicate incremental data using [<a href="/tidb-binlog/tidb-binlog-overview.md">TiDB Binlog</a>](/tidb-binlog/tidb-binlog-overview.md) | [<a href="/tidb-binlog-deployment-topology.md">Deploy the TiDB Binlog topology</a>](/tidb-binlog-deployment-topology.md)                      | [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tidb-binlog.yaml">Simple TiDB Binlog configuration template (MySQL as downstream)</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tidb-binlog.yaml) <br/> [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-file-binlog.yaml">Simple TiDB Binlog configuration template (Files as downstream)</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-file-binlog.yaml) <br/> [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tidb-binlog.yaml">Full TiDB Binlog configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tidb-binlog.yaml) | This is to deploy TiDB Binlog along with the minimal cluster topology.                                                                                                                                                                            |
-| Use OLAP on Spark                                                                                                                       | [<a href="/tispark-deployment-topology.md">Deploy the TiSpark topology</a>](/tispark-deployment-topology.md)                                  | [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tispark.yaml">Simple TiSpark configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tispark.yaml) <br/> [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tispark.yaml">Full TiSpark configuration template</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tispark.yaml)                                                                                                                                                                                                                                                                                                                          | This is to deploy TiSpark along with the minimal cluster topology. TiSpark is a component built for running Apache Spark on top of TiDB/TiKV to answer the OLAP queries. Currently, TiUP cluster's support for TiSpark is still **experimental**. |
-| Deploy multiple instances on a single machine                                                                                           | [<a href="/hybrid-deployment-topology.md">Deploy a hybrid topology</a>](/hybrid-deployment-topology.md)                                       | [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-multi-instance.yaml">Simple configuration template for hybrid deployment</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-multi-instance.yaml) <br/> [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-multi-instance.yaml">Full configuration template for hybrid deployment</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-multi-instance.yaml)                                                                                                                                                                                                                                                                  | The deployment topologies also apply when you need to add extra configurations for the directory, port, resource ratio, and label.                                                                                                                |
-| Deploy TiDB clusters across data centers                                                                                                | [<a href="/geo-distributed-deployment-topology.md">Deploy a geo-distributed deployment topology</a>](/geo-distributed-deployment-topology.md) | [<a href="https://github.com/pingcap/docs/blob/release-6.1/config-templates/geo-redundancy-deployment.yaml">Configuration template for geo-distributed deployment</a>](https://github.com/pingcap/docs/blob/release-6.1/config-templates/geo-redundancy-deployment.yaml)                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             | This topology takes the typical architecture of three data centers in two cities as an example. It introduces the geo-distributed deployment architecture and the key configuration that requires attention.                                      |
+| Application                                                                          | Configuration task                                                                      | Configuration file template                                                                                                                                                                                                                                                                                                                                                                                                                                                 | Topology description                                                                                                                                                                                                                              |
+| :----------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| OLTP                                                                                 | [Deploy minimal topology](/minimal-deployment-topology.md)                              | [Simple minimal configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-mini.yaml) <br/> [Full minimal configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-mini.yaml)                                                                                                                                                                                                                | This is the basic cluster topology, including tidb-server, tikv-server, and pd-server.                                                                                                                                                            |
+| HTAP                                                                                 | [Deploy the TiFlash topology](/tiflash-deployment-topology.md)                          | [Simple TiFlash configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tiflash.yaml) <br/> [Full TiFlash configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tiflash.yaml)                                                                                                                                                                                                          | This is to deploy TiFlash along with the minimal cluster topology. TiFlash is a columnar storage engine, and gradually becomes a standard cluster topology.                                                                                       |
+| Replicate incremental data using [TiCDC](/ticdc/ticdc-overview.md)                   | [Deploy the TiCDC topology](/ticdc-deployment-topology.md)                              | [Simple TiCDC configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-cdc.yaml) <br/> [Full TiCDC configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-cdc.yaml)                                                                                                                                                                                                                      | This is to deploy TiCDC along with the minimal cluster topology. TiCDC supports multiple downstream platforms, such as TiDB, MySQL, and MQ.                                                                                                       |
+| Replicate incremental data using [TiDB Binlog](/tidb-binlog/tidb-binlog-overview.md) | [Deploy the TiDB Binlog topology](/tidb-binlog-deployment-topology.md)                  | [Simple TiDB Binlog configuration template (MySQL as downstream)](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tidb-binlog.yaml) <br/> [Simple TiDB Binlog configuration template (Files as downstream)](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-file-binlog.yaml) <br/> [Full TiDB Binlog configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tidb-binlog.yaml) | This is to deploy TiDB Binlog along with the minimal cluster topology.                                                                                                                                                                            |
+| Use OLAP on Spark                                                                    | [Deploy the TiSpark topology](/tispark-deployment-topology.md)                          | [Simple TiSpark configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-tispark.yaml) <br/> [Full TiSpark configuration template](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-tispark.yaml)                                                                                                                                                                                                          | This is to deploy TiSpark along with the minimal cluster topology. TiSpark is a component built for running Apache Spark on top of TiDB/TiKV to answer the OLAP queries. Currently, TiUP cluster's support for TiSpark is still **experimental**. |
+| Deploy multiple instances on a single machine                                        | [Deploy a hybrid topology](/hybrid-deployment-topology.md)                              | [Simple configuration template for hybrid deployment](https://github.com/pingcap/docs/blob/release-6.1/config-templates/simple-multi-instance.yaml) <br/> [Full configuration template for hybrid deployment](https://github.com/pingcap/docs/blob/release-6.1/config-templates/complex-multi-instance.yaml)                                                                                                                                                                | The deployment topologies also apply when you need to add extra configurations for the directory, port, resource ratio, and label.                                                                                                                |
+| Deploy TiDB clusters across data centers                                             | [Deploy a geo-distributed deployment topology](/geo-distributed-deployment-topology.md) | [Configuration template for geo-distributed deployment](https://github.com/pingcap/docs/blob/release-6.1/config-templates/geo-redundancy-deployment.yaml)                                                                                                                                                                                                                                                                                                                   | This topology takes the typical architecture of three data centers in two cities as an example. It introduces the geo-distributed deployment architecture and the key configuration that requires attention.                                      |
 
 > **Note:**
 >
 > -   For parameters that should be globally effective, configure these parameters of corresponding components in the `server_configs` section of the configuration file.
 > -   For parameters that should be effective on a specific node, configure these parameters in the `config` of this node.
-> -   Use `.` to indicate the subcategory of the configuration, such as `log.slow-threshold`. For more formats, see [<a href="https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml">TiUP configuration template</a>](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml).
-> -   If you need to specify the user group name to be created on the target machine, see [<a href="https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml#L7">this example</a>](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml#L7).
+> -   Use `.` to indicate the subcategory of the configuration, such as `log.slow-threshold`. For more formats, see [TiUP configuration template](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml).
+> -   If you need to specify the user group name to be created on the target machine, see [this example](https://github.com/pingcap/tiup/blob/master/embed/examples/cluster/topology.example.yaml#L7).
 
 For more configuration description, see the following configuration examples:
 
--   [<a href="https://github.com/pingcap/tidb/blob/master/config/config.toml.example">TiDB `config.toml.example`</a>](https://github.com/pingcap/tidb/blob/master/config/config.toml.example)
--   [<a href="https://github.com/tikv/tikv/blob/master/etc/config-template.toml">TiKV `config.toml.example`</a>](https://github.com/tikv/tikv/blob/master/etc/config-template.toml)
--   [<a href="https://github.com/pingcap/pd/blob/master/conf/config.toml">PD `config.toml.example`</a>](https://github.com/pingcap/pd/blob/master/conf/config.toml)
--   [<a href="https://github.com/pingcap/tiflash/blob/master/etc/config-template.toml">TiFlash `config.toml.example`</a>](https://github.com/pingcap/tiflash/blob/master/etc/config-template.toml)
+-   [TiDB `config.toml.example`](https://github.com/pingcap/tidb/blob/release-6.1/config/config.toml.example)
+-   [TiKV `config.toml.example`](https://github.com/tikv/tikv/blob/master/etc/config-template.toml)
+-   [PD `config.toml.example`](https://github.com/pingcap/pd/blob/master/conf/config.toml)
+-   [TiFlash `config.toml.example`](https://github.com/pingcap/tiflash/blob/master/etc/config-template.toml)
 
 ## Step 4. Run the deployment command {#step-4-run-the-deployment-command}
 
@@ -314,23 +274,17 @@ Before you run the `deploy` command, use the `check` and `check --apply` command
 
 1.  Check for potential risks:
 
-    {{< copyable "" >}}
-
     ```shell
     tiup cluster check ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
     ```
 
 2.  Enable automatic repair:
 
-    {{< copyable "" >}}
-
     ```shell
     tiup cluster check ./topology.yaml --apply --user root [-p] [-i /home/root/.ssh/gcp_rsa]
     ```
 
 3.  Deploy a TiDB cluster:
-
-    {{< copyable "" >}}
 
     ```shell
     tiup cluster deploy tidb-test v6.1.7 ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
@@ -348,8 +302,6 @@ At the end of the output log, you will see ``Deployed cluster `tidb-test` succes
 
 ## Step 5. Check the clusters managed by TiUP {#step-5-check-the-clusters-managed-by-tiup}
 
-{{< copyable "" >}}
-
 ```shell
 tiup cluster list
 ```
@@ -359,8 +311,6 @@ TiUP supports managing multiple TiDB clusters. The preceding command outputs inf
 ## Step 6. Check the status of the deployed TiDB cluster {#step-6-check-the-status-of-the-deployed-tidb-cluster}
 
 For example, run the following command to check the status of the `tidb-test` cluster:
-
-{{< copyable "" >}}
 
 ```shell
 tiup cluster display tidb-test
@@ -378,19 +328,15 @@ After safe start, TiUP automatically generates a password for the TiDB root user
 >
 > -   After safe start of a TiDB cluster, you cannot log in to TiDB using a root user without a password. Therefore, you need to record the password returned in the command output for future logins.
 >
-> -   The password is generated only once. If you do not record it or you forgot it, refer to [<a href="/user-account-management.md#forget-the-root-password">Forget the `root` password</a>](/user-account-management.md#forget-the-root-password) to change the password.
+> -   The password is generated only once. If you do not record it or you forgot it, refer to [Forget the `root` password](/user-account-management.md#forget-the-root-password) to change the password.
 
 Method 1: Safe start
-
-{{< copyable "" >}}
 
 ```shell
 tiup cluster start tidb-test --init
 ```
 
 If the output is as follows, the start is successful:
-
-{{< copyable "" >}}
 
 ```shell
 Started cluster `tidb-test` successfully.
@@ -402,8 +348,6 @@ The generated password can NOT be got again in future.
 
 Method 2: Standard start
 
-{{< copyable "" >}}
-
 ```shell
 tiup cluster start tidb-test
 ```
@@ -411,8 +355,6 @@ tiup cluster start tidb-test
 If the output log includes ``Started cluster `tidb-test` successfully``, the start is successful. After standard start, you can log in to a database using a root user without a password.
 
 ## Step 8. Verify the running status of the TiDB cluster {#step-8-verify-the-running-status-of-the-tidb-cluster}
-
-{{< copyable "" >}}
 
 ```shell
 tiup cluster display tidb-test
@@ -422,15 +364,15 @@ If the output log shows `Up` status, the cluster is running properly.
 
 ## See also {#see-also}
 
-If you have deployed [<a href="/tiflash/tiflash-overview.md">TiFlash</a>](/tiflash/tiflash-overview.md) along with the TiDB cluster, see the following documents:
+If you have deployed [TiFlash](/tiflash/tiflash-overview.md) along with the TiDB cluster, see the following documents:
 
--   [<a href="/tiflash/tiflash-overview.md#use-tiflash">Use TiFlash</a>](/tiflash/tiflash-overview.md#use-tiflash)
--   [<a href="/tiflash/maintain-tiflash.md">Maintain a TiFlash Cluster</a>](/tiflash/maintain-tiflash.md)
--   [<a href="/tiflash/tiflash-alert-rules.md">TiFlash Alert Rules and Solutions</a>](/tiflash/tiflash-alert-rules.md)
--   [<a href="/tiflash/troubleshoot-tiflash.md">Troubleshoot TiFlash</a>](/tiflash/troubleshoot-tiflash.md)
+-   [Use TiFlash](/tiflash/tiflash-overview.md#use-tiflash)
+-   [Maintain a TiFlash Cluster](/tiflash/maintain-tiflash.md)
+-   [TiFlash Alert Rules and Solutions](/tiflash/tiflash-alert-rules.md)
+-   [Troubleshoot TiFlash](/tiflash/troubleshoot-tiflash.md)
 
-If you have deployed [<a href="/ticdc/ticdc-overview.md">TiCDC</a>](/ticdc/ticdc-overview.md) along with the TiDB cluster, see the following documents:
+If you have deployed [TiCDC](/ticdc/ticdc-overview.md) along with the TiDB cluster, see the following documents:
 
--   [<a href="/ticdc/manage-ticdc.md">Manage TiCDC Cluster and Replication Tasks</a>](/ticdc/manage-ticdc.md)
--   [<a href="/ticdc/troubleshoot-ticdc.md">Troubleshoot TiCDC</a>](/ticdc/troubleshoot-ticdc.md)
--   [<a href="/ticdc/ticdc-faq.md">TiCDC FAQs</a>](/ticdc/ticdc-faq.md)
+-   [Manage TiCDC Cluster and Replication Tasks](/ticdc/manage-ticdc.md)
+-   [Troubleshoot TiCDC](/ticdc/troubleshoot-ticdc.md)
+-   [TiCDC FAQs](/ticdc/ticdc-faq.md)
