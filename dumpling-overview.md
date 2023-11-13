@@ -45,9 +45,7 @@ TiDB also provides other tools that you can choose to use as needed.
 
 > **Note:**
 >
-> PingCAP previously maintained a fork of the [mydumper project](https://github.com/maxbube/mydumper) with enhancements specific to TiDB. This fork has since been replaced by [Dumpling](/dumpling-overview.md), which has been rewritten in Go, and supports more optimizations that are specific to TiDB. It is strongly recommended that you use Dumpling instead of mydumper.
->
-> For more information on Mydumper, refer to [v4.0 Mydumper documentation](https://docs.pingcap.com/tidb/v4.0/backup-and-restore-using-mydumper-lightning).
+> PingCAP previously maintained a fork of the [mydumper project](https://github.com/maxbube/mydumper) with enhancements specific to TiDB. For more information on Mydumper, refer to [v4.0 Mydumper documentation](https://docs.pingcap.com/tidb/v4.0/backup-and-restore-using-mydumper-lightning). Starting from v7.5.0, [Mydumper](https://docs.pingcap.com/tidb/v4.0/mydumper-overview) is deprecated and most of its features have been replaced by [Dumpling](/dumpling-overview.md). It is strongly recommended that you use Dumpling instead of Mydumper.
 
 Compared to Mydumper, Dumpling has the following improvements:
 
@@ -85,8 +83,6 @@ This document assumes that there is a TiDB instance on the 127.0.0.1:4000 host a
 
 Dumpling exports data to SQL files by default. You can also export data to SQL files by adding the `--filetype sql` flag:
 
-{{< copyable "" >}}
-
 ```shell
 dumpling -u root -P 4000 -h 127.0.0.1 --filetype sql -t 8 -o /tmp/test -r 200000 -F 256MiB
 ```
@@ -121,8 +117,6 @@ You can export data to CSV files by adding the `--filetype csv` argument.
 
 When you export data to CSV files, you can use `--sql <SQL>` to filter the records with the SQL statements. For example, you can export all records that match `id < 100` in `test.sbtest1` using the following command:
 
-{{< copyable "" >}}
-
 ```shell
 ./dumpling -u root -P 4000 -h 127.0.0.1 -o /tmp/test --filetype csv --sql 'select * from `test`.`sbtest1` where id < 100' -F 100MiB --output-filename-template 'test.sbtest1.{{.Index}}'
 ```
@@ -153,8 +147,6 @@ In the command above:
 
 -   `metadata`: The start time of the exported files and the position of the master binary log.
 
-    {{< copyable "" >}}
-
     ```shell
     cat metadata
     ```
@@ -169,8 +161,6 @@ In the command above:
 
 -   `{schema}-schema-create.sql`: The SQL file used to create the schema
 
-    {{< copyable "" >}}
-
     ```shell
     cat test-schema-create.sql
     ```
@@ -180,8 +170,6 @@ In the command above:
     ```
 
 -   `{schema}.{table}-schema.sql`: The SQL file used to create the table
-
-    {{< copyable "" >}}
 
     ```shell
     cat test.t1-schema.sql
@@ -194,8 +182,6 @@ In the command above:
     ```
 
 -   `{schema}.{table}.{0001}.{sql|csv}`: The date source file
-
-    {{< copyable "" >}}
 
     ```shell
     cat test.t1.0.sql
@@ -217,8 +203,6 @@ You need to create an Amazon S3 bucket in the specified region (see the [Amazon 
 
 Pass `SecretKey` and `AccessKey` of the account with the permission to access the Amazon S3 backend storage to the Dumpling node as environment variables.
 
-{{< copyable "" >}}
-
 ```shell
 export AWS_ACCESS_KEY_ID=${AccessKey}
 export AWS_SECRET_ACCESS_KEY=${SecretKey}
@@ -238,8 +222,6 @@ Dumpling also supports reading credential files from `~/.aws/credentials`. For m
 
 When you back up data using Dumpling, explicitly specify the `--s3.region` parameter, which means the region of the S3 storage (for example, `ap-northeast-1`):
 
-{{< copyable "" >}}
-
 ```shell
 ./dumpling -u root -P 4000 -h 127.0.0.1 -r 200000 -o "s3://${Bucket}/${Folder}" --s3.region "${region}"
 ```
@@ -250,8 +232,6 @@ When you back up data using Dumpling, explicitly specify the `--s3.region` param
 
 By default, Dumpling exports all databases except system databases (including `mysql`, `sys`, `INFORMATION_SCHEMA`, `PERFORMANCE_SCHEMA`, `METRICS_SCHEMA`, and `INSPECTION_SCHEMA`). You can use `--where <SQL where expression>` to select the records to be exported.
 
-{{< copyable "" >}}
-
 ```shell
 ./dumpling -u root -P 4000 -h 127.0.0.1 -o /tmp/test --where "id < 100"
 ```
@@ -261,8 +241,6 @@ The above command exports the data that matches `id < 100` from each table. Note
 #### Use the <code>--filter</code> option to filter data {#use-the-code-filter-code-option-to-filter-data}
 
 Dumpling can filter specific databases or tables by specifying the table filter with the `--filter` option. The syntax of table filters is similar to that of `.gitignore`. For details, see [Table Filter](/table-filter.md).
-
-{{< copyable "" >}}
 
 ```shell
 ./dumpling -u root -P 4000 -h 127.0.0.1 -o /tmp/test -r 200000 --filter "employees.*" --filter "*.WorkOrder"
@@ -310,30 +288,24 @@ Dumpling uses the `--consistency <consistency level>` option to control the way 
 
 After everything is done, you can see the exported file in `/tmp/test`:
 
-{{< copyable "" >}}
-
 ```shell
 ls -lh /tmp/test | awk '{print $5 "\t" $9}'
 ```
 
-```
-140B  metadata
-66B   test-schema-create.sql
-300B  test.sbtest1-schema.sql
-190K  test.sbtest1.0.sql
-300B  test.sbtest2-schema.sql
-190K  test.sbtest2.0.sql
-300B  test.sbtest3-schema.sql
-190K  test.sbtest3.0.sql
-```
+    140B  metadata
+    66B   test-schema-create.sql
+    300B  test.sbtest1-schema.sql
+    190K  test.sbtest1.0.sql
+    300B  test.sbtest2-schema.sql
+    190K  test.sbtest2.0.sql
+    300B  test.sbtest3-schema.sql
+    190K  test.sbtest3.0.sql
 
 ### Export historical data snapshots of TiDB {#export-historical-data-snapshots-of-tidb}
 
 Dumpling can export the data of a certain [tidb_snapshot](/read-historical-data.md#how-tidb-reads-data-from-history-versions) with the `--snapshot` option specified.
 
 The `--snapshot` option can be set to a TSO (the `Position` field output by the `SHOW MASTER STATUS` command) or a valid time of the `datetime` data type (in the form of `YYYY-MM-DD hh:mm:ss`), for example:
-
-{{< copyable "" >}}
 
 ```shell
 ./dumpling --snapshot 417773951312461825
