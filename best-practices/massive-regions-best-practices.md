@@ -65,7 +65,7 @@ By default, `raftstore.store-pool-size` is configured to `2` in TiKV. If a bottl
 
 ### Method 2: Enable Hibernate Region {#method-2-enable-hibernate-region}
 
-In the actual situation, read and write requests are not evenly distributed on every Region. Instead, they are concentrated on a few Regions. Then you can minimize the number of messages between the Raft leader and the followers for the temporarily idle Regions, which is the feature of Hibernate Region. In this feature, Raftstore does sent tick messages to the Raft state machines of idle Regions if not necessary. Then these Raft state machines will not be triggered to generate heartbeat messages, which can greatly reduce the workload of Raftstore.
+In the actual situation, read and write requests are not evenly distributed on every Region. Instead, they are concentrated on a few Regions. Then you can minimize the number of messages between the Raft leader and the followers for the temporarily idle Regions, which is the feature of Hibernate Region. In this feature, Raftstore doesn't send tick messages to the Raft state machines of idle Regions if not necessary. Then these Raft state machines will not be triggered to generate heartbeat messages, which can greatly reduce the workload of Raftstore.
 
 Hibernate Region is enabled by default in [TiKV master](https://github.com/tikv/tikv/tree/master). You can configure this feature according to your needs. For details, refer to [Configure Hibernate Region](/tikv-configuration-file.md).
 
@@ -79,13 +79,9 @@ You can also reduce the number of Regions by enabling `Region Merge`. Contrary t
 
 Enable `Region Merge` by configuring the following parameters:
 
-{{< copyable "" >}}
-
-```
-config set max-merge-region-size 20
-config set max-merge-region-keys 200000
-config set merge-schedule-limit 8
-```
+    config set max-merge-region-size 20
+    config set max-merge-region-keys 200000
+    config set merge-schedule-limit 8
 
 Refer to [Region Merge](https://tikv.org/docs/4.0/tasks/configure/region-merge/) and the following three configuration parameters in the [PD configuration file](/pd-configuration-file.md#schedule) for more details:
 
@@ -103,23 +99,15 @@ If I/O resources and CPU resources are sufficient, you can deploy multiple TiKV 
 
 In addition to reducing the number of Regions, you can also reduce pressure on Raftstore by reducing the number of messages for each Region within a unit of time. For example, you can properly increase the value of the `raft-base-tick-interval` configuration item:
 
-{{< copyable "" >}}
-
-```
-[raftstore]
-raft-base-tick-interval = "2s"
-```
+    [raftstore]
+    raft-base-tick-interval = "2s"
 
 In the above configuration, `raft-base-tick-interval` is the time interval at which Raftstore drives the Raft state machine of each Region, which means at this time interval, Raftstore sends a tick message to the Raft state machine. Increasing this interval can effectively reduce the number of messages from Raftstore.
 
 Note that this interval between tick messages also determines the intervals between `election timeout` and `heartbeat`. See the following example:
 
-{{< copyable "" >}}
-
-```
-raft-election-timeout = raft-base-tick-interval * raft-election-timeout-ticks
-raft-heartbeat-interval = raft-base-tick-interval * raft-heartbeat-ticks
-```
+    raft-election-timeout = raft-base-tick-interval * raft-election-timeout-ticks
+    raft-heartbeat-interval = raft-base-tick-interval * raft-heartbeat-ticks
 
 If Region followers have not received the heartbeat from the leader within the `raft-election-timeout` interval, these followers determine that the leader has failed and start a new election. `raft-heartbeat-interval` is the interval at which a leader sends a heartbeat to followers. Therefore, increasing the value of `raft-base-tick-interval` can reduce the number of network messages sent from Raft state machines but also makes it longer for Raft state machines to detect the leader failure.
 
@@ -137,7 +125,7 @@ To address this problem, `use-region-storage` is enabled by default in PD since 
 
 In TiKV, pd-worker regularly reports Region Meta information to PD. When TiKV is restarted or switches the Region leader, PD needs to recalculate Region's `approximate size / keys` through statistics. Therefore, with a large number of Regions, the single-threaded pd-worker might become the bottleneck, causing tasks to be piled up and not processed in time. In this situation, PD cannot obtain certain Region Meta information in time so that the routing information is not updated in time. This problem does not affect the actual reads and writes, but might cause inaccurate PD scheduling and require several round trips when TiDB updates Region cache.
 
-You can check **Worker pending tasks** under <strong>Task</strong> in the <strong>TiKV Grafana</strong> panel to determine whether pd-worker has tasks piled up. Generally, `pending tasks` should be kept at a relatively low value.
+You can check **Worker pending tasks** under **Task** in the **TiKV Grafana** panel to determine whether pd-worker has tasks piled up. Generally, `pending tasks` should be kept at a relatively low value.
 
 ![Check pd-worker](/media/best-practices/pd-worker-metrics.png)
 
