@@ -7,7 +7,7 @@ summary: Learn the MPP mode of TiFlash and how to use it.
 
 This document introduces the MPP mode of TiFlash and how to use it.
 
-TiFlash supports using the MPP mode to execute queries, which introduces cross-node data exchange (data shuffle process) into the computation. TiDB automatically determines whether to select the MPP mode using the optimizer's cost estimation. You can change the selection strategy by modifying the values of [<a href="/system-variables.md#tidb_allow_mpp-new-in-v50">`tidb_allow_mpp`</a>](/system-variables.md#tidb_allow_mpp-new-in-v50) and [<a href="/system-variables.md#tidb_enforce_mpp-new-in-v51">`tidb_enforce_mpp`</a>](/system-variables.md#tidb_enforce_mpp-new-in-v51).
+TiFlash supports using the MPP mode to execute queries, which introduces cross-node data exchange (data shuffle process) into the computation. TiDB automatically determines whether to select the MPP mode using the optimizer's cost estimation. You can change the selection strategy by modifying the values of [`tidb_allow_mpp`](/system-variables.md#tidb_allow_mpp-new-in-v50) and [`tidb_enforce_mpp`](/system-variables.md#tidb_enforce_mpp-new-in-v51).
 
 ## Control whether to select the MPP mode {#control-whether-to-select-the-mpp-mode}
 
@@ -22,15 +22,11 @@ The results corresponding to all values of these two variables are as follows:
 
 For example, if you do not want to use the MPP mode, you can execute the following statements:
 
-{{< copyable "" >}}
-
 ```sql
 set @@session.tidb_allow_mpp=0;
 ```
 
 If you want TiDB's cost-based optimizer to automatically decide whether to use the MPP mode (by default), you can execute the following statements:
-
-{{< copyable "" >}}
 
 ```sql
 set @@session.tidb_allow_mpp=1;
@@ -39,8 +35,6 @@ set @@session.tidb_enforce_mpp=0;
 
 If you want TiDB to ignore the optimizer's cost estimation and to forcibly select the MPP mode, you can execute the following statements:
 
-{{< copyable "" >}}
-
 ```sql
 set @@session.tidb_allow_mpp=1;
 set @@session.tidb_enforce_mpp=1;
@@ -48,7 +42,7 @@ set @@session.tidb_enforce_mpp=1;
 
 <CustomContent platform="tidb">
 
-The initial value of the `tidb_enforce_mpp` session variable is equal to the [<a href="/tidb-configuration-file.md#enforce-mpp">`enforce-mpp`</a>](/tidb-configuration-file.md#enforce-mpp) configuration value of this tidb-server instance (which is `false` by default). If multiple tidb-server instances in a TiDB cluster only perform analytical queries and you want to make sure that the MPP mode is used on these instances, you can change their [<a href="/tidb-configuration-file.md#enforce-mpp">`enforce-mpp`</a>](/tidb-configuration-file.md#enforce-mpp) configuration values to `true`.
+The initial value of the `tidb_enforce_mpp` session variable is equal to the [`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp) configuration value of this tidb-server instance (which is `false` by default). If multiple tidb-server instances in a TiDB cluster only perform analytical queries and you want to make sure that the MPP mode is used on these instances, you can change their [`enforce-mpp`](/tidb-configuration-file.md#enforce-mpp) configuration values to `true`.
 
 </CustomContent>
 
@@ -65,13 +59,11 @@ The initial value of the `tidb_enforce_mpp` session variable is equal to the [<a
 > show warnings;
 > ```
 >
-> ```
-> +---------+------+-----------------------------------------------------------------------------+
-> | Level   | Code | Message                                                                     |
-> +---------+------+-----------------------------------------------------------------------------+
-> | Warning | 1105 | MPP mode may be blocked because there aren't tiflash replicas of table `t`. |
-> +---------+------+-----------------------------------------------------------------------------+
-> ```
+>     +---------+------+-----------------------------------------------------------------------------+
+>     | Level   | Code | Message                                                                     |
+>     +---------+------+-----------------------------------------------------------------------------+
+>     | Warning | 1105 | MPP mode may be blocked because there aren't tiflash replicas of table `t`. |
+>     +---------+------+-----------------------------------------------------------------------------+
 
 ## Algorithm support for the MPP mode {#algorithm-support-for-the-mpp-mode}
 
@@ -81,19 +73,19 @@ The following statement takes the table structure in the TPC-H test set as an ex
 
 ```sql
 explain select count(*) from customer c join nation n on c.c_nationkey=n.n_nationkey;
-+------------------------------------------+------------+-------------------+---------------+----------------------------------------------------------------------------+
-| id                                       | estRows    | task              | access object | operator info                                                              |
-+------------------------------------------+------------+-------------------+---------------+----------------------------------------------------------------------------+
-| HashAgg_23                               | 1.00       | root              |               | funcs:count(Column#16)->Column#15                                          |
-| └─TableReader_25                         | 1.00       | root              |               | data:ExchangeSender_24                                                     |
-|   └─ExchangeSender_24                    | 1.00       | batchCop[tiflash] |               | ExchangeType: PassThrough                                                  |
-|     └─HashAgg_12                         | 1.00       | batchCop[tiflash] |               | funcs:count(1)->Column#16                                                  |
-|       └─HashJoin_17                      | 3000000.00 | batchCop[tiflash] |               | inner join, equal:[eq(tpch.nation.n_nationkey, tpch.customer.c_nationkey)] |
-|         ├─ExchangeReceiver_21(Build)     | 25.00      | batchCop[tiflash] |               |                                                                            |
-|         │ └─ExchangeSender_20            | 25.00      | batchCop[tiflash] |               | ExchangeType: Broadcast                                                    |
-|         │   └─TableFullScan_18           | 25.00      | batchCop[tiflash] | table:n       | keep order:false                                                           |
-|         └─TableFullScan_22(Probe)        | 3000000.00 | batchCop[tiflash] | table:c       | keep order:false                                                           |
-+------------------------------------------+------------+-------------------+---------------+----------------------------------------------------------------------------+
++------------------------------------------+------------+--------------+---------------+----------------------------------------------------------------------------+
+| id                                       | estRows    | task         | access object | operator info                                                              |
++------------------------------------------+------------+--------------+---------------+----------------------------------------------------------------------------+
+| HashAgg_23                               | 1.00       | root         |               | funcs:count(Column#16)->Column#15                                          |
+| └─TableReader_25                         | 1.00       | root         |               | data:ExchangeSender_24                                                     |
+|   └─ExchangeSender_24                    | 1.00       | mpp[tiflash] |               | ExchangeType: PassThrough                                                  |
+|     └─HashAgg_12                         | 1.00       | mpp[tiflash] |               | funcs:count(1)->Column#16                                                  |
+|       └─HashJoin_17                      | 3000000.00 | mpp[tiflash] |               | inner join, equal:[eq(tpch.nation.n_nationkey, tpch.customer.c_nationkey)] |
+|         ├─ExchangeReceiver_21(Build)     | 25.00      | mpp[tiflash] |               |                                                                            |
+|         │ └─ExchangeSender_20            | 25.00      | mpp[tiflash] |               | ExchangeType: Broadcast                                                    |
+|         │   └─TableFullScan_18           | 25.00      | mpp[tiflash] | table:n       | keep order:false                                                           |
+|         └─TableFullScan_22(Probe)        | 3000000.00 | mpp[tiflash] | table:c       | keep order:false                                                           |
++------------------------------------------+------------+--------------+---------------+----------------------------------------------------------------------------+
 9 rows in set (0.00 sec)
 ```
 
@@ -101,12 +93,12 @@ In the example execution plan, the `ExchangeReceiver` and `ExchangeSender` opera
 
 TiFlash provides the following two global/session variables to control whether to use Broadcast Hash Join:
 
--   [<a href="/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50">`tidb_broadcast_join_threshold_size`</a>](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is bytes. If the table size (in the unit of bytes) is less than the value of the variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
--   [<a href="/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50">`tidb_broadcast_join_threshold_count`</a>](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is rows. If the objects of the join operation belong to a subquery, the optimizer cannot estimate the size of the subquery result set, so the size is determined by the number of rows in the result set. If the estimated number of rows in the subquery is less than the value of this variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
+-   [`tidb_broadcast_join_threshold_size`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is bytes. If the table size (in the unit of bytes) is less than the value of the variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
+-   [`tidb_broadcast_join_threshold_count`](/system-variables.md#tidb_broadcast_join_threshold_count-new-in-v50): The unit of the value is rows. If the objects of the join operation belong to a subquery, the optimizer cannot estimate the size of the subquery result set, so the size is determined by the number of rows in the result set. If the estimated number of rows in the subquery is less than the value of this variable, the Broadcast Hash Join algorithm is used. Otherwise, the Shuffled Hash Join algorithm is used.
 
 ## Access partitioned tables in the MPP mode {#access-partitioned-tables-in-the-mpp-mode}
 
-To access partitioned tables in the MPP mode, you need to enable [<a href="https://docs.pingcap.com/tidb/stable/partitioned-table#dynamic-pruning-mode">dynamic pruning mode</a>](https://docs.pingcap.com/tidb/stable/partitioned-table#dynamic-pruning-mode) first.
+To access partitioned tables in the MPP mode, you need to enable [dynamic pruning mode](https://docs.pingcap.com/tidb/stable/partitioned-table#dynamic-pruning-mode) first.
 
 Example:
 
@@ -181,12 +173,12 @@ mysql> explain SELECT count(*) FROM test.employees;
 In the current version, TiFlash uses the `start_ts` of a query as the unique key of the query. In most cases, the `start_ts` of each query can uniquely identify a query, but in the following cases, different queries have the same `start_ts`:
 
 -   All queries in the same transaction have the same `start_ts`.
--   When you use [<a href="/system-variables.md#tidb_snapshot">`tidb_snapshot`</a>](/system-variables.md#tidb_snapshot) to read data at a specific historical time point, the same time point is manually specified.
--   When [<a href="/stale-read.md">Stale Read</a>](/stale-read.md) is enabled, the same time point is manually specified.
+-   When you use [`tidb_snapshot`](/system-variables.md#tidb_snapshot) to read data at a specific historical time point, the same time point is manually specified.
+-   When [Stale Read](/stale-read.md) is enabled, the same time point is manually specified.
 
 When `start_ts` cannot uniquely represent the MPP query, if TiFlash detects that different queries have the same `start_ts` at a given time, TiFlash might report an error. Typical error cases are as follows:
 
 -   When multiple queries with the same `start_ts` are sent to TiFlash at the same time, you might encounter the `task has been registered` error.
--   When multiple simple queries with `LIMIT` are executed continuously in the same transaction, once the `LIMIT` condition is met, TiDB sends a cancel request to TiFlash to cancel the query. This request also uses `start_ts` to identify the query to be canceled. If there are other queries with the same `start_ts` in TiFlash, these queries might be canceled by mistake. An example of this issue can be found in [<a href="https://github.com/pingcap/tidb/issues/43426">#43426</a>](https://github.com/pingcap/tidb/issues/43426).
+-   When multiple simple queries with `LIMIT` are executed continuously in the same transaction, once the `LIMIT` condition is met, TiDB sends a cancel request to TiFlash to cancel the query. This request also uses `start_ts` to identify the query to be canceled. If there are other queries with the same `start_ts` in TiFlash, these queries might be canceled by mistake. An example of this issue can be found in [#43426](https://github.com/pingcap/tidb/issues/43426).
 
-This issue is fixed in TiDB v6.6.0. It is recommended to use the [<a href="https://docs.pingcap.com/tidb/stable">latest LTS version</a>](https://docs.pingcap.com/tidb/stable).
+This issue is fixed in TiDB v6.6.0. It is recommended to use the [latest LTS version](https://docs.pingcap.com/tidb/stable).
