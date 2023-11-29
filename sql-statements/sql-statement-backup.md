@@ -9,6 +9,10 @@ This statement is used to perform a distributed backup of the TiDB cluster.
 
 The `BACKUP` statement uses the same engine as the [BR tool](/br/backup-and-restore-tool.md) does, except that the backup process is driven by TiDB itself rather than a separate BR tool. All benefits and warnings of BR also apply in this statement.
 
+> **Warning:**
+>
+> This feature is experimental. It is not recommended that you use it in the production environment. This feature might be changed or removed without prior notice. If you find a bug, you can report an [issue](https://github.com/pingcap/tidb/issues) on GitHub.
+
 Executing `BACKUP` requires either the `BACKUP_ADMIN` or `SUPER` privilege. Additionally, both the TiDB node executing the backup and all TiKV nodes in the cluster must have read or write permission to the destination. Local storage (storage paths starting with `local://`) is not permitted when [Security Enhanced Mode](/system-variables.md#tidb_enable_enhanced_security) is enabled.
 
 The `BACKUP` statement is blocked until the entire backup task is finished, failed, or canceled. A long-lasting connection should be prepared for executing `BACKUP`. The task can be canceled using the [`KILL TIDB QUERY`](/sql-statements/sql-statement-kill.md) statement.
@@ -46,8 +50,6 @@ BackupTSO ::=
 
 ### Back up databases {#back-up-databases}
 
-{{< copyable "" >}}
-
 ```sql
 BACKUP DATABASE `test` TO 'local:///mnt/backup/2020/04/';
 ```
@@ -75,21 +77,15 @@ The first row of the result above is described as follows:
 
 ### Back up tables {#back-up-tables}
 
-{{< copyable "" >}}
-
 ```sql
 BACKUP TABLE `test`.`sbtest01` TO 'local:///mnt/backup/sbtest01/';
 ```
-
-{{< copyable "" >}}
 
 ```sql
 BACKUP TABLE sbtest02, sbtest03, sbtest04 TO 'local:///mnt/backup/sbtest/';
 ```
 
 ### Back up the entire cluster {#back-up-the-entire-cluster}
-
-{{< copyable "" >}}
 
 ```sql
 BACKUP DATABASE * TO 'local:///mnt/backup/full/';
@@ -101,8 +97,6 @@ Note that the system tables (`mysql.*`, `INFORMATION_SCHEMA.*`, `PERFORMANCE_SCH
 
 BR supports backing up data to S3 or GCS:
 
-{{< copyable "" >}}
-
 ```sql
 BACKUP DATABASE `test` TO 's3://example-bucket-2020/backup-05/?region=us-west-2&access-key={YOUR_ACCESS_KEY}&secret-access-key={YOUR_SECRET_KEY}';
 ```
@@ -110,8 +104,6 @@ BACKUP DATABASE `test` TO 's3://example-bucket-2020/backup-05/?region=us-west-2&
 The URL syntax is further explained in [External Storages](/br/backup-and-restore-storages.md).
 
 When running on cloud environment where credentials should not be distributed, set the `SEND_CREDENTIALS_TO_TIKV` option to `FALSE`:
-
-{{< copyable "" >}}
 
 ```sql
 BACKUP DATABASE `test` TO 's3://example-bucket-2020/backup-05/?region=us-west-2'
@@ -126,8 +118,6 @@ By default, every TiKV node would run 4 backup threads. This value can be adjust
 
 Before backup is completed, `BACKUP` would perform a checksum against the data on the cluster to verify correctness. This step can be disabled with the `CHECKSUM` option if you are confident that this is unnecessary.
 
-{{< copyable "" >}}
-
 ```sql
 BACKUP DATABASE `test` TO 's3://example-bucket-2020/backup-06/'
     RATE_LIMIT = 120 MB/SECOND
@@ -138,8 +128,6 @@ BACKUP DATABASE `test` TO 's3://example-bucket-2020/backup-06/'
 ### Snapshot {#snapshot}
 
 Specify a timestamp, TSO or relative time to backup historical data.
-
-{{< copyable "" >}}
 
 ```sql
 -- relative time
@@ -169,8 +157,6 @@ Note that, following SQL standard, the units are always singular.
 ### Incremental backup {#incremental-backup}
 
 Supply the `LAST_BACKUP` option to only backup the changes between the last backup to the current snapshot.
-
-{{< copyable "" >}}
 
 ```sql
 -- timestamp (in current time zone)

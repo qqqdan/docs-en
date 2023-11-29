@@ -7,6 +7,10 @@ summary: An overview of the usage of RESTORE for the TiDB database.
 
 This statement performs a distributed restore from a backup archive previously produced by a [`BACKUP` statement](/sql-statements/sql-statement-backup.md).
 
+> **Warning:**
+>
+> This feature is experimental. It is not recommended that you use it in the production environment. This feature might be changed or removed without prior notice. If you find a bug, you can report an [issue](https://github.com/pingcap/tidb/issues) on GitHub.
+
 The `RESTORE` statement uses the same engine as the [BR tool](/br/backup-and-restore-tool.md), except that the restore process is driven by TiDB itself rather than a separate BR tool. All benefits and caveats of BR also apply here. In particular, **`RESTORE` is currently not ACID-compliant**. Before running `RESTORE`, ensure that the following requirements are met:
 
 -   The cluster is "offline", and the current TiDB session is the only active SQL connection to access all tables being restored.
@@ -45,8 +49,6 @@ Boolean ::=
 
 ### Restore from backup archive {#restore-from-backup-archive}
 
-{{< copyable "" >}}
-
 ```sql
 RESTORE DATABASE * FROM 'local:///mnt/backup/2020/04/';
 ```
@@ -76,13 +78,9 @@ The first row of the result above is described as follows:
 
 You can specify which databases or tables to restore. If some databases or tables are missing from the backup archive, they will be ignored, and thus `RESTORE` would complete without doing anything.
 
-{{< copyable "" >}}
-
 ```sql
 RESTORE DATABASE `test` FROM 'local:///mnt/backup/2020/04/';
 ```
-
-{{< copyable "" >}}
 
 ```sql
 RESTORE TABLE `test`.`sbtest01`, `test`.`sbtest02` FROM 'local:///mnt/backup/2020/04/';
@@ -92,8 +90,6 @@ RESTORE TABLE `test`.`sbtest01`, `test`.`sbtest02` FROM 'local:///mnt/backup/202
 
 BR supports restoring data from S3 or GCS:
 
-{{< copyable "" >}}
-
 ```sql
 RESTORE DATABASE * FROM 's3://example-bucket-2020/backup-05/?region=us-west-2';
 ```
@@ -101,8 +97,6 @@ RESTORE DATABASE * FROM 's3://example-bucket-2020/backup-05/?region=us-west-2';
 The URL syntax is further explained in [External Storages](/br/backup-and-restore-storages.md).
 
 When running on cloud environment where credentials should not be distributed, set the `SEND_CREDENTIALS_TO_TIKV` option to `FALSE`:
-
-{{< copyable "" >}}
 
 ```sql
 RESTORE DATABASE * FROM 's3://example-bucket-2020/backup-05/?region=us-west-2'
@@ -117,8 +111,6 @@ By default, TiDB node would run 128 restore threads. This value can be adjusted 
 
 Before restore is completed, `RESTORE` would perform a checksum against the data from the archive to verify correctness. This step can be disabled with the `CHECKSUM` option if you are confident that this is unnecessary.
 
-{{< copyable "" >}}
-
 ```sql
 RESTORE DATABASE * FROM 's3://example-bucket-2020/backup-06/'
     RATE_LIMIT = 120 MB/SECOND
@@ -132,8 +124,6 @@ There is no special syntax to perform incremental restore. TiDB will recognize w
 
 For instance, if a backup task is created as follows:
 
-{{< copyable "" >}}
-
 ```sql
 BACKUP DATABASE `test` TO 's3://example-bucket/full-backup'  SNAPSHOT = 413612900352000;
 BACKUP DATABASE `test` TO 's3://example-bucket/inc-backup-1' SNAPSHOT = 414971854848000 LAST_BACKUP = 413612900352000;
@@ -141,8 +131,6 @@ BACKUP DATABASE `test` TO 's3://example-bucket/inc-backup-2' SNAPSHOT = 41635345
 ```
 
 then the same order should be applied in the restore:
-
-{{< copyable "" >}}
 
 ```sql
 RESTORE DATABASE * FROM 's3://example-bucket/full-backup';
