@@ -95,8 +95,6 @@ You can perform full collection using the following syntax.
 
 -   To collect statistics of all the tables in `TableNameList`:
 
-    {{< copyable "" >}}
-
     ```sql
     ANALYZE TABLE TableNameList [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
     ```
@@ -138,8 +136,6 @@ If a table has many columns, collecting statistics on all the columns can cause 
 
 -   To collect statistics on specific columns, use the following syntax:
 
-    {{< copyable "" >}}
-
     ```sql
     ANALYZE TABLE TableName COLUMNS ColumnNameList [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
     ```
@@ -172,8 +168,6 @@ If a table has many columns, collecting statistics on all the columns can cause 
 
     2.  After the query pattern of your business is relatively stable, collect statistics on `PREDICATE COLUMNS` by using the following syntax:
 
-        {{< copyable "" >}}
-
         ```sql
         ANALYZE TABLE TableName PREDICATE COLUMNS [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
         ```
@@ -187,8 +181,6 @@ If a table has many columns, collecting statistics on all the columns can cause 
 
 -   To collect statistics on all columns and indexes, use the following syntax:
 
-    {{< copyable "" >}}
-
     ```sql
     ANALYZE TABLE TableName ALL COLUMNS [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
     ```
@@ -199,8 +191,6 @@ If you want to persist the column configuration in the `ANALYZE` statement (incl
 -   When you manually execute the `ANALYZE` statement multiple times with column configuration specified, TiDB overwrites the previously recorded persistent configuration using the new configuration specified by the latest `ANALYZE` statement.
 
 To locate `PREDICATE COLUMNS` and columns on which statistics have been collected, use the following syntax:
-
-{{< copyable "" >}}
 
 ```sql
 SHOW COLUMN_STATS_USAGE [ShowLikeOrWhere];
@@ -218,8 +208,6 @@ The `SHOW COLUMN_STATS_USAGE` statement returns the following 6 columns:
 | `Last_analyzed_at` | The last time when the column statistics were collected                      |
 
 In the following example, after executing `ANALYZE TABLE t PREDICATE COLUMNS;`, TiDB collects statistics on columns `b`, `c`, and `d`, where column `b` is a `PREDICATE COLUMN` and columns `c` and `d` are index columns.
-
-{{< copyable "" >}}
 
 ```sql
 SET GLOBAL tidb_enable_column_tracking = ON;
@@ -261,8 +249,6 @@ SHOW COLUMN_STATS_USAGE WHERE db_name = 'test' AND table_name = 't' AND last_ana
 
 To collect statistics on all indexes in `IndexNameList` in `TableName`, use the following syntax:
 
-{{< copyable "" >}}
-
 ```sql
 ANALYZE TABLE TableName INDEX [IndexNameList] [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
 ```
@@ -277,15 +263,11 @@ When `IndexNameList` is empty, this syntax collects statistics on all indexes in
 
 -   To collect statistics on all partitions in `PartitionNameList` in `TableName`, use the following syntax:
 
-    {{< copyable "" >}}
-
     ```sql
     ANALYZE TABLE TableName PARTITION PartitionNameList [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
     ```
 
 -   To collect index statistics on all partitions in `PartitionNameList` in `TableName`, use the following syntax:
-
-    {{< copyable "" >}}
 
     ```sql
     ANALYZE TABLE TableName PARTITION PartitionNameList INDEX [IndexNameList] [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
@@ -296,8 +278,6 @@ When `IndexNameList` is empty, this syntax collects statistics on all indexes in
     > **Warning:**
     >
     > Currently, collecting statistics on `PREDICATE COLUMNS` is an experimental feature. It is not recommended that you use it in production environments.
-
-    {{< copyable "" >}}
 
     ```sql
     ANALYZE TABLE TableName PARTITION PartitionNameList [COLUMNS ColumnNameList|PREDICATE COLUMNS|ALL COLUMNS] [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
@@ -316,15 +296,11 @@ You can perform incremental collection using the following syntax.
 
 -   To incrementally collect statistics on index columns in all `IndexNameLists` in `TableName`:
 
-    {{< copyable "" >}}
-
     ```sql
     ANALYZE INCREMENTAL TABLE TableName INDEX [IndexNameList] [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
     ```
 
 -   To incrementally collect statistics on index columns for partitions in all `PartitionNameLists` in `TableName`:
-
-    {{< copyable "" >}}
 
     ```sql
     ANALYZE INCREMENTAL TABLE TableName PARTITION PartitionNameList INDEX [IndexNameList] [WITH NUM BUCKETS|TOPN|CMSKETCH DEPTH|CMSKETCH WIDTH]|[WITH NUM SAMPLES|WITH FLOATNUM SAMPLERATE];
@@ -387,7 +363,13 @@ The following are the `ANALYZE` configurations that support persistence:
 
 The `ANALYZE` configuration persistence feature is enabled by default (the system variable `tidb_analyze_version` is `2` and `tidb_persist_analyze_options` is `ON` by default). You can use this feature to record the persistence configurations specified in the `ANALYZE` statement when executing the statement manually. Once recorded, the next time TiDB automatically updates statistics or you manually collect statistics without specifying these configuration, TiDB will collect statistics according to the recorded configurations.
 
-When you manually execute the `ANALYZE` statement multiple times with persistence configurations specified, TiDB overwrites the previously recorded persistent configuration using the new configurations specified by the latest `ANALYZE` statement.
+To query the configuration persisted on a specific table used for auto analyze operations, you can use the following SQL statement:
+
+```sql
+SELECT sample_num, sample_rate, buckets, topn, column_choice, column_ids FROM mysql.analyze_options opt JOIN information_schema.tables tbl ON opt.table_id = tbl.tidb_table_id WHERE tbl.table_schema = '{db_name}' AND tbl.table_name = '{table_name}';
+```
+
+TiDB will overwrite the previously recorded persistent configuration using the new configurations specified by the latest `ANALYZE` statement. For example, if you run `ANALYZE TABLE t WITH 200 TOPN;`, it will set the top 200 values in the `ANALYZE` statement. Subsequently, executing `ANALYZE TABLE t WITH 0.1 SAMPLERATE;` will set both the top 200 values and a sampling rate of 0.1 for auto `ANALYZE` statements, similar to `ANALYZE TABLE t WITH 200 TOPN, 0.1 SAMPLERATE;`.
 
 #### Disable ANALYZE configuration persistence {#disable-analyze-configuration-persistence}
 
@@ -402,8 +384,6 @@ After disabling the `ANALYZE` configuration persistence feature, TiDB does not c
 ### View <code>ANALYZE</code> state {#view-code-analyze-code-state}
 
 When executing the `ANALYZE` statement, you can view the current state of `ANALYZE` using the following SQL statement:
-
-{{< copyable "" >}}
 
 ```sql
 SHOW ANALYZE STATUS [ShowLikeOrWhere]
@@ -430,8 +410,6 @@ You can view the statistics status using the following statements.
 ### Metadata of tables {#metadata-of-tables}
 
 You can use the `SHOW STATS_META` statement to view the total number of rows and the number of updated rows.
-
-{{< copyable "" >}}
 
 ```sql
 SHOW STATS_META [ShowLikeOrWhere];
@@ -462,8 +440,6 @@ You can use the `SHOW STATS_HEALTHY` statement to check the health state of tabl
 
 The syntax is as follows:
 
-{{< copyable "" >}}
-
 ```sql
 SHOW STATS_HEALTHY [ShowLikeOrWhere];
 ```
@@ -486,8 +462,6 @@ Currently, the `SHOW STATS_HEALTHY` statement returns the following 4 columns:
 You can use the `SHOW STATS_HISTOGRAMS` statement to view the number of different values and the number of `NULL` in all the columns.
 
 Syntax as follows:
-
-{{< copyable "" >}}
 
 ```sql
 SHOW STATS_HISTOGRAMS [ShowLikeOrWhere]
@@ -515,8 +489,6 @@ Currently, the `SHOW STATS_HISTOGRAMS` statement returns the following 10 column
 You can use the `SHOW STATS_BUCKETS` statement to view each bucket of the histogram.
 
 The syntax is as follows:
-
-{{< copyable "" >}}
 
 ```sql
 SHOW STATS_BUCKETS [ShowLikeOrWhere]
@@ -550,8 +522,6 @@ You can use the `SHOW STATS_TOPN` statement to view the Top-N information curren
 
 The syntax is as follows:
 
-{{< copyable "" >}}
-
 ```sql
 SHOW STATS_TOPN [ShowLikeOrWhere];
 ```
@@ -573,8 +543,6 @@ Currently, the `SHOW STATS_TOPN` statement returns the following 7 columns:
 You can run the `DROP STATS` statement to delete statistics.
 
 Syntax as follows:
-
-{{< copyable "" >}}
 
 ```sql
 DROP STATS TableName
@@ -631,27 +599,15 @@ The interface to export statistics is as follows:
 
 -   To obtain the JSON format statistics of the `${table_name}` table in the `${db_name}` database:
 
-    {{< copyable "" >}}
-
-    ```
-    http://${tidb-server-ip}:${tidb-server-status-port}/stats/dump/${db_name}/${table_name}
-    ```
+        http://${tidb-server-ip}:${tidb-server-status-port}/stats/dump/${db_name}/${table_name}
 
     For example:
 
-    {{< copyable "" >}}
-
-    ```
-    curl -s http://127.0.0.1:10080/stats/dump/test/t1 -o /tmp/t1.json
-    ```
+        curl -s http://127.0.0.1:10080/stats/dump/test/t1 -o /tmp/t1.json
 
 -   To obtain the JSON format statistics of the `${table_name}` table in the `${db_name}` database at specific time:
 
-    {{< copyable "" >}}
-
-    ```
-    http://${tidb-server-ip}:${tidb-server-status-port}/stats/dump/${db_name}/${table_name}/${yyyyMMddHHmmss}
-    ```
+        http://${tidb-server-ip}:${tidb-server-status-port}/stats/dump/${db_name}/${table_name}/${yyyyMMddHHmmss}
 
 ### Import statistics {#import-statistics}
 
@@ -663,11 +619,7 @@ Generally, the imported statistics refer to the JSON file obtained using the exp
 
 Syntax:
 
-{{< copyable "" >}}
-
-```
-LOAD STATS 'file_name'
-```
+    LOAD STATS 'file_name'
 
 `file_name` is the file name of the statistics to be imported.
 
