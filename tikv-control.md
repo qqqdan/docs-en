@@ -21,67 +21,65 @@ TiKV Control (`tikv-ctl`) is a command line tool of TiKV, used to manage the clu
 tiup ctl:<cluster-version> tikv
 ```
 
-```
-Starting component `ctl`: /home/tidb/.tiup/components/ctl/v4.0.8/ctl tikv
-TiKV Control (tikv-ctl)
-Release Version:   4.0.8
-Edition:           Community
-Git Commit Hash:   83091173e960e5a0f5f417e921a0801d2f6635ae
-Git Commit Branch: heads/refs/tags/v4.0.8
-UTC Build Time:    2020-10-30 08:40:33
-Rust Version:      rustc 1.42.0-nightly (0de96d37f 2019-12-19)
-Enable Features:   jemalloc mem-profiling portable sse protobuf-codec
-Profile:           dist_release
+    Starting component `ctl`: /home/tidb/.tiup/components/ctl/v4.0.8/ctl tikv
+    TiKV Control (tikv-ctl)
+    Release Version:   4.0.8
+    Edition:           Community
+    Git Commit Hash:   83091173e960e5a0f5f417e921a0801d2f6635ae
+    Git Commit Branch: heads/refs/tags/v4.0.8
+    UTC Build Time:    2020-10-30 08:40:33
+    Rust Version:      rustc 1.42.0-nightly (0de96d37f 2019-12-19)
+    Enable Features:   jemalloc mem-profiling portable sse protobuf-codec
+    Profile:           dist_release
 
-A tool for interacting with TiKV deployments.
-USAGE:
-    TiKV Control (tikv-ctl) [FLAGS] [OPTIONS] [SUBCOMMAND]
-FLAGS:
-    -h, --help                    Prints help information
-        --skip-paranoid-checks    Skip paranoid checks when open rocksdb
-    -V, --version                 Prints version information
-OPTIONS:
-        --ca-path <ca-path>              Set the CA certificate path
-        --cert-path <cert-path>          Set the certificate path
-        --config <config>                TiKV config path, by default it's <deploy-dir>/conf/tikv.toml
-        --data-dir <data-dir>            TiKV data directory path, check <deploy-dir>/scripts/run.sh to get it
-        --decode <decode>                Decode a key in escaped format
-        --encode <encode>                Encode a key in escaped format
-        --to-hex <escaped-to-hex>        Convert an escaped key to hex key
-        --to-escaped <hex-to-escaped>    Convert a hex key to escaped key
-        --host <host>                    Set the remote host
-        --key-path <key-path>            Set the private key path
-        --log-level <log-level>          Set the log level [default: warn]
-        --pd <pd>                        Set the address of pd
-SUBCOMMANDS:
-    bad-regions           Get all regions with corrupt raft
-    cluster               Print the cluster id
-    compact               Compact a column family in a specified range
-    compact-cluster       Compact the whole cluster in a specified range in one or more column families
-    consistency-check     Force a consistency-check for a specified region
-    decrypt-file          Decrypt an encrypted file
-    diff                  Calculate difference of region keys from different dbs
-    dump-snap-meta        Dump snapshot meta file
-    encryption-meta       Dump encryption metadata
-    fail                  Inject failures to TiKV and recovery
-    help                  Prints this message or the help of the given subcommand(s)
-    metrics               Print the metrics
-    modify-tikv-config    Modify tikv config, eg. tikv-ctl --host ip:port modify-tikv-config -n
-                          rocksdb.defaultcf.disable-auto-compactions -v true
-    mvcc                  Print the mvcc value
-    print                 Print the raw value
-    raft                  Print a raft log entry
-    raw-scan              Print all raw keys in the range
-    recover-mvcc          Recover mvcc data on one node by deleting corrupted keys
-    recreate-region       Recreate a region with given metadata, but alloc new id for it
-    region-properties     Show region properties
-    scan                  Print the range db range
-    size                  Print region size
-    split-region          Split the region
-    store                 Print the store id
-    tombstone             Set some regions on the node to tombstone by manual
-    unsafe-recover        Unsafely recover the cluster when the majority replicas are failed
-```
+    A tool for interacting with TiKV deployments.
+    USAGE:
+        TiKV Control (tikv-ctl) [FLAGS] [OPTIONS] [SUBCOMMAND]
+    FLAGS:
+        -h, --help                    Prints help information
+            --skip-paranoid-checks    Skip paranoid checks when open rocksdb
+        -V, --version                 Prints version information
+    OPTIONS:
+            --ca-path <ca-path>              Set the CA certificate path
+            --cert-path <cert-path>          Set the certificate path
+            --config <config>                TiKV config path, by default it's <deploy-dir>/conf/tikv.toml
+            --data-dir <data-dir>            TiKV data directory path, check <deploy-dir>/scripts/run.sh to get it
+            --decode <decode>                Decode a key in escaped format
+            --encode <encode>                Encode a key in escaped format
+            --to-hex <escaped-to-hex>        Convert an escaped key to hex key
+            --to-escaped <hex-to-escaped>    Convert a hex key to escaped key
+            --host <host>                    Set the remote host
+            --key-path <key-path>            Set the private key path
+            --log-level <log-level>          Set the log level [default: warn]
+            --pd <pd>                        Set the address of pd
+    SUBCOMMANDS:
+        bad-regions           Get all regions with corrupt raft
+        cluster               Print the cluster id
+        compact               Compact a column family in a specified range
+        compact-cluster       Compact the whole cluster in a specified range in one or more column families
+        consistency-check     Force a consistency-check for a specified region
+        decrypt-file          Decrypt an encrypted file
+        diff                  Calculate difference of region keys from different dbs
+        dump-snap-meta        Dump snapshot meta file
+        encryption-meta       Dump encryption metadata
+        fail                  Inject failures to TiKV and recovery
+        help                  Prints this message or the help of the given subcommand(s)
+        metrics               Print the metrics
+        modify-tikv-config    Modify tikv config, eg. tikv-ctl --host ip:port modify-tikv-config -n
+                              rocksdb.defaultcf.disable-auto-compactions -v true
+        mvcc                  Print the mvcc value
+        print                 Print the raw value
+        raft                  Print a raft log entry
+        raw-scan              Print all raw keys in the range
+        recover-mvcc          Recover mvcc data on one node by deleting corrupted keys
+        recreate-region       Recreate a region with given metadata, but alloc new id for it
+        region-properties     Show region properties
+        scan                  Print the range db range
+        size                  Print region size
+        split-region          Split the region
+        store                 Print the store id
+        tombstone             Set some regions on the node to tombstone by manual
+        unsafe-recover        Unsafely recover the cluster when the majority replicas are failed
 
 You can add corresponding parameters and subcommands after `tiup ctl:<cluster-version> tikv`.
 
@@ -93,16 +91,12 @@ You can add corresponding parameters and subcommands after `tiup ctl:<cluster-ve
 
     For this mode, if SSL is enabled in TiKV, `tikv-ctl` also needs to specify the related certificate file. For example:
 
-    ```
-    $ tikv-ctl --ca-path ca.pem --cert-path client.pem --key-path client-key.pem --host 127.0.0.1:20160 <subcommands>
-    ```
+        $ tikv-ctl --ca-path ca.pem --cert-path client.pem --key-path client-key.pem --host 127.0.0.1:20160 <subcommands>
 
     However, sometimes `tikv-ctl` communicates with PD instead of TiKV. In this case, you need to use the `--pd` option instead of `--host`. Here is an example:
 
-    ```
-    $ tikv-ctl --pd 127.0.0.1:2379 compact-cluster
-    store:"127.0.0.1:20160" compact db:KV cf:default range:([], []) success!
-    ```
+        $ tikv-ctl --pd 127.0.0.1:2379 compact-cluster
+        store:"127.0.0.1:20160" compact db:KV cf:default range:([], []) success!
 
 -   Local mode:
 
@@ -281,9 +275,7 @@ Then use the `tikv-ctl` tool to set a Region to tombstone on the corresponding T
 tikv-ctl --data-dir /path/to/tikv tombstone -p 127.0.0.1:2379 -r <region_id>
 ```
 
-```
-success!
-```
+    success!
 
 However, in some cases, you cannot easily remove this Peer of this Region from PD, so you can specify the `--force` option in `tikv-ctl` to forcibly set the Peer to tombstone:
 
@@ -291,9 +283,7 @@ However, in some cases, you cannot easily remove this Peer of this Region from P
 tikv-ctl --data-dir /path/to/tikv tombstone -p 127.0.0.1:2379 -r <region_id>,<region_id> --force
 ```
 
-```
-success!
-```
+    success!
 
 > **Note:**
 >
@@ -359,9 +349,7 @@ Set the size of `shared block cache`:
 tikv-ctl --host ip:port modify-tikv-config -n storage.block-cache.capacity -v 10GB
 ```
 
-```
-success
-```
+    success
 
 When `shared block cache` is disabled, set `block cache size` for the `write` CF:
 
@@ -369,25 +357,19 @@ When `shared block cache` is disabled, set `block cache size` for the `write` CF
 tikv-ctl --host ip:port modify-tikv-config -n rocksdb.writecf.block-cache-size -v 256MB
 ```
 
-```
-success
-```
+    success
 
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n raftdb.defaultcf.disable-auto-compactions -v true
 ```
 
-```
-success
-```
+    success
 
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n raftstore.sync-log -v false
 ```
 
-```
-success
-```
+    success
 
 When the compaction rate limit causes accumulated compaction pending bytes, disable the `rate-limiter-auto-tuned` mode or set a higher limit for the compaction flow:
 
@@ -395,17 +377,13 @@ When the compaction rate limit causes accumulated compaction pending bytes, disa
 tikv-ctl --host ip:port modify-tikv-config -n rocksdb.rate-limiter-auto-tuned -v false
 ```
 
-```
-success
-```
+    success
 
 ```shell
 tikv-ctl --host ip:port modify-tikv-config -n rocksdb.rate-bytes-per-sec -v "1GB"
 ```
 
-```
-success
-```
+    success
 
 ### Force Regions to recover services from failure of multiple replicas (deprecated) {#force-regions-to-recover-services-from-failure-of-multiple-replicas-deprecated}
 
@@ -427,9 +405,7 @@ The `-s` option accepts multiple `store_id` separated by comma and uses the `-r`
 tikv-ctl --data-dir /path/to/tikv unsafe-recover remove-fail-stores -s 3 -r 1001,1002
 ```
 
-```
-success!
-```
+    success!
 
 ```shell
 tikv-ctl --data-dir /path/to/tikv unsafe-recover remove-fail-stores -s 4,5 --all-regions
@@ -488,11 +464,9 @@ Use the `encryption-meta` subcommand to dump encryption metadata. The subcommand
 
 To dump encryption info for data files, use the `encryption-meta dump-file` subcommand. You need to create a TiKV config file to specify `data-dir` for the TiKV deployment:
 
-```
-# conf.toml
-[storage]
-data-dir = "/path/to/tikv/data"
-```
+    # conf.toml
+    [storage]
+    data-dir = "/path/to/tikv/data"
 
 The `--path` option can be used to specify an absolute or relative path to the data file of interest. The command might give empty output if the data file is not encrypted. If `--path` is not provided, encryption info for all data files will be printed.
 
@@ -503,16 +477,14 @@ $ tikv-ctl --config=./conf.toml encryption-meta dump-file --path=/path/to/tikv/d
 
 To dump data encryption keys, use the `encryption-meta dump-key` subcommand. In additional to `data-dir`, you also need to specify the current master key used in the config file. For how to config master key, refer to [Encryption-At-Rest](/encryption-at-rest.md). Also with this command, the `security.encryption.previous-master-key` config will be ignored, and the master key rotation will not be triggered.
 
-```
-# conf.toml
-[storage]
-data-dir = "/path/to/tikv/data"
+    # conf.toml
+    [storage]
+    data-dir = "/path/to/tikv/data"
 
-[security.encryption.master-key]
-type = "kms"
-key-id = "0987dcba-09fe-87dc-65ba-ab0987654321"
-region = "us-west-2"
-```
+    [security.encryption.master-key]
+    type = "kms"
+    key-id = "0987dcba-09fe-87dc-65ba-ab0987654321"
+    region = "us-west-2"
 
 Note if the master key is a AWS KMS key, `tikv-ctl` needs to have access to the KMS key. Access to a AWS KMS key can be granted to `tikv-ctl` via environment variable, AWS default config file, or IAM role, whichever is suitable. Refer to AWS document for usage.
 
@@ -565,9 +537,9 @@ it isn't easy to handle local data, start key:0101
 overlap region:
 RegionInfo { region: id: 4 end_key: 7480000000000000FF0500000000000000F8 region_epoch { conf_ver: 1 version: 2 } peers { id: 5 store_id: 1 }, leader: Some(id: 5 store_id: 1) }
 
-suggested operations:
-tikv-ctl ldb --db=data/tikv-21107/db unsafe_remove_sst_file "data/tikv-21107/db/000014.sst"
-tikv-ctl --db=data/tikv-21107/db tombstone -r 4 --pd <endpoint>
+refer operations:
+tikv-ctl ldb --db=/path/to/tikv/db unsafe_remove_sst_file 000014
+tikv-ctl --data-dir=/path/to/tikv tombstone -r 4 --pd <endpoint>
 --------------------------------------------------------
 corruption analysis has completed
 ```
