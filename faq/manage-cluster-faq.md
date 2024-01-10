@@ -145,6 +145,10 @@ Most of the APIs of PD are available only when the TiKV cluster is initialized. 
 
 This is because the `--initial-cluster` in the PD startup parameter contains a member that doesn't belong to this cluster. To solve this problem, check the corresponding cluster of each member, remove the wrong member, and then restart PD.
 
+### The <code>[PD:encryption:ErrEncryptionNewMasterKey]fail to get encryption key from file /root/path/file%!(EXTRA string=open /root/path/file: permission denied)</code> message is displayed when enabling encryption at rest for PD {#the-code-pd-encryption-errencryptionnewmasterkey-fail-to-get-encryption-key-from-file-root-path-file-extra-string-open-root-path-file-permission-denied-code-message-is-displayed-when-enabling-encryption-at-rest-for-pd}
+
+Encryption at rest does not support storing the key file in the `root` directory or its subdirectories. Even if you grant read permissions, the same error occurs. To resolve this issue, store the key file in a location outside the `root` directory.
+
 ### What's the maximum tolerance for time synchronization error of PD? {#what-s-the-maximum-tolerance-for-time-synchronization-error-of-pd}
 
 PD can tolerate any synchronization error, but a larger error value means a larger gap between the timestamp allocated by the PD and the physical time, which will affect functions such as read of historical versions.
@@ -288,7 +292,7 @@ When using the above statement, you need to fill in and replace the following fi
 
 In addition, in the above statement:
 
--   `store_size_amplification` indicates the average of the cluster compression ratio. In addition to using `SELECT * FROM METRICS_SCHEMA.store_size_amplification;` to query this information, you can also check the **Size amplification** metric for each node on the <strong>Grafana Monitoring PD - statistics balance</strong> panel. The average of the cluster compression ratio is the average of the Size amplification for all nodes.
+-   `store_size_amplification` indicates the average of the cluster compression ratio. In addition to using `SELECT * FROM METRICS_SCHEMA.store_size_amplification;` to query this information, you can also check the **Size amplification** metric for each node on the **Grafana Monitoring PD - statistics balance** panel. The average of the cluster compression ratio is the average of the Size amplification for all nodes.
 -   `Approximate_Size` indicates the size of the table in a replica before compression. Note that this is an approximate value, not an accurate one.
 -   `Disk_Size` indicates the size of the table after compression. This is an approximate value and can be calculated according to `Approximate_Size` and `store_size_amplification`.
 
