@@ -17,7 +17,7 @@ For more information about how to handle highly concurrent write-heavy workloads
 
 ## Basic concepts {#basic-concepts}
 
-`AUTO_RANDOM` is a column attribute that is used to automatically assign values to a `BIGINT` column. Values assigned automatically are **random** and <strong>unique</strong>.
+`AUTO_RANDOM` is a column attribute that is used to automatically assign values to a `BIGINT` column. Values assigned automatically are **random** and **unique**.
 
 To create a table with an `AUTO_RANDOM` column, you can use the following statements. The `AUTO_RANDOM` column must be included in a primary key, and the primary key must only have the `AUTO_RANDOM` column.
 
@@ -112,6 +112,10 @@ The output is as follows:
 +-------+------+---------------------------------------------------------+
 1 row in set (0.00 sec)
 ```
+
+## Implicit allocation rules of IDs {#implicit-allocation-rules-of-ids}
+
+TiDB implicitly allocates values to `AUTO_RANDOM` columns similarly to `AUTO_INCREMENT` columns. They are also controlled by the session-level system variables [`auto_increment_increment`](/system-variables.md#auto_increment_increment) and [`auto_increment_offset`](/system-variables.md#auto_increment_offset). The auto-increment bits (ID) of implicitly allocated values conform to the equation `(ID - auto_increment_offset) % auto_increment_increment == 0`.
 
 ## Restrictions {#restrictions}
 
