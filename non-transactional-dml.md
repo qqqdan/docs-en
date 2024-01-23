@@ -3,52 +3,50 @@ title: Non-Transactional DML Statements
 summary: Learn the non-transactional DML statements in TiDB. At the expense of atomicity and isolation, a DML statement is split into multiple statements to be executed in sequence, which improves the stability and ease of use in batch data processing scenarios.
 ---
 
-# 非トランザクションDMLステートメント {#non-transactional-dml-statements}
+# Non-Transactional DML Statements {#non-transactional-dml-statements}
 
-このドキュメントでは、TiDBでの非トランザクションDMLステートメントの使用シナリオ、使用方法、および制限について説明します。さらに、実装の原則と一般的な問題についても説明します。
+This document describes the usage scenarios, usage methods, and restrictions of non-transactional DML statements in TiDB. In addition, the implementation principle and common issues are also explained.
 
-非トランザクションDMLステートメントは、複数のSQLステートメント（つまり、複数のバッチ）に分割されて順番に実行されるDMLステートメントです。トランザクションのアトミック性と分離を犠牲にして、バッチデータ処理のパフォーマンスと使いやすさを向上させます。
+A non-transactional DML statement is a DML statement split into multiple SQL statements (which is, multiple batches) to be executed in sequence. It enhances the performance and ease of use in batch data processing at the expense of transactional atomicity and isolation.
 
-非トランザクションDMLステートメントには`INSERT` 、および`UPDATE`が含まれ、そのうちTiDBは現在`DELETE`のみをサポートしてい`DELETE` 。詳細な構文については、 [`BATCH`](/sql-statements/sql-statement-batch.md)を参照してください。
+Non-transactional DML statements include `INSERT`, `UPDATE`, and `DELETE`, of which TiDB currently only supports `DELETE`. For detailed syntax, see [`BATCH`](/sql-statements/sql-statement-batch.md).
 
-> **ノート：**
+> **Note:**
 >
-> 非トランザクションDMLステートメントは、ステートメントの原子性と分離を保証するものではなく、元のDMLステートメントと同等ではありません。
+> A non-transactional DML statement does not guarantee the atomicity and isolation of the statement, and is not equivalent to the original DML statement.
 
-## 使用シナリオ {#usage-scenarios}
+## Usage scenarios {#usage-scenarios}
 
-大規模なデータ処理のシナリオでは、多くの場合、大量のデータに対して同じ操作を実行する必要があります。単一のSQLステートメントを使用して操作を直接実行すると、トランザクションサイズが制限を超え、実行パフォーマンスに影響を与える可能性があります。
+In the scenarios of large data processing, you might often need to perform same operations on a large batch of data. If the operation is performed directly using a single SQL statement, the transaction size might exceed the limit and affect the execution performance.
 
-バッチデータ処理では、多くの場合、時間やデータがオンラインアプリケーションの操作と重複することはありません。並行操作が存在しない場合、分離（ACIDのI）は不要です。バルクデータ操作がべき等であるか、簡単に再試行できる場合も、アトミシティは不要です。アプリケーションがデータ分離も原子性も必要としない場合は、非トランザクションDMLステートメントの使用を検討できます。
+Batch data processing often has no overlap of time or data with the online application operations. Isolation (I in ACID) is unnecessary when no concurrent operations exist. Atomicity is also unnecessary if bulk data operations are idempotent or easily retryable. If your application needs neither data isolation nor atomicity, you can consider using non-transactional DML statements.
 
-非トランザクションDMLステートメントは、特定のシナリオで大規模なトランザクションのサイズ制限をバイパスするために使用されます。 1つのステートメントは、トランザクションを手動で分割する必要があるタスクを完了するために使用され、実行効率が高く、リソース消費が少なくなります。
+Non-transactional DML statements are used to bypass the size limit on large transactions in certain scenarios. One statement is used to complete tasks that would otherwise require manually splitting of transactions, with higher execution efficiency and less resource consumption.
 
-たとえば、期限切れのデータを削除するには、アプリケーションが期限切れのデータにアクセスしないようにする場合、非トランザクションDMLステートメントを使用して`DELETE`のパフォーマンスを向上させることができます。
+For example, to delete expired data, if you ensure that no application will access the expired data, you can use a non-transactional DML statement to improve the `DELETE` performance.
 
-## 前提条件 {#prerequisites}
+## Prerequisites {#prerequisites}
 
-非トランザクションDMLステートメントを使用する前に、以下の条件が満たされていることを確認してください。
+Before using non-transactional DML statements, make sure that the following conditions are met:
 
--   ステートメントはアトミック性を必要としません。これにより、実行結果で一部の行を変更し、一部の行を変更しないままにすることができます。
--   ステートメントがべき等であるか、エラーメッセージに従ってデータの一部を再試行する準備ができています。システム変数が`tidb_redact_log = 1`と`tidb_nontransactional_ignore_error = 1`に設定されている場合、このステートメントはべき等である必要があります。そうしないと、ステートメントが部分的に失敗したときに、失敗した部分を正確に特定できません。
--   操作対象のデータには他の同時書き込みはありません。つまり、他のステートメントによって同時に更新されることはありません。そうしないと、削除の欠落や誤った削除などの予期しない結果が発生する可能性があります。
--   ステートメントは、ステートメント自体によって読み取られるデータを変更しません。そうしないと、次のバッチが前のバッチによって書き込まれたデータを読み取り、予期しない結果を簡単に引き起こします。
--   ステートメントは[制限](#restrictions)を満たしています。
--   このDMLステートメントによって読み書きされるテーブルに対して同時DDL操作を実行することはお勧めしません。
+-   The statement does not require atomicity, which permits some rows to be modified and some rows to remain unmodified in the execution result.
+-   The statement is idempotent, or you are prepared to retry on a part of the data according to the error message. If the system variables are set to `tidb_redact_log = 1` and `tidb_nontransactional_ignore_error = 1`, this statement must be idempotent. Otherwise, when the statement partially fails, the failed part cannot be accurately located.
+-   The data to be operated on has no other concurrent writes, which means it is not updated by other statements at the same time. Otherwise, unexpected results such as missing deletions and wrong deletions might occur.
+-   The statement does not modify the data to be read by the statement itself. Otherwise, the following batch will read the data written by the previous batch and easily causes unexpected results.
+-   The statement meets the [restrictions](#restrictions).
+-   It is not recommended to perform concurrent DDL operations on the table to be read or written by this DML statement.
 
-> **警告：**
+> **Warning:**
 >
-> `tidb_redact_log`と`tidb_nontransactional_ignore_error`を同時に有効にすると、各バッチの完全なエラー情報が得られない可能性があり、失敗したバッチのみを再試行することはできません。したがって、両方のシステム変数がオンになっている場合、非トランザクションDMLステートメントはべき等である必要があります。
+> If `tidb_redact_log` and `tidb_nontransactional_ignore_error` are enabled at the same time, you might not get the complete error information of each batch, and you cannot retry the failed batch only. Therefore, if both of the system variables are turned on, the non-transactional DML statement must be idempotent.
 
-## 使用例 {#usage-examples}
+## Usage examples {#usage-examples}
 
-### 非トランザクションDMLステートメントを使用する {#use-a-non-transactional-dml-statement}
+### Use a non-transactional DML statement {#use-a-non-transactional-dml-statement}
 
-次のセクションでは、非トランザクションDMLステートメントの使用について例を挙げて説明します。
+The following sections describe the use of non-transactional DML statements with examples:
 
-次のスキーマを使用してテーブル`t`を作成します。
-
-{{< copyable "" >}}
+Create a table `t` with the following schema:
 
 ```sql
 CREATE TABLE t (id INT, v INT, KEY(id));
@@ -58,9 +56,7 @@ CREATE TABLE t (id INT, v INT, KEY(id));
 Query OK, 0 rows affected
 ```
 
-表`t`にいくつかのデータを挿入します。
-
-{{< copyable "" >}}
+Insert some data into table `t`.
 
 ```sql
 INSERT INTO t VALUES (1, 2), (2, 3), (3, 4), (4, 5), (5, 6);
@@ -70,9 +66,7 @@ INSERT INTO t VALUES (1, 2), (2, 3), (3, 4), (4, 5), (5, 6);
 Query OK, 5 rows affected
 ```
 
-次の操作では、非トランザクションDMLステートメントを使用して、表`t`の列`v`の整数6未満の値の行を削除します。このステートメントは、バッチサイズが2の2つのSQLステートメントに分割され、 `id`列で除算されて実行されます。
-
-{{< copyable "" >}}
+The following operation uses a non-transactional DML statement to delete rows with values less than the integer 6 on column `v` of table `t`. This statement is split into two SQL statements, with a batch size of 2, divided by the `id` column and executed.
 
 ```sql
 BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6;
@@ -87,9 +81,7 @@ BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6;
 1 row in set
 ```
 
-上記の非トランザクションDMLステートメントの削除結果を確認してください。
-
-{{< copyable "" >}}
+Check the deletion results of the above non-transactional DML statement.
 
 ```sql
 SELECT * FROM t;
@@ -104,11 +96,9 @@ SELECT * FROM t;
 1 row in set
 ```
 
-### 実行の進捗状況を確認する {#check-the-execution-progress}
+### Check the execution progress {#check-the-execution-progress}
 
-非トランザクションDMLステートメントの実行中に、 `SHOW PROCESSLIST`を使用して進行状況を表示できます。返された結果の`Time`フィールドは、現在のバッチ実行の消費時間を示します。ログと低速ログは、非トランザクションDML実行中の各分割ステートメントの進行状況も記録します。例えば：
-
-{{< copyable "" >}}
+During the execution of a non-transactional DML statement, you can view the progress using `SHOW PROCESSLIST`. The `Time` field in the returned result indicates the time consumption of the current batch execution. Logs and slow logs also record the progress of each split statement throughout the non-transactional DML execution. For example:
 
 ```sql
 SHOW PROCESSLIST;
@@ -123,17 +113,17 @@ SHOW PROCESSLIST;
 +------+------+--------------------+--------+---------+------+------------+----------------------------------------------------------------------------------------------------+
 ```
 
-### 非トランザクションDMLステートメントを終了します {#terminate-a-non-transactional-dml-statement}
+### Terminate a non-transactional DML statement {#terminate-a-non-transactional-dml-statement}
 
-非トランザクションDMLステートメントを終了するには、 `KILL TIDB`を使用できます。次に、TiDBは、現在実行されているバッチの後にすべてのバッチをキャンセルします。ログから実行結果を取得できます。
+To terminate a non-transactional DML statement, you can use `KILL TIDB <processlist_id>`. Then TiDB will cancel all batches after the batch that is currently being executed. You can get the execution result from the log.
 
-### バッチ分割ステートメントを照会します {#query-the-batch-dividing-statement}
+For more information about `KILL TIDB`, see the reference [`KILL`](/sql-statements/sql-statement-kill.md).
 
-非トランザクションDMLステートメントの実行中、ステートメントは、DMLステートメントを複数のバッチに分割するために内部的に使用されます。このバッチ分割ステートメントを照会するには、この非トランザクションDMLステートメントに`DRY RUN QUERY`を追加します。その場合、TiDBはこのクエリと後続のDML操作を実行しません。
+### Query the batch-dividing statement {#query-the-batch-dividing-statement}
 
-次のステートメントは、 `BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6`の実行中にバッチ分割ステートメントを照会します。
+During the execution of a non-transactional DML statement, a statement is internally used to divide the DML statement into multiple batches. To query this batch-dividing statement, you can add `DRY RUN QUERY` to this non-transactional DML statement. Then TiDB will not execute this query and the subsequent DML operations.
 
-{{< copyable "" >}}
+The following statement queries the batch-dividing statement during the execution of `BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6`:
 
 ```sql
 BATCH ON id LIMIT 2 DRY RUN QUERY DELETE FROM t WHERE v < 6;
@@ -148,11 +138,9 @@ BATCH ON id LIMIT 2 DRY RUN QUERY DELETE FROM t WHERE v < 6;
 1 row in set
 ```
 
-### 最初と最後のバッチに対応するステートメントを照会します {#query-the-statements-corresponding-to-the-first-and-the-last-batches}
+### Query the statements corresponding to the first and the last batches {#query-the-statements-corresponding-to-the-first-and-the-last-batches}
 
-非トランザクションDMLステートメントの最初と最後のバッチに対応する実際のDMLステートメントを照会するには、この非トランザクションDMLステートメントに`DRY RUN`を追加します。次に、TiDBはバッチを分割するだけで、これらのSQLステートメントを実行しません。バッチが多い場合があるため、すべてのバッチが表示されるわけではなく、最初のバッチと最後のバッチのみが表示されます。
-
-{{< copyable "" >}}
+To query the actual DML statements corresponding to the first and the last batches in a non-transactional DML statement, you can add `DRY RUN` to this non-transactional DML statement. Then, TiDB only divides batches and does not execute these SQL statements. Because there might be many batches, not all batches are displayed, and only the first one and the last one are displayed.
 
 ```sql
 BATCH ON id LIMIT 2 DRY RUN DELETE FROM t WHERE v < 6;
@@ -168,127 +156,171 @@ BATCH ON id LIMIT 2 DRY RUN DELETE FROM t WHERE v < 6;
 2 rows in set
 ```
 
-### オプティマイザヒントを使用する {#use-the-optimizer-hint}
+### Use the optimizer hint {#use-the-optimizer-hint}
 
-オプティマイザヒントが元々 `DELETE`ステートメントでサポートされている場合、オプティマイザヒントは非トランザクション`DELETE`ステートメントでもサポートされます。ヒントの位置は、通常の`DELETE`ステートメントの位置と同じです。
-
-{{< copyable "" >}}
+If an optimizer hint is originally supported in the `DELETE` statement, the optimizer hint is also supported in the non-transactional `DELETE` statement. The position of the hint is the same as that in the ordinary `DELETE` statement:
 
 ```sql
 BATCH ON id LIMIT 2 DELETE /*+ USE_INDEX(t)*/ FROM t WHERE v < 6;
 ```
 
-## ベストプラクティス {#best-practices}
+## Best practices {#best-practices}
 
-非トランザクションDMLステートメントを使用するには、次の手順をお勧めします。
+To use a non-transactional DML statement, the following steps are recommended:
 
-1.  適切な[分割列](#parameter-description)を選択します。整数型または文字列型をお勧めします。
-2.  （オプション）非トランザクションDMLステートメントに`DRY RUN QUERY`を追加し、クエリを手動で実行して、DMLステートメントの影響を受けるデータ範囲がおおよそ正しいかどうかを確認します。
-3.  （オプション）非トランザクションDMLステートメントに`DRY RUN`を追加し、クエリを手動で実行し、分割ステートメントと実行プランを確認します。インデックス選択の効率に注意を払う必要があります。
-4.  非トランザクションDMLステートメントを実行します。
-5.  エラーが報告された場合は、エラーメッセージまたはログから特定の失敗したデータ範囲を取得し、手動で再試行または処理してください。
+1.  Select an appropriate [dividing column](#parameter-description). Integer or string types are recommended.
+2.  (Optional) Add `DRY RUN QUERY` to the non-transactional DML statement, execute the query manually, and confirm whether the data range affected by the DML statement is roughly correct.
+3.  (Optional) Add `DRY RUN` to the non-transactional DML statement, execute the query manually, and check the split statements and the execution plans. You need to pay attention to the index selection efficiency.
+4.  Execute the non-transactional DML statement.
+5.  If an error is reported, get the specific failed data range from the error message or log, and retry or handle it manually.
 
-## パラメータの説明 {#parameter-description}
+## Parameter description {#parameter-description}
 
-| パラメータ  | 説明                                                                                                                                                                  | デフォルト値                   | 必須かどうか | 推奨値                                             |
-| :----- | :------------------------------------------------------------------------------------------------------------------------------------------------------------------ | :----------------------- | :----- | :---------------------------------------------- |
-| 分割列    | 上記の非トランザクションDMLステートメント`BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6`の`id`列など、バッチを分割するために使用される列。                                                                    | TiDBは、分割列を自動的に選択しようとします。 | いいえ    | 最も効率的な方法で`WHERE`の条件を満たすことができる列を選択します。           |
-| バッチサイズ | 各バッチのサイズを制御するために使用されます。バッチの数は、DML操作が分割されるSQLステートメントの数です（上記の非トランザクションDMLステートメント`BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6`の`LIMIT 2`など）。バッチが多いほど、バッチサイズは小さくなります。 | 該当なし                     | はい     | 1000-1000000。バッチが小さすぎたり大きすぎたりすると、パフォーマンスが低下します。 |
+| Parameter       | Description                                                                                                                                                                                                                                                                                      | Default value                                         | Required or not | Recommended value                                                                  |
+| :-------------- | :----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | :---------------------------------------------------- | :-------------- | :--------------------------------------------------------------------------------- |
+| Dividing column | The column used to divide batches, such as the `id` column in the above non-transactional DML statement `BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6`.                                                                                                                                         | TiDB tries to automatically select a dividing column. | No              | Select a column that can meet the `WHERE` condition in the most efficient way.     |
+| Batch size      | Used to control the size of each batch. The number of batches is the number of SQL statements into which DML operations are split, such as `LIMIT 2` in the above non-transactional DML statement `BATCH ON id LIMIT 2 DELETE FROM t WHERE v < 6`. The more batches, the smaller the batch size. | N/A                                                   | Yes             | 1000-1000000. Too small or too large a batch will lead to performance degradation. |
 
-### 分割列の選び方 {#how-to-select-a-dividing-column}
+### How to select a dividing column {#how-to-select-a-dividing-column}
 
-非トランザクションDMLステートメントは、データバッチ処理の基礎として列を使用します。これは分割列です。実行効率を高めるには、インデックスを使用するための分割列が必要です。異なるインデックスと分割列によってもたらされる実行効率は、数十回異なる場合があります。分割列を選択するときは、次の提案を考慮してください。
+A non-transactional DML statement uses a column as the basis for data batching, which is the dividing column. For higher execution efficiency, a dividing column is required to use index. The execution efficiency brought by different indexes and dividing columns might vary by dozens of times. When choosing the dividing column, consider the following suggestions:
 
--   アプリケーションデータの分布がわかっている場合は、 `WHERE`の条件に従って、バッチ処理後にデータをより狭い範囲で分割する列を選択します。
-    -   理想的には、 `WHERE`条件は分割列のインデックスを利用して、バッチごとにスキャンされるデータの量を減らすことができます。たとえば、各トランザクションの開始時刻と終了時刻を記録するトランザクションテーブルがあり、終了時刻が1か月より前のすべてのトランザクションレコードを削除するとします。トランザクションの開始時刻にインデックスがあり、トランザクションの開始時刻と終了時刻が比較的近い場合は、開始時刻の列を分割列として選択できます。
-    -   理想的とは言えないケースでは、分割列のデータ分布は`WHERE`条件から完全に独立しており、分割列のインデックスを使用してデータスキャンの範囲を縮小することはできません。
--   クラスタ化インデックスが存在する場合は、実行効率を高めるために、主キー（主キー`INT`つと主キー`_tidb_rowid`を含む）を分割列として使用することをお勧めします。
--   重複する値が少ない列を選択してください。
+-   If you know the application data distribution, according to the `WHERE` condition, choose the column that divides data with smaller ranges after the batching.
+    -   Ideally, the `WHERE` condition can take advantage of the index of the dividing column to reduce the amount of data to be scanned per batch. For example, there is a transaction table that records the start and end time of each transaction, and you want to delete all transaction records whose end time is before one month. If there is an index on the start time of the transaction, and the start and end times of the transaction are relatively close, then you can choose the start time column as the dividing column.
+    -   In a less-than-ideal case, the data distribution of the dividing column is completely independent of the `WHERE` condition, and the index of the dividing column cannot be used to reduce the scope of the data scan.
+-   When a clustered index exists, it is recommended to use the primary key (including an `INT` primary key and `_tidb_rowid`) as the dividing column, so that the execution efficiency is higher.
+-   Choose the column with fewer duplicate values.
 
-分割列を指定しないように選択することもできます。次に、TiDBはデフォルトで`handle`の最初の列を分割列として使用します。ただし、クラスター化インデックスの主キーの最初の列が非トランザクションDMLステートメント（ `ENUM` ）でサポートされて`BIT`ないデータ型である場合、 `SET`はエラーを報告し`JSON` 。アプリケーションのニーズに応じて、適切な分割列を選択できます。
+You can also choose not to specify a dividing column. Then, TiDB will use the first column of `handle` as the dividing column by default. But if the first column of the primary key of the clustered index is of a data type not supported by non-transactional DML statements (which is `ENUM`, `BIT`, `SET`, `JSON`), TiDB will report an error. You can choose an appropriate dividing column according to your application needs.
 
-### バッチサイズの設定方法 {#how-to-set-batch-size}
+### How to set batch size {#how-to-set-batch-size}
 
-非トランザクションDMLステートメントでは、バッチサイズが大きいほど、分割されるSQLステートメントが少なくなり、各SQLステートメントの実行が遅くなります。最適なバッチサイズは、ワークロードによって異なります。 50000から開始することをお勧めします。バッチサイズが小さすぎるか大きすぎると、実行効率が低下します。
+In non-transactional DML statements, the larger the batch size, the fewer SQL statements are split and the slower each SQL statement is executed. The optimal batch size depends on the workload. It is recommended to start from 50000. Either too small or too large batch sizes will cause decreased execution efficiency.
 
-各バッチの情報はメモリに保存されるため、バッチが多すぎるとメモリ消費量が大幅に増加する可能性があります。これは、バッチサイズが小さすぎない理由を説明しています。バッチ情報を格納するための非トランザクションステートメントによって消費されるメモリの上限は[`tidb_mem_quota_query`](/system-variables.md#tidb_mem_quota_query)と同じであり、この制限を超えたときにトリガーされるアクションは、構成項目[`tidb_mem_oom_action`](/system-variables.md#tidb_mem_oom_action-new-in-v610)によって決定されます。
+The information of each batch is stored in memory, so too many batches can significantly increase memory consumption. This explains why the batch size cannot be too small. The upper limit of memory consumed by non-transactional statements for storing batch information is the same as [`tidb_mem_quota_query`](/system-variables.md#tidb_mem_quota_query), and the action triggered when this limit is exceeded is determined by the configuration item [`tidb_mem_oom_action`](/system-variables.md#tidb_mem_oom_action-new-in-v610).
 
-## 制限 {#restrictions}
+## Restrictions {#restrictions}
 
-以下は、非トランザクションDMLステートメントに対する厳しい制限です。これらの制限が満たされない場合、TiDBはエラーを報告します。
+The following are hard restrictions on non-transactional DML statements. If these restrictions are not met, TiDB will report an error.
 
--   1つのテーブルのみを操作できます。マルチテーブル結合は現在サポートされていません。
--   DMLステートメントに`ORDER BY`つまたは`LIMIT`の句を含めることはできません。
--   分割列にはインデックスを付ける必要があります。インデックスは、単一列のインデックス、または結合インデックスの最初の列にすることができます。
--   [`autocommit`](/system-variables.md#autocommit)モードで使用する必要があります。
--   batch-dmlが有効になっている場合は使用できません。
--   [ `tidb_snapshot` ]（/ read-historical-data.md＃operation flow）が設定されている場合は使用できません。
--   `prepare`ステートメントでは使用できません。
--   `ENUM` `BIT`は`SET` `JSON`としてサポートされていません。
--   [一時テーブル](/temporary-tables.md)ではサポートされていません。
--   [共通テーブル式](/develop/dev-guide-use-common-table-expression.md)はサポートされていません。
+-   You can only operate on a single table. Multi-table joins are currently not supported.
+-   The DML statements cannot contain `ORDER BY` or `LIMIT` clauses.
+-   The dividing column must be indexed. The index can be a single-column index, or the first column of a joint index.
+-   Must be used in the [`autocommit`](/system-variables.md#autocommit) mode.
+-   Cannot be used when batch-dml is enabled.
+-   Cannot be used when [`tidb_snapshot`](/read-historical-data.md#operation flow) is set.
+-   Cannot be used with the `prepare` statement.
+-   `ENUM`, `BIT`, `SET`, `JSON` types are not supported as the dividing columns.
+-   Not supported for [temporary tables](/temporary-tables.md).
+-   [Common Table Expression](/develop/dev-guide-use-common-table-expression.md) is not supported.
 
-## バッチ実行の失敗を制御する {#control-batch-execution-failure}
+## Control batch execution failure {#control-batch-execution-failure}
 
-非トランザクションDMLステートメントはアトミック性を満たしていません。一部のバッチは成功する可能性があり、一部は失敗する可能性があります。システム変数[`tidb_nontransactional_ignore_error`](/system-variables.md#tidb_nontransactional_ignore_error-new-in-v610)は、非トランザクションDMLステートメントがエラーを処理する方法を制御します。
+Non-transactional DML statements do not satisfy atomicity. Some batches might succeed and some might fail. The system variable [`tidb_nontransactional_ignore_error`](/system-variables.md#tidb_nontransactional_ignore_error-new-in-v610) controls how the non-transactional DML statements handle errors.
 
-例外は、最初のバッチが失敗した場合、ステートメント自体が間違っている可能性が高いことです。この場合、非トランザクションステートメント全体が直接エラーを返します。
+An exception is that if the first batch fails, there is a high probability that the statement itself is wrong. In this case, the entire non-transactional statement will directly return an error.
 
-## 使い方 {#how-it-works}
+## How it works {#how-it-works}
 
-非トランザクションDMLステートメントの動作原理は、SQLステートメントの自動分割をTiDBに組み込むことです。非トランザクションDMLステートメントがない場合は、SQLステートメントを手動で分割する必要があります。非トランザクションDMLステートメントの動作を理解するには、次のタスクを実行するユーザースクリプトと考えてください。
+The working principle of non-transactional DML statements is to build into TiDB the automatic splitting of SQL statements. Without non-transactional DML statements, you will need to manually split the SQL statements. To understand the behavior of a non-transactional DML statement, think of it as a user script doing the following tasks:
 
-非トランザクション`BATCH ON $C$ LIMIT $N$ DELETE FROM ... WHERE $P$`の場合、$ C $は分割に使用される列、$ N $はバッチサイズ、$P$はフィルター条件です。
+For the non-transactional DML `BATCH ON $C$ LIMIT $N$ DELETE FROM ... WHERE $P$`, $C$ is the column used for dividing, $N$ is the batch size, and $P$ is the filter condition.
 
-1.  元のステートメントのフィルター条件$P$と、分割用に指定された列$ C $に従って、TiDBは$P$を満たすすべての$C$を照会します。 TiDBは、これらの$C$を$N$に従ってグループ$B_1\ dotsB_k$に分類します。すべての$B_i$について、TiDBは最初と最後の$C$を$S_i$と$E_i$として保持します。このステップで実行されたクエリステートメントは、 [`DRY RUN QUERY`](/non-transactional-dml.md#query-the-batch-dividing-statement)から表示できます。
-2.  $ B_i $に含まれるデータは、$ P_i $を満たすサブセットです：$ C $ BETWEEN $ S_i $ AND $E_i$。 $ P_i $を使用して、各バッチが処理する必要のあるデータの範囲を絞り込むことができます。
-3.  $ B_i $の場合、TiDBは上記の条件を元のステートメントの`WHERE`条件に埋め込みます。これにより、WHERE（$ P_i $）AND（$ P $）になります。このステップの実行結果は、 [`DRY RUN`](/non-transactional-dml.md#query-the-statements-corresponding-to-the-first-and-the-last-batches)を介して表示できます。
-4.  すべてのバッチについて、新しいステートメントを順番に実行します。各グループ化のエラーは収集および結合され、すべてのグループ化が完了した後、非トランザクションDMLステートメント全体の結果として返されます。
+1.  According to the filter condition $P$ of the original statement and the specified column $C$ for dividing, TiDB queries all $C$ that satisfy $P$. TiDB sorts these $C$ into groups $B_1 \dots B_k$ according to $N$. For each of all $B_i$, TiDB keeps its first and last $C$ as $S_i$ and $E_i$. The query statement executed in this step can be viewed through [`DRY RUN QUERY`](/non-transactional-dml.md#query-the-batch-dividing-statement).
+2.  The data involved in $B_i$ is a subset that satisfies $P_i$: $C$ BETWEEN $S_i$ AND $E_i$. You can use $P_i$ to narrow down the range of data that each batch needs to process.
+3.  For $B_i$, TiDB embeds the above condition into the `WHERE` condition of the original statement, which makes it WHERE ($P_i$) AND ($P$). The execution result of this step can be viewed through [`DRY RUN`](/non-transactional-dml.md#query-the-statements-corresponding-to-the-first-and-the-last-batches).
+4.  For all batches, execute new statements in sequence. The errors for each grouping are collected and combined, and returned as the result of the entire non-transactional DML statement after all groupings are complete.
 
-## batch-dmlとの比較 {#comparison-with-batch-dml}
+## Comparison with batch-dml {#comparison-with-batch-dml}
 
-batch-dmlは、DMLステートメントの実行中にトランザクションを複数のトランザクションコミットに分割するためのメカニズムです。
+batch-dml is a mechanism for splitting a transaction into multiple transaction commits during the execution of a DML statement.
 
-> **ノート：**
+> **Note:**
 >
-> batch-dmlの使用はお勧めしません。 batch-dml機能が適切に使用されていない場合、データインデックスの不整合のリスクがあります。 batch-dmlは、TiDBの今後のリリースで非推奨になります。
+> It is not recommended to use batch-dml which has been deprecated. When the batch-dml feature is not properly used, there is a risk of data index inconsistency.
 
-非トランザクションDMLステートメントは、まだすべてのバッチdml使用シナリオに置き換わるものではありません。それらの主な違いは次のとおりです。
+Non-transactional DML statements are not yet a replacement for all batch-dml usage scenarios. Their main differences are as follows:
 
--   パフォーマンス： [分割列](#how-to-select-a-dividing-column)が効率的である場合、非トランザクションDMLステートメントのパフォーマンスはbatch-dmlのパフォーマンスに近くなります。分割列の効率が低い場合、非トランザクションDMLステートメントのパフォーマンスはbatch-dmlのパフォーマンスよりも大幅に低くなります。
+-   Performance: When the [dividing column](#how-to-select-a-dividing-column) is efficient, the performance of non-transactional DML statements is close to that of batch-dml. When the dividing column is less efficient, the performance of non-transactional DML statements is significantly lower than that of batch-dml.
 
--   安定性：batch-dmlは、不適切な使用によりデータインデックスの不整合が発生する傾向があります。非トランザクションDMLステートメントは、データインデックスの不整合を引き起こしません。ただし、不適切に使用された場合、非トランザクションDMLステートメントは元のステートメントと同等ではなく、アプリケーションは予期しない動作を観察する可能性があります。詳細については、 [一般的な問題のセクション](#non-transactional-delete-has-exceptional-behavior-that-is-not-equivalent-to-ordinary-delete)を参照してください。
+-   Stability: batch-dml is prone to data index inconsistencies due to improper use. Non-transactional DML statements do not cause data index inconsistencies. However, when used improperly, non-transactional DML statements are not equivalent to the original statements, and the applications might observe unexpected behavior. See the [common issues section](#non-transactional-delete-has-exceptional-behavior-that-is-not-equivalent-to-ordinary-delete) for details.
 
-## 一般的な問題 {#common-issues}
+## Common issues {#common-issues}
 
-### 実際のバッチサイズは、指定されたバッチサイズと同じではありません {#the-actual-batch-size-is-not-the-same-as-the-specified-batch-size}
+### Executing a multiple table joins statement results in the <code>Unknown column xxx in 'where clause'</code> error {#executing-a-multiple-table-joins-statement-results-in-the-code-unknown-column-xxx-in-where-clause-code-error}
 
-非トランザクションDMLステートメントの実行中に、最後のバッチで処理されるデータのサイズが、指定されたバッチサイズよりも小さい場合があります。
+This error occurs when the `WHERE` clause concatenated in a query involves tables other than the table in which the [shard column](#parameter-description) is defined. For example, in the following SQL statement, the shard column is `t2.id` and it is defined in table `t2`, but the `WHERE` clause involves table `t2` and `t3`.
 
-**重複する値が分割列に存在する**場合、各バッチには、このバッチの分割列の最後の要素の重複する値がすべて含まれます。したがって、このバッチの行数は、指定されたバッチサイズよりも大きい可能性があります。
+```sql
+BATCH ON test.t2.id LIMIT 1 
+INSERT INTO t 
+SELECT t2.id, t2.v, t3. FROM t2, t3 WHERE t2.id = t3.id
+```
 
-また、他の同時書き込みが発生した場合、各バッチで処理される行数が指定されたバッチサイズと異なる場合があります。
+```sql
+(1054, "Unknown column 't3.id' in 'where clause'")
+```
 
-### <code>Failed to restore the delete statement, probably because of unsupported type of the shard column</code> {#the-code-failed-to-restore-the-delete-statement-probably-because-of-unsupported-type-of-the-shard-column-code-error-occurs-during-execution}
+If the error occurs, you can print the query statement for confirmation by using `DRY RUN QUERY`. For example:
 
-分割列は`ENUM` `BIT`を`JSON`して`SET`ません。新しい分割列を指定してみてください。整数型または文字列型の列を使用することをお勧めします。
+```sql
+BATCH ON test.t2.id LIMIT 1 
+DRY RUN QUERY INSERT INTO t 
+SELECT t2.id, t2.v, t3. FROM t2, t3 WHERE t2.id = t3.id
+```
 
-選択した分割列がこれらのサポートされていないタイプのいずれでもないときにエラーが発生した場合は、PingCAPテクニカルサポートに連絡してください。
+To avoid the error, you can move the condition related to other tables in the `WHERE` clause to the `ON` condition in the `JOIN` clause. For example:
 
-### 非トランザクション<code>DELETE</code>には、通常の<code>DELETE</code>と同等ではない「例外的な」動作があります {#non-transactional-code-delete-code-has-exceptional-behavior-that-is-not-equivalent-to-ordinary-code-delete-code}
+```sql
+BATCH ON test.t2.id LIMIT 1 
+INSERT INTO t 
+SELECT t2.id, t2.v, t3. FROM t2 JOIN t3 ON t2.id=t3.id
+```
 
-非トランザクションDMLステートメントは、このDMLステートメントの元の形式と同等ではありません。これには、次の理由が考えられます。
+    +----------------+---------------+
+    | number of jobs | job status    |
+    +----------------+---------------+
+    | 0              | all succeeded |
+    +----------------+---------------+
 
--   他にも同時書き込みがあります。
--   非トランザクションDMLステートメントは、ステートメント自体が読み取る値を変更します。
--   `WHERE`の条件が変更されるため、各バッチで実行されるSQLステートメントにより、実行プランと式の計算順序が異なる場合があります。したがって、実行結果は元のステートメントとは異なる場合があります。
--   DMLステートメントには、非決定論的な操作が含まれています。
+### The actual batch size is not the same as the specified batch size {#the-actual-batch-size-is-not-the-same-as-the-specified-batch-size}
 
-## MySQLの互換性 {#mysql-compatibility}
+During the execution of a non-transactional DML statement, the size of data to be processed in the last batch might be smaller than the specified batch size.
 
-非トランザクションステートメントはTiDB固有であり、MySQLと互換性がありません。
+When **duplicated values exist in the dividing column**, each batch will contain all the duplicated values of the last element of the dividing column in this batch. Therefore, the number of rows in this batch might be greater than the specified batch size.
 
-## も参照してください {#see-also}
+In addition, when other concurrent writes occur, the number of rows processed in each batch might be different from the specified batch size.
 
--   [`BATCH`](/sql-statements/sql-statement-batch.md)の構文
+### The <code>Failed to restore the delete statement, probably because of unsupported type of the shard column</code> error occurs during execution {#the-code-failed-to-restore-the-delete-statement-probably-because-of-unsupported-type-of-the-shard-column-code-error-occurs-during-execution}
+
+The dividing column does not support `ENUM`, `BIT`, `SET`, `JSON` types. Try to specify a new dividing column. It is recommended to use an integer or string type column.
+
+<CustomContent platform="tidb">
+
+If the error occurs when the selected shard column is not one of these unsupported types, [get support](/support.md) from PingCAP or the community.
+
+</CustomContent>
+
+<CustomContent platform="tidb-cloud">
+
+If the error occurs when the selected shard column is not one of these unsupported types, [contact TiDB Cloud Support](/tidb-cloud/tidb-cloud-support.md).
+
+</CustomContent>
+
+### Non-transactional <code>DELETE</code> has "exceptional" behavior that is not equivalent to ordinary <code>DELETE</code> {#non-transactional-code-delete-code-has-exceptional-behavior-that-is-not-equivalent-to-ordinary-code-delete-code}
+
+A non-transactional DML statement is not equivalent to the original form of this DML statement, which might have the following reasons:
+
+-   There are other concurrent writes.
+-   The non-transactional DML statement modifies a value that the statement itself will read.
+-   The SQL statement executed in each batch might cause a different execution plan and expression calculation order because the `WHERE` condition is changed. Therefore, the execution result might be different from the original statement.
+-   The DML statements contain non-deterministic operations.
+
+## MySQL compatibility {#mysql-compatibility}
+
+Non-transactional statements are TiDB-specific and are not compatible with MySQL.
+
+## See also {#see-also}
+
+-   The [`BATCH`](/sql-statements/sql-statement-batch.md) syntax
 -   [`tidb_nontransactional_ignore_error`](/system-variables.md#tidb_nontransactional_ignore_error-new-in-v610)
