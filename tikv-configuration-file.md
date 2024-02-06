@@ -1031,8 +1031,8 @@ Configuration items related to RocksDB
 
 ### <code>wal-dir</code> {#code-wal-dir-code}
 
--   The directory in which WAL files are stored
--   Default value: `"/tmp/tikv/store"`
+-   The directory in which WAL files are stored. If not specified, the WAL files will be stored in the same directory as the data.
+-   Default value: `""`
 
 ### <code>wal-ttl-seconds</code> {#code-wal-ttl-seconds-code}
 
