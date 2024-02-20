@@ -70,16 +70,12 @@ The operations in this section are based on [pd-ctl](/pd-control.md), and the co
 
 The Placement Rules feature is enabled by default in v5.0 and later versions of TiDB. To disable it, refer to [Disable Placement Rules](#disable-placement-rules). To enable this feature after it has been disabled, you can modify the PD configuration file as follows before initializing the cluster:
 
-{{< copyable "" >}}
-
 ```toml
 [replication]
 enable-placement-rules = true
 ```
 
-In this way, PD enables this feature after the cluster is successfully bootstrapped and generates corresponding rules according to the `max-replicas` and `location-labels` configurations:
-
-{{< copyable "" >}}
+In this way, PD enables this feature after the cluster is successfully bootstrapped and generates corresponding rules according to the [`max-replicas`](/pd-configuration-file.md#max-replicas), [`location-labels`](/pd-configuration-file.md#location-labels), and [`isolation-level`](/pd-configuration-file.md#isolation-level) configurations:
 
 ```json
 {
@@ -96,23 +92,20 @@ In this way, PD enables this feature after the cluster is successfully bootstrap
 
 For a bootstrapped cluster, you can also enable Placement Rules dynamically through pd-ctl:
 
-{{< copyable "" >}}
-
 ```bash
 pd-ctl config placement-rules enable
 ```
 
-PD also generates default rules based on the `max-replicas` and `location-labels` configurations.
+PD also generates default rules based on the `max-replicas`, `location-labels`, and `isolation-level` configurations.
 
 > **Note:**
 >
-> After enabling Placement Rules, the previously configured `max-replicas` and `location-labels` no longer take effect. To adjust the replica policy, use the interface related to Placement Rules.
+> -   When Placement Rules are enabled and multiple rules exist, the previously configured `max-replicas`, `location-labels`, and `isolation-level` no longer take effect. To adjust the replica policy, use the interface related to Placement Rules.
+> -   When Placement Rules are enabled and only one default rule exists, TiDB will automatically update this default rule when `max-replicas`, `location-labels`, or `isolation-level` configurations are changed.
 
 ### Disable Placement Rules {#disable-placement-rules}
 
 You can use pd-ctl to disable the Placement Rules feature and switch to the previous scheduling strategy.
-
-{{< copyable "" >}}
 
 ```bash
 pd-ctl config placement-rules disable
@@ -120,7 +113,7 @@ pd-ctl config placement-rules disable
 
 > **Note:**
 >
-> After disabling Placement Rules, PD uses the original `max-replicas` and `location-labels` configurations. The modification of rules (when Placement Rules is enabled) will not update these two configurations in real time. In addition, all the rules that have been configured remain in PD and will be used the next time you enable Placement Rules.
+> After disabling Placement Rules, PD uses the original `max-replicas`, `location-labels`, and `isolation-level` configurations. The modification of rules (when Placement Rules is enabled) will not update these three configurations in real time. In addition, all the rules that have been configured remain in PD and will be used the next time you enable Placement Rules.
 
 ### Set rules using pd-ctl {#set-rules-using-pd-ctl}
 
@@ -132,15 +125,11 @@ pd-ctl supports using the following methods to view rules in the system, and the
 
 -   To view the list of all rules:
 
-    {{< copyable "" >}}
-
     ```bash
     pd-ctl config placement-rules show
     ```
 
 -   To view the list of all rules in a PD Group:
-
-    {{< copyable "" >}}
 
     ```bash
     pd-ctl config placement-rules show --group=pd
@@ -148,15 +137,11 @@ pd-ctl supports using the following methods to view rules in the system, and the
 
 -   To view the rule of a specific ID in a Group:
 
-    {{< copyable "" >}}
-
     ```bash
     pd-ctl config placement-rules show --group=pd --id=default
     ```
 
 -   To view the rule list that matches a Region:
-
-    {{< copyable "" >}}
 
     ```bash
     pd-ctl config placement-rules show --region=2
@@ -165,8 +150,6 @@ pd-ctl supports using the following methods to view rules in the system, and the
     In the above example, `2` is the Region ID.
 
 Adding rules and editing rules are similar. You need to write the corresponding rules into a file and then use the `save` command to save the rules to PD:
-
-{{< copyable "" >}}
 
 ```bash
 cat > rules.json <<EOF
@@ -194,8 +177,6 @@ The above operation writes `rule1` and `rule2` to PD. If a rule with the same `G
 
 To delete a rule, you only need to set the `count` of the rule to `0`, and the rule with the same `GroupID` + `ID` will be deleted. The following command deletes the `pd / rule2` rule:
 
-{{< copyable "" >}}
-
 ```bash
 cat > rules.json <<EOF
 [
@@ -212,15 +193,11 @@ pd-ctl config placement save --in=rules.json
 
 -   To view the list of all rule groups:
 
-    {{< copyable "" >}}
-
     ```bash
     pd-ctl config placement-rules rule-group show
     ```
 
 -   To view the rule group of a specific ID:
-
-    {{< copyable "" >}}
 
     ```bash
     pd-ctl config placement-rules rule-group show pd
@@ -228,15 +205,11 @@ pd-ctl config placement save --in=rules.json
 
 -   To set the `index` and `override` attributes of the rule group:
 
-    {{< copyable "" >}}
-
     ```bash
     pd-ctl config placement-rules rule-group set pd 100 true
     ```
 
 -   To delete the configuration of a rule group (use the default group configuration if there is any rule in the group):
-
-    {{< copyable "" >}}
 
     ```bash
     pd-ctl config placement-rules rule-group delete pd
@@ -247,8 +220,6 @@ pd-ctl config placement save --in=rules.json
 To view and modify the rule groups and all rules in the groups at the same time, execute the `rule-bundle` subcommand.
 
 In this subcommand, `get {group_id}` is used to query a group, and the output result shows the rule group and rules of the group in a nested form:
-
-{{< copyable "" >}}
 
 ```bash
 pd-ctl config placement-rules rule-bundle get pd
@@ -276,15 +247,11 @@ The output of the above command:
 
 To write the output to a file, add the `--out` argument to the `rule-bundle get` subcommand, which is convenient for subsequent modification and saving.
 
-{{< copyable "" >}}
-
 ```bash
 pd-ctl config placement-rules rule-bundle get pd --out="group.json"
 ```
 
 After the modification is finished, you can use the `rule-bundle set` subcommand to save the configuration in the file to the PD server. Unlike the `save` command described in [Set rules using pd-ctl](#set-rules-using-pd-ctl), this command replaces all the rules of this group on the server side.
-
-{{< copyable "" >}}
 
 ```bash
 pd-ctl config placement-rules rule-bundle set pd --in="group.json"
@@ -296,15 +263,11 @@ You can also view and modify all configuration using pd-ctl. To do that, save al
 
 For example, to save all configuration to the `rules.json` file, execute the following command:
 
-{{< copyable "" >}}
-
 ```bash
 pd-ctl config placement-rules rule-bundle load --out="rules.json"
 ```
 
 After editing the file, execute the following command to save the configuration to the PD server:
-
-{{< copyable "" >}}
 
 ```bash
 pd-ctl config placement-rules rule-bundle save --in="rules.json"
@@ -313,8 +276,6 @@ pd-ctl config placement-rules rule-bundle save --in="rules.json"
 ### Use tidb-ctl to query the table-related key range {#use-tidb-ctl-to-query-the-table-related-key-range}
 
 If you need special configuration for metadata or a specific table, you can execute the [`keyrange` command](https://github.com/pingcap/tidb-ctl/blob/master/doc/tidb-ctl_keyrange.md) in [tidb-ctl](https://github.com/pingcap/tidb-ctl) to query related keys. Remember to add `--encode` at the end of the command.
-
-{{< copyable "" >}}
 
 ```bash
 tidb-ctl keyrange --database test --table ttt --encode
@@ -345,8 +306,6 @@ This section introduces the typical usage scenarios of Placement Rules.
 
 You only need to add a rule that limits the key range to the range of metadata, and set the value of `count` to `5`. Here is an example of this rule:
 
-{{< copyable "" >}}
-
 ```json
 {
   "group_id": "pd",
@@ -364,8 +323,6 @@ You only need to add a rule that limits the key range to the range of metadata, 
 ### Scenario 2: Place five replicas in three data centers in the proportion of 2:2:1, and the Leader should not be in the third data center {#scenario-2-place-five-replicas-in-three-data-centers-in-the-proportion-of-2-2-1-and-the-leader-should-not-be-in-the-third-data-center}
 
 Create three rules. Set the number of replicas to `2`, `2`, and `1` respectively. Limit the replicas to the corresponding data centers through `label_constraints` in each rule. In addition, change `role` to `follower` for the data center that does not need a Leader.
-
-{{< copyable "" >}}
 
 ```json
 [
@@ -412,8 +369,6 @@ Create three rules. Set the number of replicas to `2`, `2`, and `1` respectively
 
 Add a separate rule for the row key of the table and limit `count` to `2`. Use `label_constraints` to ensure that the replicas are generated on the node of `engine = tiflash`. Note that a separate `group_id` is used here to ensure that this rule does not overlap or conflict with rules from other sources in the system.
 
-{{< copyable "" >}}
-
 ```json
 {
   "group_id": "tiflash",
@@ -432,8 +387,6 @@ Add a separate rule for the row key of the table and limit `count` to `2`. Use `
 ### Scenario 4: Add two follower replicas for a table in the Beijing node with high-performance disks {#scenario-4-add-two-follower-replicas-for-a-table-in-the-beijing-node-with-high-performance-disks}
 
 The following example shows a more complicated `label_constraints` configuration. In this rule, the replicas must be placed in the `bj1` or `bj2` machine room, and the disk type must be `nvme`.
-
-{{< copyable "" >}}
 
 ```json
 {
@@ -457,8 +410,6 @@ Different from scenario 3, this scenario is not to add new replica(s) on the bas
 
 The rule:
 
-{{< copyable "" >}}
-
 ```json
 {
   "group_id": "ssd-override",
@@ -475,8 +426,6 @@ The rule:
 ```
 
 The rule group:
-
-{{< copyable "" >}}
 
 ```json
 {
