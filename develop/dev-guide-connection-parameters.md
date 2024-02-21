@@ -35,13 +35,16 @@ The application needs to return the connection after finishing using it. It is r
 
 ### Probe configuration {#probe-configuration}
 
-The connection pool maintains persistent connections to TiDB. TiDB does not proactively close client connections by default (unless an error is reported), but generally, there are also network proxies such as [LVS](https://en.wikipedia.org/wiki/Linux_Virtual_Server) or [HAProxy](https://en.wikipedia.org/wiki/HAProxy) between the client and TiDB. Usually, these proxies proactively clean up connections that are idle for a certain period. In addition to paying attention to the idle configuration of the proxies, the connection pool also needs to keep alive or probe connections.
+The connection pool maintains persistent connections from clients to TiDB as follows:
+
+-   Before v5.4, TiDB does not proactively close client connections by default (unless an error is reported).
+-   Starting from v5.4, TiDB automatically closes client connections after `28800` seconds (this is, `8` hours) of inactivity by default. You can control this timeout setting using the TiDB and MySQL compatible `wait_timeout` variable. For more information, see [JDBC Query Timeout](/develop/dev-guide-timeouts-in-tidb.md#jdbc-query-timeout).
+
+Moreover, there might be network proxies such as [LVS](https://en.wikipedia.org/wiki/Linux_Virtual_Server) or [HAProxy](https://en.wikipedia.org/wiki/HAProxy) between clients and TiDB. These proxies typically proactively clean up connections after a specific idle period (determined by the proxy's idle configuration). In addition to monitoring the proxy's idle configuration, connection pools also need to maintain or probe connections for keep-alive.
 
 If you often see the following error in your Java application:
 
-```
-The last packet sent successfully to the server was 3600000 milliseconds ago. The driver has not received any packets from the server. com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Communications link failure
-```
+    The last packet sent successfully to the server was 3600000 milliseconds ago. The driver has not received any packets from the server. com.mysql.jdbc.exceptions.jdbc4.CommunicationsException: Communications link failure
 
 If `n` in `n milliseconds ago` is `0` or a very small value, it is usually because the executed SQL operation causes TiDB to exit abnormally. To find the cause, it is recommended to check the TiDB stderr log.
 
@@ -59,27 +62,23 @@ According to the [About Pool Sizing](https://github.com/brettwooldridge/HikariCP
 
 The formula based on experience is as follows:
 
-```
-connections = ((core_count * 2) + effective_spindle_count)
-```
+    connections = ((core_count * 2) + effective_spindle_count)
 
 The description of each parameter in the formula is as follows:
 
 -   **connections**: the size of connections obtained.
 -   **core_count**: the number of CPU cores.
--   **effective_spindle_count**: the number of hard drives (not [SSD](https://en.wikipedia.org/wiki/Solid-state_drive)). Because each spinning hard disk can be called a spindle. For example, if you are using a server with a RAID of 16 disks, the <strong>effective_spindle_count</strong> should be 16. Because <strong>HDD</strong> usually can handle only one request at a time, the formula here is actually measuring how many concurrent I/O requests your server can manage.
+-   **effective_spindle_count**: the number of hard drives (not [SSD](https://en.wikipedia.org/wiki/Solid-state_drive)). Because each spinning hard disk can be called a spindle. For example, if you are using a server with a RAID of 16 disks, the **effective_spindle_count** should be 16. Because **HDD** usually can handle only one request at a time, the formula here is actually measuring how many concurrent I/O requests your server can manage.
 
 In particular, pay attention to the following note below the [formula](https://github.com/brettwooldridge/HikariCP/wiki/About-Pool-Sizing#the-formula).
 
-> ```
-> A formula which has held up pretty well across a lot of benchmarks for years is
-> that for optimal throughput the number of active connections should be somewhere
-> near ((core_count * 2) + effective_spindle_count). Core count should not include
-> HT threads, even if hyperthreading is enabled. Effective spindle count is zero if
-> the active data set is fully cached, and approaches the actual number of spindles
-> as the cache hit rate falls. ... There hasn't been any analysis so far regarding
-> how well the formula works with SSDs.
-> ```
+>     A formula which has held up pretty well across a lot of benchmarks for years is
+>     that for optimal throughput the number of active connections should be somewhere
+>     near ((core_count * 2) + effective_spindle_count). Core count should not include
+>     HT threads, even if hyperthreading is enabled. Effective spindle count is zero if
+>     the active data set is fully cached, and approaches the actual number of spindles
+>     as the cache hit rate falls. ... There hasn't been any analysis so far regarding
+>     how well the formula works with SSDs.
 
 This note indicates that:
 
@@ -89,9 +88,7 @@ This note indicates that:
 
 When using SSDs, it is recommended that you use the following formula based on experience instead:
 
-```
-connections = (number of cores * 4)
-```
+    connections = (number of cores * 4)
 
 Therefore, you can set the maximum connection size of the initial connection pool to `cores * 4` in the case of SSDs and further adjust the size to tune the performance.
 
@@ -125,7 +122,7 @@ In addition, with the default implementation of MySQL Connector/J, only client-s
 
 #### Use Batch API {#use-batch-api}
 
-For batch inserts, you can use the [`addBatch`/<code>executeBatch</code> API](https://www.tutorialspoint.com/jdbc/jdbc-batch-processing). The `addBatch()` method is used to cache multiple SQL statements first on the client, and then send them to the database server together when calling the `executeBatch` method.
+For batch inserts, you can use the [`addBatch`/`executeBatch` API](https://www.tutorialspoint.com/jdbc/jdbc-batch-processing). The `addBatch()` method is used to cache multiple SQL statements first on the client, and then send them to the database server together when calling the `executeBatch` method.
 
 > **Note:**
 >
@@ -163,7 +160,7 @@ This section introduces parameters related to `Prepare`.
 
     To verify that this setting already takes effect, you can do:
 
-    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > <strong>CPS By Instance</strong>.
+    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > **CPS By Instance**.
     -   If `COM_QUERY` is replaced by `COM_STMT_EXECUTE` or `COM_STMT_PREPARE` in the request, it means this setting already takes effect.
 
 -   **cachePrepStmts**
@@ -172,7 +169,7 @@ This section introduces parameters related to `Prepare`.
 
     To verify that this setting already takes effect, you can do:
 
-    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > <strong>CPS By Instance</strong>.
+    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > **CPS By Instance**.
     -   If the number of `COM_STMT_EXECUTE` in the request is far more than the number of `COM_STMT_PREPARE`, it means this setting already takes effect.
 
     In addition, configuring `useConfigs=maxPerformance` will configure multiple parameters at the same time, including `cachePrepStmts=true`.
@@ -185,7 +182,7 @@ This section introduces parameters related to `Prepare`.
 
     You need to check whether this setting is too small if you:
 
-    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > <strong>CPS By Instance</strong>.
+    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > **CPS By Instance**.
     -   And find that `cachePrepStmts=true` has been configured, but `COM_STMT_PREPARE` is still mostly equal to `COM_STMT_EXECUTE` and `COM_STMT_CLOSE` exists.
 
 -   **prepStmtCacheSize**
@@ -194,7 +191,7 @@ This section introduces parameters related to `Prepare`.
 
     To verify that this setting already takes effect, you can do:
 
-    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > <strong>CPS By Instance</strong>.
+    -   Go to TiDB monitoring dashboard and view the request command type through **Query Summary** > **CPS By Instance**.
     -   If the number of `COM_STMT_EXECUTE` in the request is far more than the number of `COM_STMT_PREPARE`, it means this setting already takes effect.
 
 #### Batch-related parameters {#batch-related-parameters}
