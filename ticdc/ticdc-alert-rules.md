@@ -5,7 +5,7 @@ summary: Learn about TiCDC alert rules and how to handle the alerts.
 
 # TiCDC Alert Rules {#ticdc-alert-rules}
 
-This document describes the TiCDC alert rules and the corresponding solutions. In descending order, the severity levels are: **Critical**, <strong>Warning</strong>.
+This document describes the TiCDC alert rules and the corresponding solutions. In descending order, the severity levels are: **Critical**, **Warning**.
 
 ## Critical alerts {#critical-alerts}
 
@@ -17,7 +17,7 @@ For critical alerts, you need to pay close attention to abnormal monitoring metr
 
 -   Alert rule:
 
-    (time() - ticdc_processor_checkpoint_ts / 1000) > 600
+    `(time() - ticdc_processor_checkpoint_ts / 1000) > 600`
 
 -   Description:
 
@@ -25,13 +25,13 @@ For critical alerts, you need to pay close attention to abnormal monitoring metr
 
 -   Solution:
 
-    See [TiCDC Handle Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
+    See [TiCDC Handles Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
 
 ## <code>cdc_resolvedts_high_delay</code> {#code-cdc-resolvedts-high-delay-code}
 
 -   Alert rule:
 
-    (time() - ticdc_processor_resolved_ts / 1000) > 300
+    `(time() - ticdc_processor_resolved_ts / 1000) > 300`
 
 -   Description:
 
@@ -39,7 +39,21 @@ For critical alerts, you need to pay close attention to abnormal monitoring metr
 
 -   Solution:
 
-    See [TiCDC Handle Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
+    See [TiCDC Handles Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
+
+### <code>ticdc_changefeed_failed</code> {#code-ticdc-changefeed-failed-code}
+
+-   Alert rule:
+
+    `(max_over_time(ticdc_owner_status[1m]) == 2) > 0`
+
+-   Description:
+
+    A replication task encounters an unrecoverable error and enters the failed state.
+
+-   Solution:
+
+    This alert is similar to replication interruption. See [TiCDC Handles Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
 
 ### <code>ticdc_processor_exit_with_error_count</code> {#code-ticdc-processor-exit-with-error-count-code}
 
@@ -53,7 +67,7 @@ For critical alerts, you need to pay close attention to abnormal monitoring metr
 
 -   Solution:
 
-    See [TiCDC Handle Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
+    See [TiCDC Handles Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
 
 ## Warning alerts {#warning-alerts}
 
@@ -113,7 +127,7 @@ Warning alerts are a reminder for an issue or error.
 
 -   Solution:
 
-    See [TiCDC Handle Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
+    See [TiCDC Handles Replication Interruption](/ticdc/troubleshoot-ticdc.md#how-do-i-handle-replication-interruptions).
 
 ### <code>ticdc_puller_entry_sorter_sort_bucket</code> {#code-ticdc-puller-entry-sorter-sort-bucket-code}
 
@@ -147,7 +161,7 @@ Warning alerts are a reminder for an issue or error.
 
 -   Alert rule:
 
-    `changes(tikv_cdc_min_resolved_ts[1m]) < 1 and ON (instance) tikv_cdc_region_resolve_status{status="resolved"} > 0`
+    `changes(tikv_cdc_min_resolved_ts[1m]) < 1 and ON (instance) tikv_cdc_region_resolve_status{status="resolved"} > 0 and ON (instance) tikv_cdc_captured_region_total > 0`
 
 -   Description:
 
