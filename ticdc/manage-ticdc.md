@@ -7,13 +7,11 @@ summary: Learn how to manage a TiCDC cluster and replication tasks.
 
 This document describes how to upgrade TiCDC cluster and modify the configuration of TiCDC cluster using TiUP, and how to manage the TiCDC cluster and replication tasks using the command-line tool `cdc cli`.
 
-You can also use the HTTP interface (the TiCDC OpenAPI feature) to manage the TiCDC cluster and replication tasks. For details, see [<a href="/ticdc/ticdc-open-api.md">TiCDC OpenAPI</a>](/ticdc/ticdc-open-api.md).
+You can also use the HTTP interface (the TiCDC OpenAPI feature) to manage the TiCDC cluster and replication tasks. For details, see [TiCDC OpenAPI](/ticdc/ticdc-open-api.md).
 
 ## Upgrade TiCDC using TiUP {#upgrade-ticdc-using-tiup}
 
 This section introduces how to upgrade the TiCDC cluster using TiUP. In the following example, assume that you need to upgrade TiCDC and the entire TiDB cluster to v6.1.7.
-
-{{< copyable "" >}}
 
 ```shell
 tiup update --self && \
@@ -23,22 +21,20 @@ tiup cluster upgrade <cluster-name> v6.1.7
 
 ### Notes for upgrade {#notes-for-upgrade}
 
--   The `changefeed` configuration has changed in TiCDC v4.0.2. See [<a href="/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file">Compatibility notes for the configuration file</a>](/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file) for details.
--   If you encounter any issues, see [<a href="/upgrade-tidb-using-tiup.md#faq">Upgrade TiDB using TiUP - FAQ</a>](/upgrade-tidb-using-tiup.md#faq).
+-   The `changefeed` configuration has changed in TiCDC v4.0.2. See [Compatibility notes for the configuration file](/production-deployment-using-tiup.md#step-3-initialize-cluster-topology-file) for details.
+-   If you encounter any issues, see [Upgrade TiDB using TiUP - FAQ](/upgrade-tidb-using-tiup.md#faq).
 
 ## Modify TiCDC configuration using TiUP {#modify-ticdc-configuration-using-tiup}
 
-This section introduces how to modify the configuration of TiCDC cluster using the  [<a href="/tiup/tiup-component-cluster-edit-config.md">`tiup cluster edit-config`</a>](/tiup/tiup-component-cluster-edit-config.md) command of TiUP. The following example changes the value of `gc-ttl` from the default `86400` to `3600`, namely, one hour.
+This section introduces how to modify the configuration of TiCDC cluster using the  [`tiup cluster edit-config`](/tiup/tiup-component-cluster-edit-config.md) command of TiUP. The following example changes the value of `gc-ttl` from the default `86400` to `3600`, namely, one hour.
 
 First, run the following command. You need to replace `<cluster-name>` with your actual cluster name.
-
-{{< copyable "" >}}
 
 ```shell
 tiup cluster edit-config <cluster-name>
 ```
 
-Then, enter the vi editor page and modify the `cdc` configuraion under [<a href="/tiup/tiup-cluster-topology-reference.md#server_configs">`server-configs`</a>](/tiup/tiup-cluster-topology-reference.md#server_configs). The configuration is shown below:
+Then, enter the vi editor page and modify the `cdc` configuraion under [`server-configs`](/tiup/tiup-cluster-topology-reference.md#server_configs). The configuration is shown below:
 
 ```shell
  server_configs:
@@ -57,7 +53,7 @@ After the modification, run the `tiup cluster reload -R cdc` command to reload t
 
 ## Use TLS {#use-tls}
 
-For details about using encrypted data transmission (TLS), see [<a href="/enable-tls-between-components.md">Enable TLS Between TiDB Components</a>](/enable-tls-between-components.md).
+For details about using encrypted data transmission (TLS), see [Enable TLS Between TiDB Components](/enable-tls-between-components.md).
 
 ## Use <code>cdc cli</code> to manage cluster status and data replication task {#use-code-cdc-cli-code-to-manage-cluster-status-and-data-replication-task}
 
@@ -76,26 +72,22 @@ If you deploy TiCDC using TiUP, replace `cdc cli` in the following commands with
 
 -   Query the `capture` list:
 
-    {{< copyable "" >}}
-
     ```shell
     cdc cli capture list --pd=http://10.0.10.25:2379
     ```
 
-    ```
-    [
-      {
-        "id": "806e3a1b-0e31-477f-9dd6-f3f2c570abdd",
-        "is-owner": true,
-        "address": "127.0.0.1:8300"
-      },
-      {
-        "id": "ea2a4203-56fe-43a6-b442-7b295f458ebc",
-        "is-owner": false,
-        "address": "127.0.0.1:8301"
-      }
-    ]
-    ```
+        [
+          {
+            "id": "806e3a1b-0e31-477f-9dd6-f3f2c570abdd",
+            "is-owner": true,
+            "address": "127.0.0.1:8300"
+          },
+          {
+            "id": "ea2a4203-56fe-43a6-b442-7b295f458ebc",
+            "is-owner": false,
+            "address": "127.0.0.1:8301"
+          }
+        ]
 
     -   `id`: The ID of the service process.
     -   `is-owner`: Indicates whether the service process is the owner node.
@@ -132,8 +124,6 @@ The numbers in the above state transfer diagram are described as follows.
 
 Run the following commands to create a replication task:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed create --pd=http://10.0.10.25:2379 --sink-uri="mysql://root:123456@127.0.0.1:3306/" --changefeed-id="simple-replication-task" --sort-engine="unified"
 ```
@@ -148,11 +138,7 @@ Info: {"sink-uri":"mysql://root:123456@127.0.0.1:3306/","opts":{},"create-time":
 
 -   `--sink-uri`: The downstream address of the replication task. Configure `--sink-uri` according to the following format. Currently, the scheme supports `mysql`/`tidb`/`kafka`/`pulsar`/`s3`/`local`.
 
-    {{< copyable "" >}}
-
-    ```
-    [scheme]://[userinfo@][host]:[port][/path]?[query_parameters]
-    ```
+        [scheme]://[userinfo@][host]:[port][/path]?[query_parameters]
 
     When a URI contains special characters, you need to process these special characters using URL encoding.
 
@@ -173,8 +159,6 @@ Info: {"sink-uri":"mysql://root:123456@127.0.0.1:3306/","opts":{},"create-time":
 #### Configure sink URI with <code>mysql</code>/<code>tidb</code> {#configure-sink-uri-with-code-mysql-code-code-tidb-code}
 
 Sample configuration:
-
-{{< copyable "" >}}
 
 ```shell
 --sink-uri="mysql://root:123456@127.0.0.1:3306/?worker-count=16&max-txn-row=5000&transaction-atomicity=table"
@@ -199,8 +183,6 @@ The following are descriptions of parameters and parameter values that can be co
 #### Configure sink URI with <code>kafka</code> {#configure-sink-uri-with-code-kafka-code}
 
 Sample configuration:
-
-{{< copyable "" >}}
 
 ```shell
 --sink-uri="kafka://127.0.0.1:9092/topic-name?kafka-version=2.4.0&partition-num=6&max-message-bytes=67108864&replication-factor=1"
@@ -276,7 +258,7 @@ The following are examples when using Kafka SASL authentication:
     --sink-uri="kafka://127.0.0.1:9092/topic-name?kafka-version=2.4.0&sasl-mechanism=gssapi&sasl-gssapi-auth-type=user&sasl-gssapi-kerberos-config-path=/etc/krb5.conf&sasl-gssapi-service-name=kafka&sasl-gssapi-user=alice/for-kafka&sasl-gssapi-password=alice-secret&sasl-gssapi-realm=example.com"
     ```
 
-    Values of `sasl-gssapi-user` and `sasl-gssapi-realm` are related to the [<a href="https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-user/What-is-a-Kerberos-Principal_003f.html">principle</a>](https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-user/What-is-a-Kerberos-Principal_003f.html) specified in kerberos. For example, if the principle is set as `alice/for-kafka@example.com`, then `sasl-gssapi-user` and `sasl-gssapi-realm` are specified as `alice/for-kafka` and `example.com` respectively.
+    Values of `sasl-gssapi-user` and `sasl-gssapi-realm` are related to the [principle](https://web.mit.edu/kerberos/krb5-1.5/krb5-1.5.4/doc/krb5-user/What-is-a-Kerberos-Principal_003f.html) specified in kerberos. For example, if the principle is set as `alice/for-kafka@example.com`, then `sasl-gssapi-user` and `sasl-gssapi-realm` are specified as `alice/for-kafka` and `example.com` respectively.
 
     SASL/GSSAPI `keytab` authentication:
 
@@ -284,7 +266,7 @@ The following are examples when using Kafka SASL authentication:
     --sink-uri="kafka://127.0.0.1:9092/topic-name?kafka-version=2.4.0&sasl-mechanism=gssapi&sasl-gssapi-auth-type=keytab&sasl-gssapi-kerberos-config-path=/etc/krb5.conf&sasl-gssapi-service-name=kafka&sasl-gssapi-user=alice/for-kafka&sasl-gssapi-keytab-path=/var/lib/secret/alice.key&sasl-gssapi-realm=example.com"
     ```
 
-    For more information about SASL/GSSAPI authentication methods, see [<a href="https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_gssapi.html">Configuring GSSAPI</a>](https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_gssapi.html).
+    For more information about SASL/GSSAPI authentication methods, see [Configuring GSSAPI](https://docs.confluent.io/platform/current/kafka/authentication_sasl/authentication_sasl_gssapi.html).
 
 -   TLS/SSL encryption
 
@@ -294,16 +276,14 @@ The following are examples when using Kafka SASL authentication:
 
     The minimum set of permissions required for TiCDC to function properly is as follows.
 
-    -   The `Create` and `Write` permissions for the Topic [<a href="https://docs.confluent.io/platform/current/kafka/authorization.html#resources">resource type</a>](https://docs.confluent.io/platform/current/kafka/authorization.html#resources).
+    -   The `Create` and `Write` permissions for the Topic [resource type](https://docs.confluent.io/platform/current/kafka/authorization.html#resources).
     -   The `DescribeConfigs` permission for the Cluster resource type.
 
 #### Integrate TiCDC with Kafka Connect (Confluent Platform) {#integrate-ticdc-with-kafka-connect-confluent-platform}
 
-To use the [<a href="https://docs.confluent.io/current/connect/managing/connectors.html">data connectors</a>](https://docs.confluent.io/current/connect/managing/connectors.html) provided by Confluent to stream data to relational or non-relational databases, you need to use the `avro` protocol and provide a URL for [<a href="https://www.confluent.io/product/confluent-platform/data-compatibility/">Confluent Schema Registry</a>](https://www.confluent.io/product/confluent-platform/data-compatibility/) in `schema-registry`.
+To use the [data connectors](https://docs.confluent.io/current/connect/managing/connectors.html) provided by Confluent to stream data to relational or non-relational databases, you need to use the `avro` protocol and provide a URL for [Confluent Schema Registry](https://www.confluent.io/product/confluent-platform/data-compatibility/) in `schema-registry`.
 
 Sample configuration:
-
-{{< copyable "" >}}
 
 ```shell
 --sink-uri="kafka://127.0.0.1:9092/topic-name?&protocol=avro&replication-factor=3" --schema-registry="http://127.0.0.1:8081" --config changefeed_config.toml
@@ -316,7 +296,7 @@ dispatchers = [
 ]
 ```
 
-For detailed integration guide, see [<a href="/ticdc/integrate-confluent-using-ticdc.md">Quick Start Guide on Integrating TiDB with Confluent Platform</a>](/ticdc/integrate-confluent-using-ticdc.md).
+For detailed integration guide, see [Quick Start Guide on Integrating TiDB with Confluent Platform](/ticdc/integrate-confluent-using-ticdc.md).
 
 #### Configure sink URI with <code>pulsar</code> {#configure-sink-uri-with-code-pulsar-code}
 
@@ -325,8 +305,6 @@ For detailed integration guide, see [<a href="/ticdc/integrate-confluent-using-t
 > This is still an experimental feature. Do **NOT** use it in a production environment.
 
 Sample configuration:
-
-{{< copyable "" >}}
 
 ```shell
 --sink-uri="pulsar://127.0.0.1:6650/topic-name?connectionTimeout=2s"
@@ -353,15 +331,13 @@ The following are descriptions of parameters that can be configured for the sink
 | `hashingScheme`              | The hash algorithm used for choosing the partition to which a message is sent (optional). The value options are `JavaStringHash` (default) and `Murmur3`.              |
 | `properties.*`               | The customized properties added to the Pulsar producer in TiCDC (optional). For example, `properties.location=Hangzhou`.                                               |
 
-For more parameters of Pulsar, see [<a href="https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ClientOptions">pulsar-client-go ClientOptions</a>](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ClientOptions) and [<a href="https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ProducerOptions">pulsar-client-go ProducerOptions</a>](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ProducerOptions).
+For more parameters of Pulsar, see [pulsar-client-go ClientOptions](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ClientOptions) and [pulsar-client-go ProducerOptions](https://godoc.org/github.com/apache/pulsar-client-go/pulsar#ProducerOptions).
 
 #### Use the task configuration file {#use-the-task-configuration-file}
 
-For more replication configuration (for example, specify replicating a single table), see [<a href="#task-configuration-file">Task configuration file</a>](#task-configuration-file).
+For more replication configuration (for example, specify replicating a single table), see [Task configuration file](#task-configuration-file).
 
 You can use a configuration file to create a replication task in the following way:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed create --pd=http://10.0.10.25:2379 --sink-uri="mysql://root:123456@127.0.0.1:3306/" --config changefeed.toml
@@ -372,8 +348,6 @@ In the command above, `changefeed.toml` is the configuration file for the replic
 #### Query the replication task list {#query-the-replication-task-list}
 
 Run the following command to query the replication task list:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed list --pd=http://10.0.10.25:2379
@@ -403,20 +377,16 @@ cdc cli changefeed list --pd=http://10.0.10.25:2379
 
 To query a specific replication task, run the `changefeed query` command. The query result includes the task information and the task state. You can specify the `--simple` or `-s` argument to simplify the query result that will only include the basic replication state and the checkpoint information. If you do not specify this argument, detailed task configuration, replication states, and replication table information are output.
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed query -s --pd=http://10.0.10.25:2379 --changefeed-id=simple-replication-task
 ```
 
-```
-{
- "state": "normal",
- "tso": 419035700154597378,
- "checkpoint": "2020-08-27 10:12:19.579",
- "error": null
-}
-```
+    {
+     "state": "normal",
+     "tso": 419035700154597378,
+     "checkpoint": "2020-08-27 10:12:19.579",
+     "error": null
+    }
 
 In the command and result above:
 
@@ -425,70 +395,66 @@ In the command and result above:
 -   `checkpoint` represents the corresponding time of the largest transaction TSO in the current `changefeed` that has been successfully replicated to the downstream.
 -   `error` records whether an error has occurred in the current `changefeed`.
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed query --pd=http://10.0.10.25:2379 --changefeed-id=simple-replication-task
 ```
 
-```
-{
-  "info": {
-    "sink-uri": "mysql://127.0.0.1:3306/?max-txn-row=20\u0026worker-number=4",
-    "opts": {},
-    "create-time": "2020-08-27T10:33:41.687983832+08:00",
-    "start-ts": 419036036249681921,
-    "target-ts": 0,
-    "admin-job-type": 0,
-    "sort-engine": "unified",
-    "sort-dir": ".",
-    "config": {
-      "case-sensitive": true,
-      "enable-old-value": false,
-      "filter": {
-        "rules": [
-          "*.*"
-        ],
-        "ignore-txn-start-ts": null,
-        "ddl-allow-list": null
-      },
-      "mounter": {
-        "worker-num": 16
-      },
-      "sink": {
-        "dispatchers": null,
-      },
-      "scheduler": {
-        "type": "table-number",
-        "polling-time": -1
-      }
-    },
-    "state": "normal",
-    "history": null,
-    "error": null
-  },
-  "status": {
-    "resolved-ts": 419036036249681921,
-    "checkpoint-ts": 419036036249681921,
-    "admin-job-type": 0
-  },
-  "count": 0,
-  "task-status": [
     {
-      "capture-id": "97173367-75dc-490c-ae2d-4e990f90da0f",
-      "status": {
-        "tables": {
-          "47": {
-            "start-ts": 419036036249681921
+      "info": {
+        "sink-uri": "mysql://127.0.0.1:3306/?max-txn-row=20\u0026worker-count=4",
+        "opts": {},
+        "create-time": "2020-08-27T10:33:41.687983832+08:00",
+        "start-ts": 419036036249681921,
+        "target-ts": 0,
+        "admin-job-type": 0,
+        "sort-engine": "unified",
+        "sort-dir": ".",
+        "config": {
+          "case-sensitive": true,
+          "enable-old-value": false,
+          "filter": {
+            "rules": [
+              "*.*"
+            ],
+            "ignore-txn-start-ts": null,
+            "ddl-allow-list": null
+          },
+          "mounter": {
+            "worker-num": 16
+          },
+          "sink": {
+            "dispatchers": null,
+          },
+          "scheduler": {
+            "type": "table-number",
+            "polling-time": -1
           }
         },
-        "operation": null,
+        "state": "normal",
+        "history": null,
+        "error": null
+      },
+      "status": {
+        "resolved-ts": 419036036249681921,
+        "checkpoint-ts": 419036036249681921,
         "admin-job-type": 0
-      }
+      },
+      "count": 0,
+      "task-status": [
+        {
+          "capture-id": "97173367-75dc-490c-ae2d-4e990f90da0f",
+          "status": {
+            "tables": {
+              "47": {
+                "start-ts": 419036036249681921
+              }
+            },
+            "operation": null,
+            "admin-job-type": 0
+          }
+        }
+      ]
     }
-  ]
-}
-```
 
 In the command and result above:
 
@@ -507,8 +473,6 @@ In the command and result above:
 
 Run the following command to pause a replication task:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed pause --pd=http://10.0.10.25:2379 --changefeed-id simple-replication-task
 ```
@@ -520,8 +484,6 @@ In the above command:
 #### Resume a replication task {#resume-a-replication-task}
 
 Run the following command to resume a paused replication task:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed resume --pd=http://10.0.10.25:2379 --changefeed-id simple-replication-task
@@ -535,8 +497,6 @@ In the above command:
 
 Run the following command to remove a replication task:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed remove --pd=http://10.0.10.25:2379 --changefeed-id simple-replication-task
 ```
@@ -549,11 +509,9 @@ In the above command:
 
 Starting from v4.0.4, TiCDC supports modifying the configuration of the replication task (not dynamically). To modify the `changefeed` configuration, pause the task, modify the configuration, and then resume the task.
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed pause -c test-cf --pd=http://10.0.10.25:2379
-cdc cli changefeed update -c test-cf --pd=http://10.0.10.25:2379 --sink-uri="mysql://127.0.0.1:3306/?max-txn-row=20&worker-number=8" --config=changefeed.toml
+cdc cli changefeed update -c test-cf --pd=http://10.0.10.25:2379 --sink-uri="mysql://127.0.0.1:3306/?max-txn-row=20&worker-count=8" --config=changefeed.toml
 cdc cli changefeed resume -c test-cf --pd=http://10.0.10.25:2379
 ```
 
@@ -568,48 +526,40 @@ Currently, you can modify the following configuration items:
 
 -   Query the `processor` list:
 
-    {{< copyable "" >}}
-
     ```shell
     cdc cli processor list --pd=http://10.0.10.25:2379
     ```
 
-    ```
-    [
-            {
-                    "id": "9f84ff74-abf9-407f-a6e2-56aa35b33888",
-                    "capture-id": "b293999a-4168-4988-a4f4-35d9589b226b",
-                    "changefeed-id": "simple-replication-task"
-            }
-    ]
-    ```
+        [
+                {
+                        "id": "9f84ff74-abf9-407f-a6e2-56aa35b33888",
+                        "capture-id": "b293999a-4168-4988-a4f4-35d9589b226b",
+                        "changefeed-id": "simple-replication-task"
+                }
+        ]
 
 -   Query a specific `changefeed` which corresponds to the status of a specific replication task:
-
-    {{< copyable "" >}}
 
     ```shell
     cdc cli processor query --pd=http://10.0.10.25:2379 --changefeed-id=simple-replication-task --capture-id=b293999a-4168-4988-a4f4-35d9589b226b
     ```
 
-    ```
-    {
-      "status": {
-        "tables": {
-          "56": {    # ID of the replication table, corresponding to tidb_table_id of a table in TiDB
-            "start-ts": 417474117955485702
+        {
+          "status": {
+            "tables": {
+              "56": {    # ID of the replication table, corresponding to tidb_table_id of a table in TiDB
+                "start-ts": 417474117955485702
+              }
+            },
+            "operation": null,
+            "admin-job-type": 0
+          },
+          "position": {
+            "checkpoint-ts": 417474143881789441,
+            "resolved-ts": 417474143881789441,
+            "count": 0
           }
-        },
-        "operation": null,
-        "admin-job-type": 0
-      },
-      "position": {
-        "checkpoint-ts": 417474143881789441,
-        "resolved-ts": 417474143881789441,
-        "count": 0
-      }
-    }
-    ```
+        }
 
     In the command above:
 
@@ -661,7 +611,7 @@ worker-num = 16
 ### Notes for compatibility {#notes-for-compatibility}
 
 -   In TiCDC v4.0.0, `ignore-txn-commit-ts` is removed and `ignore-txn-start-ts` is added, which uses start_ts to filter transactions.
--   In TiCDC v4.0.2, `db-dbs`/`db-tables`/`ignore-dbs`/`ignore-tables` are removed and `rules` is added, which uses new filter rules for databases and tables. For detailed filter syntax, see [<a href="/table-filter.md">Table Filter</a>](/table-filter.md).
+-   In TiCDC v4.0.2, `db-dbs`/`db-tables`/`ignore-dbs`/`ignore-tables` are removed and `rules` is added, which uses new filter rules for databases and tables. For detailed filter syntax, see [Table Filter](/table-filter.md).
 
 ## Customize the rules for Topic and Partition dispatchers of Kafka Sink {#customize-the-rules-for-topic-and-partition-dispatchers-of-kafka-sink}
 
@@ -727,19 +677,15 @@ You can use `partition = "xxx"` to specify a partition dispatcher. It supports f
 >
 > Since v6.1, to clarify the meaning of the configuration, the configuration used to specify the partition dispatcher has been changed from `dispatcher` to `partition`, with `partition` being an alias for `dispatcher`. For example, the following two rules are exactly equivalent.
 >
-> ```
-> [sink]
-> dispatchers = [
->    {matcher = ['*.*'], dispatcher = "ts"},
->    {matcher = ['*.*'], partition = "ts"},
-> ]
-> ```
+>     [sink]
+>     dispatchers = [
+>        {matcher = ['*.*'], dispatcher = "ts"},
+>        {matcher = ['*.*'], partition = "ts"},
+>     ]
 >
 > However, `dispatcher` and `partition` cannot appear in the same rule. For example, the following rule is invalid.
 >
-> ```
-> {matcher = ['*.*'], dispatcher = "ts", partition = "table"},
-> ```
+>     {matcher = ['*.*'], dispatcher = "ts", partition = "table"},
 
 ## Output the historical value of a Row Changed Event <span class="version-mark">New in v4.0.5</span> {#output-the-historical-value-of-a-row-changed-event-span-class-version-mark-new-in-v4-0-5-span}
 
@@ -747,23 +693,19 @@ In the default configuration, the Row Changed Event of TiCDC Open Protocol outpu
 
 Starting from v4.0.5, TiCDC supports outputting the historical value of a Row Changed Event. To enable this feature, specify the following configuration in the `changefeed` configuration file at the root level:
 
-{{< copyable "" >}}
-
 ```toml
 enable-old-value = true
 ```
 
-This feature is enabled by default since v5.0. To learn the output format of the TiCDC Open Protocol after this feature is enabled, see [<a href="/ticdc/ticdc-open-protocol.md#row-changed-event">TiCDC Open Protocol - Row Changed Event</a>](/ticdc/ticdc-open-protocol.md#row-changed-event).
+This feature is enabled by default since v5.0. To learn the output format of the TiCDC Open Protocol after this feature is enabled, see [TiCDC Open Protocol - Row Changed Event](/ticdc/ticdc-open-protocol.md#row-changed-event).
 
 ## Replicate tables with the new framework for collations enabled {#replicate-tables-with-the-new-framework-for-collations-enabled}
 
-Starting from v4.0.15, v5.0.4, v5.1.1 and v5.2.0, TiCDC supports tables that have enabled [<a href="/character-set-and-collation.md#new-framework-for-collations">new framework for collations</a>](/character-set-and-collation.md#new-framework-for-collations).
+Starting from v4.0.15, v5.0.4, v5.1.1 and v5.2.0, TiCDC supports tables that have enabled [new framework for collations](/character-set-and-collation.md#new-framework-for-collations).
 
 ## Replicate tables without a valid index {#replicate-tables-without-a-valid-index}
 
 Since v4.0.8, TiCDC supports replicating tables that have no valid index by modifying the task configuration. To enable this feature, configure in the `changefeed` configuration file as follows:
-
-{{< copyable "" >}}
 
 ```toml
 enable-old-value = true
@@ -785,8 +727,6 @@ For the changefeeds created using `cdc cli` after v4.0.13, Unified Sorter is ena
 
 To check whether or not the Unified Sorter feature is enabled on a changefeed, you can run the following example command (assuming the IP address of the PD instance is `http://10.0.10.25:2379`):
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli --pd="http://10.0.10.25:2379" changefeed query --changefeed-id=simple-replication-task | grep 'sort-engine'
 ```
@@ -798,7 +738,7 @@ In the output of the above command, if the value of `sort-engine` is "unified", 
 > -   If your servers use mechanical hard drives or other storage devices that have high latency or limited bandwidth, use the unified sorter with caution.
 > -   By default, Unified Sorter uses `data_dir` to store temporary files. It is recommended to ensure that the free disk space is greater than or equal to 500 GiB. For production environments, it is recommended to ensure that the free disk space on each node is greater than (the maximum `checkpoint-ts` delay allowed by the business) * (upstream write traffic at business peak hours). In addition, if you plan to replicate a large amount of historical data after `changefeed` is created, make sure that the free space on each node is greater than the amount of replicated data.
 > -   Unified sorter is enabled by default. If your servers do not match the above requirements and you want to disable the unified sorter, you need to manually set `sort-engine` to `memory` for the changefeed.
-> -   To enable Unified Sorter on an existing changefeed that uses `memory` to sort, see the methods provided in [<a href="/ticdc/troubleshoot-ticdc.md#what-should-i-do-to-handle-the-oom-that-occurs-after-ticdc-is-restarted-after-a-task-interruption">How do I handle the OOM that occurs after TiCDC is restarted after a task interruption?</a>](/ticdc/troubleshoot-ticdc.md#what-should-i-do-to-handle-the-oom-that-occurs-after-ticdc-is-restarted-after-a-task-interruption).
+> -   To enable Unified Sorter on an existing changefeed that uses `memory` to sort, see the methods provided in [How do I handle the OOM that occurs after TiCDC is restarted after a task interruption?](/ticdc/troubleshoot-ticdc.md#what-should-i-do-to-handle-the-oom-that-occurs-after-ticdc-is-restarted-after-a-task-interruption).
 
 ## Eventually consistent replication in disaster scenarios {#eventually-consistent-replication-in-disaster-scenarios}
 

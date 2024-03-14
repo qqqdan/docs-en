@@ -159,8 +159,6 @@ Two solutions:
 
 -   Add the `-Dsqoop.export.records.per.statement=10` option as follows:
 
-    {{< copyable "" >}}
-
     ```bash
     sqoop export \
         -Dsqoop.export.records.per.statement=10 \
@@ -211,8 +209,6 @@ You can combine the above two parameters with the DML of TiDB to use them. For e
 
 1.  Adjust the priority by writing SQL statements in the database:
 
-    {{< copyable "" >}}
-
     ```sql
     SELECT HIGH_PRIORITY | LOW_PRIORITY | DELAYED COUNT(*) FROM table_name;
     INSERT HIGH_PRIORITY | LOW_PRIORITY | DELAYED INTO table_name insert_values;
@@ -225,11 +221,11 @@ You can combine the above two parameters with the DML of TiDB to use them. For e
 
 ## What's the trigger strategy for <code>auto analyze</code> in TiDB? {#what-s-the-trigger-strategy-for-code-auto-analyze-code-in-tidb}
 
-Trigger strategy: `auto analyze` is automatically triggered when the number of rows in a new table reaches 1000 and this table has no write operation within one minute.
+When the number of rows in a table or a single partition of a partitioned table reaches 1000, and the ratio (the number of modified rows / the current total number of rows) of the table or partition is larger than [`tidb_auto_analyze_ratio`](/system-variables.md#tidb_auto_analyze_ratio), the [`ANALYZE`](/sql-statements/sql-statement-analyze-table.md) statement is automatically triggered.
 
-When the ratio (the number of modified rows / the current total number of rows) is larger than `tidb_auto_analyze_ratio`, the `analyze` statement is automatically triggered. The default value of `tidb_auto_analyze_ratio` is 0.5, indicating that this feature is enabled by default. To ensure safety, its minimum value is 0.3 when the feature is enabled, and it must be smaller than `pseudo-estimate-ratio` whose default value is 0.8, otherwise pseudo statistics will be used for a period of time. It is recommended to set `tidb_auto_analyze_ratio` to 0.5.
+The default value of the `tidb_auto_analyze_ratio` system variable is `0.5`, indicating that this feature is enabled by default. It is not recommended to set the value of `tidb_auto_analyze_ratio` to be larger than or equal to [`pseudo-estimate-ratio`](/tidb-configuration-file.md#pseudo-estimate-ratio) (the default value is `0.8`), otherwise the optimizer might use pseudo statistics. TiDB v5.3.0 introduces the [`tidb_enable_pseudo_for_outdated_stats`](/system-variables.md#tidb_enable_pseudo_for_outdated_stats-new-in-v530) variable, and when you set it to `OFF`, pseudo statistics are not used even if the statistics are outdated.
 
-To disable auto analyze, use the system variable `tidb_enable_auto_analyze`.
+To disable `auto analyze`, use the system variable [`tidb_enable_auto_analyze`](/system-variables.md#tidb_enable_auto_analyze-new-in-v610).
 
 ## Can I use optimizer hints to override the optimizer behavior? {#can-i-use-optimizer-hints-to-override-the-optimizer-behavior}
 
@@ -301,13 +297,11 @@ You can use `ADMIN SHOW DDL` to view the progress of the current DDL job. The op
 ADMIN SHOW DDL;
 ```
 
-```
-*************************** 1. row ***************************
-  SCHEMA_VER: 140
-       OWNER: 1a1c4174-0fcd-4ba0-add9-12d08c4077dc
-RUNNING_JOBS: ID:121, Type:add index, State:running, SchemaState:write reorganization, SchemaID:1, TableID:118, RowCount:77312, ArgLen:0, start time: 2018-12-05 16:26:10.652 +0800 CST, Err:<nil>, ErrCount:0, SnapshotVersion:404749908941733890
-     SELF_ID: 1a1c4174-0fcd-4ba0-add9-12d08c4077dc
-```
+    *************************** 1. row ***************************
+      SCHEMA_VER: 140
+           OWNER: 1a1c4174-0fcd-4ba0-add9-12d08c4077dc
+    RUNNING_JOBS: ID:121, Type:add index, State:running, SchemaState:write reorganization, SchemaID:1, TableID:118, RowCount:77312, ArgLen:0, start time: 2018-12-05 16:26:10.652 +0800 CST, Err:<nil>, ErrCount:0, SnapshotVersion:404749908941733890
+         SELF_ID: 1a1c4174-0fcd-4ba0-add9-12d08c4077dc
 
 From the above results, you can get that the `ADD INDEX` operation is currently being processed. You can also get from the `RowCount` field of the `RUNNING_JOBS` column that now the `ADD INDEX` operation has added 77312 rows of indexes.
 
