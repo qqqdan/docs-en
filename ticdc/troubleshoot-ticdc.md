@@ -28,8 +28,6 @@ When you execute `cdc cli changefeed create` to create a replication task, TiCDC
 
 To view the status of TiCDC replication tasks, use `cdc cli`. For example:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed list --pd=http://10.0.10.25:2379
 ```
@@ -70,8 +68,6 @@ The expected output is as follows:
 ### How do I know whether the replication task is stopped manually? {#how-do-i-know-whether-the-replication-task-is-stopped-manually}
 
 You can know whether the replication task is stopped manually by executing `cdc cli`. For example:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed query --pd=http://10.0.10.25:2379 --changefeed-id 28c43ffc-2316-4f4f-a70b-d1a7c59ba79f
@@ -142,44 +138,34 @@ The Time-To-Live (TTL) that TiCDC sets for a service GC safepoint is 24 hours, w
 
 This error is returned when the downstream MySQL does not load the time zone. You can load the time zone by running [`mysql_tzinfo_to_sql`](https://dev.mysql.com/doc/refman/8.0/en/mysql-tzinfo-to-sql.html). After loading the time zone, you can create tasks and replicate data normally.
 
-{{< copyable "" >}}
-
 ```shell
 mysql_tzinfo_to_sql /usr/share/zoneinfo | mysql -u root mysql -p
 ```
 
 If the output of the command above is similar to the following one, the import is successful:
 
-```
-Enter password:
-Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
-Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
-Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
-Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
-```
+    Enter password:
+    Warning: Unable to load '/usr/share/zoneinfo/iso3166.tab' as time zone. Skipping it.
+    Warning: Unable to load '/usr/share/zoneinfo/leap-seconds.list' as time zone. Skipping it.
+    Warning: Unable to load '/usr/share/zoneinfo/zone.tab' as time zone. Skipping it.
+    Warning: Unable to load '/usr/share/zoneinfo/zone1970.tab' as time zone. Skipping it.
 
 If the downstream is a special MySQL environment (a public cloud RDS or some MySQL derivative versions) and importing the time zone using the above method fails, you need to specify the MySQL time zone of the downstream using the `time-zone` parameter in `sink-uri`. You can first query the time zone used by MySQL:
 
 1.  Query the time zone used by MySQL:
 
-    {{< copyable "" >}}
-
     ```sql
     show variables like '%time_zone%';
     ```
 
-    ```
-    +------------------+--------+
-    | Variable_name    | Value  |
-    +------------------+--------+
-    | system_time_zone | CST    |
-    | time_zone        | SYSTEM |
-    +------------------+--------+
-    ```
+        +------------------+--------+
+        | Variable_name    | Value  |
+        +------------------+--------+
+        | system_time_zone | CST    |
+        | time_zone        | SYSTEM |
+        +------------------+--------+
 
 2.  Specify the time zone when you create the replication task and create the TiCDC service:
-
-    {{< copyable "" >}}
 
     ```shell
     cdc cli changefeed create --sink-uri="mysql://root@127.0.0.1:3306/?time-zone=CST" --pd=http://10.0.10.25:2379
@@ -223,20 +209,18 @@ If you use the `cdc cli changefeed create` command without specifying the `-conf
 
 Refer to [Notes for compatibility](/ticdc/manage-ticdc.md#notes-for-compatibility).
 
-## Does TiCDC support outputting data changes in the Canal format? {#does-ticdc-support-outputting-data-changes-in-the-canal-format}
+## Does TiCDC support outputting data changes in the Canal protocol? {#does-ticdc-support-outputting-data-changes-in-the-canal-protocol}
 
-Yes. To enable Canal output, specify the protocol as `canal` in the `--sink-uri` parameter. For example:
-
-{{< copyable "" >}}
+Yes. Note that for the Canal protocol, TiCDC only supports the JSON output format, while the protobuf format is not officially supported yet. To enable Canal output, specify `protocol` as `canal-json` in the `--sink-uri` configuration. For example:
 
 ```shell
-cdc cli changefeed create --pd=http://10.0.10.25:2379 --sink-uri="kafka://127.0.0.1:9092/cdc-test?kafka-version=2.4.0&protocol=canal" --config changefeed.toml
+cdc cli changefeed create --pd=http://10.0.10.25:2379 --sink-uri="kafka://127.0.0.1:9092/cdc-test?kafka-version=2.4.0&protocol=canal-json" --config changefeed.toml
 ```
 
 > **Note:**
 >
 > -   This feature is introduced in TiCDC 4.0.2.
-> -   TiCDC currently supports outputting data changes in the Canal format only to MQ sinks such as Kafka and Pulsar.
+> -   TiCDC currently supports outputting data changes in the Canal-JSON format only to MQ sinks such as Kafka and Pulsar.
 
 For more information, refer to [Create a replication task](/ticdc/manage-ticdc.md#create-a-replication-task).
 
@@ -335,7 +319,7 @@ If you encounter an error above, it is recommended to use BR to restore the incr
 
 ## After I upgrade the TiCDC cluster to v4.0.8, the <code>[CDC:ErrKafkaInvalidConfig]Canal requires old value to be enabled</code> error is reported when I execute a changefeed {#after-i-upgrade-the-ticdc-cluster-to-v4-0-8-the-code-cdc-errkafkainvalidconfig-canal-requires-old-value-to-be-enabled-code-error-is-reported-when-i-execute-a-changefeed}
 
-Since v4.0.8, if the `canal-json`, `canal` or `maxwell` protocol is used for output in a changefeed, TiCDC enables the old value feature automatically. However, if you have upgraded TiCDC from an earlier version to v4.0.8 or later, when the changefeed uses the `canal-json`, `canal` or `maxwell` protocol and the old value feature is disabled, this error is reported.
+Since v4.0.8, if the `canal-json` or `maxwell` protocol is used for output in a changefeed, TiCDC enables the old value feature automatically. However, if you have upgraded TiCDC from an earlier version to v4.0.8 or later, when the changefeed uses the `canal-json` or `maxwell` protocol and the old value feature is disabled, this error is reported.
 
 To fix the error, take the following steps:
 
@@ -343,23 +327,17 @@ To fix the error, take the following steps:
 
 2.  Execute `cdc cli changefeed pause` to pause the replication task.
 
-    {{< copyable "" >}}
-
     ```shell
     cdc cli changefeed pause -c test-cf --pd=http://10.0.10.25:2379
     ```
 
 3.  Execute `cdc cli changefeed update` to update the original changefeed configuration.
 
-    {{< copyable "" >}}
-
     ```shell
     cdc cli changefeed update -c test-cf --pd=http://10.0.10.25:2379 --sink-uri="mysql://127.0.0.1:3306/?max-txn-row=20&worker-number=8" --config=changefeed.toml
     ```
 
 4.  Execute `cdc cli changfeed resume` to resume the replication task.
-
-    {{< copyable "" >}}
 
     ```shell
     cdc cli changefeed resume -c test-cf --pd=http://10.0.10.25:2379
@@ -384,28 +362,22 @@ Currently, users cannot modify the `safe-mode` setting, so this issue currently 
 
 For TiCDC v4.0.8 or earlier versions, you cannot effectively control the size of the message output to Kafka only by configuring the `max-message-bytes` setting for Kafka in the Sink URI. To control the message size, you also need to increase the limit on the bytes of messages to be received by Kafka. To add such a limit, add the following configuration to the Kafka server configuration.
 
-```
-# The maximum byte number of a message that the broker receives
-message.max.bytes=2147483648
-# The maximum byte number of a message that the broker copies
-replica.fetch.max.bytes=2147483648
-# The maximum message byte number that the consumer side reads
-fetch.message.max.bytes=2147483648
-```
+    # The maximum byte number of a message that the broker receives
+    message.max.bytes=2147483648
+    # The maximum byte number of a message that the broker copies
+    replica.fetch.max.bytes=2147483648
+    # The maximum message byte number that the consumer side reads
+    fetch.message.max.bytes=2147483648
 
 ## How can I find out whether a DDL statement fails to execute in downstream during TiCDC replication? How to resume the replication? {#how-can-i-find-out-whether-a-ddl-statement-fails-to-execute-in-downstream-during-ticdc-replication-how-to-resume-the-replication}
 
 If a DDL statement fails to execute, the replication task (changefeed) automatically stops. The checkpoint-ts is the DDL statement's finish-ts minus one. If you want TiCDC to retry executing this statement in the downstream, use `cdc cli changefeed resume` to resume the replication task. For example:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed resume -c test-cf --pd=http://10.0.10.25:2379
 ```
 
 If you want to skip this DDL statement that goes wrong, set the start-ts of the changefeed to the checkpoint-ts (the timestamp at which the DDL statement goes wrong) plus one. For example, if the checkpoint-ts at which the DDL statement goes wrong is `415241823337054209`, execute the following commands to skip this DDL statement:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed update -c test-cf --pd=http://10.0.10.25:2379 --start-ts 415241823337054210
@@ -415,8 +387,6 @@ cdc cli changefeed resume -c test-cf --pd=http://10.0.10.25:2379
 ## The default value of the time type field is inconsistent when replicating a DDL statement to the downstream MySQL 5.7. What can I do? {#the-default-value-of-the-time-type-field-is-inconsistent-when-replicating-a-ddl-statement-to-the-downstream-mysql-5-7-what-can-i-do}
 
 Suppose that the `create table test (id int primary key, ts timestamp)` statement is executed in the upstream TiDB. When TiCDC replicates this statement to the downstream MySQL 5.7, MySQL uses the default configuration. The table schema after the replication is as follows. The default value of the `timestamp` field becomes `CURRENT_TIMESTAMP`:
-
-{{< copyable "" >}}
 
 ```sql
 mysql root@127.0.0.1:test> show create table test;

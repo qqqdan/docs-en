@@ -13,8 +13,6 @@ You can also use the HTTP interface (the TiCDC OpenAPI feature) to manage the Ti
 
 This section introduces how to upgrade the TiCDC cluster using TiUP. In the following example, assume that you need to upgrade TiCDC and the entire TiDB cluster to v5.4.3.
 
-{{< copyable "" >}}
-
 ```shell
 tiup update --self && \
 tiup update --all && \
@@ -31,8 +29,6 @@ tiup cluster upgrade <cluster-name> v5.4.3
 This section introduces how to modify the configuration of TiCDC cluster using the  [`tiup cluster edit-config`](/tiup/tiup-component-cluster-edit-config.md) command of TiUP. The following example changes the value of `gc-ttl` from the default `86400` to `3600`, namely, one hour.
 
 First, execute the following command. You need to replace `<cluster-name>` with your actual cluster name.
-
-{{< copyable "" >}}
 
 ```shell
 tiup cluster edit-config <cluster-name>
@@ -76,26 +72,22 @@ If you deploy TiCDC using TiUP, replace `cdc cli` in the following commands with
 
 -   Query the `capture` list:
 
-    {{< copyable "" >}}
-
     ```shell
     cdc cli capture list --pd=http://10.0.10.25:2379
     ```
 
-    ```
-    [
-      {
-        "id": "806e3a1b-0e31-477f-9dd6-f3f2c570abdd",
-        "is-owner": true,
-        "address": "127.0.0.1:8300"
-      },
-      {
-        "id": "ea2a4203-56fe-43a6-b442-7b295f458ebc",
-        "is-owner": false,
-        "address": "127.0.0.1:8301"
-      }
-    ]
-    ```
+        [
+          {
+            "id": "806e3a1b-0e31-477f-9dd6-f3f2c570abdd",
+            "is-owner": true,
+            "address": "127.0.0.1:8300"
+          },
+          {
+            "id": "ea2a4203-56fe-43a6-b442-7b295f458ebc",
+            "is-owner": false,
+            "address": "127.0.0.1:8301"
+          }
+        ]
 
     -   `id`: The ID of the service process.
     -   `is-owner`: Indicates whether the service process is the owner node.
@@ -132,8 +124,6 @@ The numbers in the above state transfer diagram are described as follows.
 
 Execute the following commands to create a replication task:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed create --pd=http://10.0.10.25:2379 --sink-uri="mysql://root:123456@127.0.0.1:3306/" --changefeed-id="simple-replication-task" --sort-engine="unified"
 ```
@@ -148,11 +138,7 @@ Info: {"sink-uri":"mysql://root:123456@127.0.0.1:3306/","opts":{},"create-time":
 
 -   `--sink-uri`: The downstream address of the replication task. Configure `--sink-uri` according to the following format. Currently, the scheme supports `mysql`/`tidb`/`kafka`/`pulsar`/`s3`/`local`.
 
-    {{< copyable "" >}}
-
-    ```
-    [scheme]://[userinfo@][host]:[port][/path]?[query_parameters]
-    ```
+        [scheme]://[userinfo@][host]:[port][/path]?[query_parameters]
 
     When a URI contains special characters, you need to process these special characters using URL encoding.
 
@@ -164,7 +150,7 @@ Info: {"sink-uri":"mysql://root:123456@127.0.0.1:3306/","opts":{},"create-time":
 
     -   `unified`: When `unified` is used, TiCDC prefers data sorting in memory. If the memory is insufficient, TiCDC automatically uses the disk to store the temporary data. This is the default value of `--sort-engine`.
     -   `memory`: Sorts data changes in memory. It is **NOT recommended** to use this sorting engine, because OOM is easily triggered when you replicate a large amount of data.
-    -   `file`: Entirely uses the disk to store the temporary data. This feature is **deprecated**. It is <strong>NOT recommended</strong> to use it in <strong>any</strong> situation.
+    -   `file`: Entirely uses the disk to store the temporary data. This feature is **deprecated**. It is **NOT recommended** to use it in **any** situation.
 
 -   `--config`: Specifies the configuration file of the `changefeed`.
 
@@ -173,8 +159,6 @@ Info: {"sink-uri":"mysql://root:123456@127.0.0.1:3306/","opts":{},"create-time":
 #### Configure sink URI with <code>mysql</code>/<code>tidb</code> {#configure-sink-uri-with-code-mysql-code-code-tidb-code}
 
 Sample configuration:
-
-{{< copyable "" >}}
 
 ```shell
 --sink-uri="mysql://root:123456@127.0.0.1:3306/?worker-count=16&max-txn-row=5000"
@@ -199,8 +183,6 @@ The following are descriptions of parameters and parameter values that can be co
 
 Sample configuration:
 
-{{< copyable "" >}}
-
 ```shell
 --sink-uri="kafka://127.0.0.1:9092/topic-name?kafka-version=2.4.0&partition-num=6&max-message-bytes=67108864&replication-factor=1"
 ```
@@ -218,7 +200,7 @@ The following are descriptions of parameters and parameter values that can be co
 | `max-message-bytes`       | The maximum size of data that is sent to Kafka broker each time (optional, `10MB` by default). From v5.0.6 and v4.0.6, the default value has changed from 64MB and 256MB to 10MB.                                                                                                               |
 | `replication-factor`      | The number of Kafka message replicas that can be saved (optional, `1` by default)                                                                                                                                                                                                               |
 | `compression`             | The compression algorithm used when sending messages (value options are `none`, `lz4`, `gzip`, `snappy`, and `zstd`; `none` by default).                                                                                                                                                        |
-| `protocol`                | The protocol with which messages are output to Kafka. The value options are `canal-json`, `open-protocol`, `canal`, `avro` and `maxwell`.                                                                                                                                                       |
+| `protocol`                | The protocol with which messages are output to Kafka. The value options are `canal-json`, `open-protocol`, `avro` and `maxwell`.                                                                                                                                                                |
 | `auto-create-topic`       | Determines whether TiCDC creates the topic automatically when the `topic-name` passed in does not exist in the Kafka cluster (optional, `true` by default)                                                                                                                                      |
 | `enable-tidb-extension`   | When the output protocol is `canal-json`, if the value is `true`, TiCDC sends Resolved events and adds the TiDB extension field to the Kafka message. (optional, `false` by default)                                                                                                            |
 | `max-batch-size`          | New in v4.0.9. If the message protocol supports outputting multiple data changes to one Kafka message, this parameter specifies the maximum number of data changes in one Kafka message. It currently takes effect only when Kafka's `protocol` is `open-protocol`. (optional, `16` by default) |
@@ -247,8 +229,6 @@ Best practices:
 
 Sample configuration:
 
-{{< copyable "" >}}
-
 ```shell
 --sink-uri="kafka://127.0.0.1:9092/topic-name?protocol=canal-json&kafka-version=2.4.0&protocol=avro&partition-num=6&max-message-bytes=67108864&replication-factor=1"
 --opts registry="http://127.0.0.1:8081"
@@ -265,8 +245,6 @@ For detailed integration guide, see [Quick Start Guide on Integrating TiDB with 
 > This is still an experimental feature. Do **NOT** use it in a production environment.
 
 Sample configuration:
-
-{{< copyable "" >}}
 
 ```shell
 --sink-uri="pulsar://127.0.0.1:6650/topic-name?connectionTimeout=2s"
@@ -285,7 +263,7 @@ The following are descriptions of parameters that can be configured for the sink
 | `auth.tls`                   | Uses the TLS mode to verify the downstream Pulsar (optional). For example, `auth=tls&auth.tlsCertFile=/path/to/cert&auth.tlsKeyFile=/path/to/key`.                     |
 | `auth.token`                 | Uses the token mode to verify the downstream Pulsar (optional). For example, `auth=token&auth.token=secret-token` or `auth=token&auth.file=path/to/secret-token-file`. |
 | `name`                       | The name of Pulsar producer in TiCDC (optional)                                                                                                                        |
-| `protocol`                   | The protocol with which messages are output to Pulsar. The value options are `canal-json`, `open-protocol`, `canal`, `avro`, and `maxwell`.                            |
+| `protocol`                   | The protocol with which messages are output to Pulsar. The value options are `canal-json`, `open-protocol`, `avro`, and `maxwell`.                                     |
 | `maxPendingMessages`         | Sets the maximum size of the pending message queue, which is optional and defaults to 1000. For example, pending for the confirmation message from Pulsar.             |
 | `disableBatching`            | Disables automatically sending messages in batches (optional)                                                                                                          |
 | `batchingMaxPublishDelay`    | Sets the duration within which the messages sent are batched (default: 10ms)                                                                                           |
@@ -301,8 +279,6 @@ For more replication configuration (for example, specify replicating a single ta
 
 You can use a configuration file to create a replication task in the following way:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed create --pd=http://10.0.10.25:2379 --sink-uri="mysql://root:123456@127.0.0.1:3306/" --config changefeed.toml
 ```
@@ -312,8 +288,6 @@ In the command above, `changefeed.toml` is the configuration file for the replic
 #### Query the replication task list {#query-the-replication-task-list}
 
 Execute the following command to query the replication task list:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed list --pd=http://10.0.10.25:2379
@@ -343,20 +317,16 @@ cdc cli changefeed list --pd=http://10.0.10.25:2379
 
 To query a specific replication task, execute the `changefeed query` command. The query result includes the task information and the task state. You can specify the `--simple` or `-s` argument to simplify the query result that will only include the basic replication state and the checkpoint information. If you do not specify this argument, detailed task configuration, replication states, and replication table information are output.
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed query -s --pd=http://10.0.10.25:2379 --changefeed-id=simple-replication-task
 ```
 
-```
-{
- "state": "normal",
- "tso": 419035700154597378,
- "checkpoint": "2020-08-27 10:12:19.579",
- "error": null
-}
-```
+    {
+     "state": "normal",
+     "tso": 419035700154597378,
+     "checkpoint": "2020-08-27 10:12:19.579",
+     "error": null
+    }
 
 In the command and result above:
 
@@ -365,70 +335,66 @@ In the command and result above:
 -   `checkpoint` represents the corresponding time of the largest transaction TSO in the current `changefeed` that has been successfully replicated to the downstream.
 -   `error` records whether an error has occurred in the current `changefeed`.
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed query --pd=http://10.0.10.25:2379 --changefeed-id=simple-replication-task
 ```
 
-```
-{
-  "info": {
-    "sink-uri": "mysql://127.0.0.1:3306/?max-txn-row=20\u0026worker-number=4",
-    "opts": {},
-    "create-time": "2020-08-27T10:33:41.687983832+08:00",
-    "start-ts": 419036036249681921,
-    "target-ts": 0,
-    "admin-job-type": 0,
-    "sort-engine": "unified",
-    "sort-dir": ".",
-    "config": {
-      "case-sensitive": true,
-      "enable-old-value": false,
-      "filter": {
-        "rules": [
-          "*.*"
-        ],
-        "ignore-txn-start-ts": null,
-        "ddl-allow-list": null
-      },
-      "mounter": {
-        "worker-num": 16
-      },
-      "sink": {
-        "dispatchers": null,
-      },
-      "scheduler": {
-        "type": "table-number",
-        "polling-time": -1
-      }
-    },
-    "state": "normal",
-    "history": null,
-    "error": null
-  },
-  "status": {
-    "resolved-ts": 419036036249681921,
-    "checkpoint-ts": 419036036249681921,
-    "admin-job-type": 0
-  },
-  "count": 0,
-  "task-status": [
     {
-      "capture-id": "97173367-75dc-490c-ae2d-4e990f90da0f",
-      "status": {
-        "tables": {
-          "47": {
-            "start-ts": 419036036249681921
+      "info": {
+        "sink-uri": "mysql://127.0.0.1:3306/?max-txn-row=20\u0026worker-number=4",
+        "opts": {},
+        "create-time": "2020-08-27T10:33:41.687983832+08:00",
+        "start-ts": 419036036249681921,
+        "target-ts": 0,
+        "admin-job-type": 0,
+        "sort-engine": "unified",
+        "sort-dir": ".",
+        "config": {
+          "case-sensitive": true,
+          "enable-old-value": false,
+          "filter": {
+            "rules": [
+              "*.*"
+            ],
+            "ignore-txn-start-ts": null,
+            "ddl-allow-list": null
+          },
+          "mounter": {
+            "worker-num": 16
+          },
+          "sink": {
+            "dispatchers": null,
+          },
+          "scheduler": {
+            "type": "table-number",
+            "polling-time": -1
           }
         },
-        "operation": null,
+        "state": "normal",
+        "history": null,
+        "error": null
+      },
+      "status": {
+        "resolved-ts": 419036036249681921,
+        "checkpoint-ts": 419036036249681921,
         "admin-job-type": 0
-      }
+      },
+      "count": 0,
+      "task-status": [
+        {
+          "capture-id": "97173367-75dc-490c-ae2d-4e990f90da0f",
+          "status": {
+            "tables": {
+              "47": {
+                "start-ts": 419036036249681921
+              }
+            },
+            "operation": null,
+            "admin-job-type": 0
+          }
+        }
+      ]
     }
-  ]
-}
-```
 
 In the command and result above:
 
@@ -447,8 +413,6 @@ In the command and result above:
 
 Execute the following command to pause a replication task:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed pause --pd=http://10.0.10.25:2379 --changefeed-id simple-replication-task
 ```
@@ -460,8 +424,6 @@ In the above command:
 #### Resume a replication task {#resume-a-replication-task}
 
 Execute the following command to resume a paused replication task:
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed resume --pd=http://10.0.10.25:2379 --changefeed-id simple-replication-task
@@ -475,8 +437,6 @@ In the above command:
 
 Execute the following command to remove a replication task:
 
-{{< copyable "" >}}
-
 ```shell
 cdc cli changefeed remove --pd=http://10.0.10.25:2379 --changefeed-id simple-replication-task
 ```
@@ -488,8 +448,6 @@ In the above command:
 ### Update task configuration {#update-task-configuration}
 
 Starting from v4.0.4, TiCDC supports modifying the configuration of the replication task (not dynamically). To modify the `changefeed` configuration, pause the task, modify the configuration, and then resume the task.
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli changefeed pause -c test-cf --pd=http://10.0.10.25:2379
@@ -508,48 +466,40 @@ Currently, you can modify the following configuration items:
 
 -   Query the `processor` list:
 
-    {{< copyable "" >}}
-
     ```shell
     cdc cli processor list --pd=http://10.0.10.25:2379
     ```
 
-    ```
-    [
-            {
-                    "id": "9f84ff74-abf9-407f-a6e2-56aa35b33888",
-                    "capture-id": "b293999a-4168-4988-a4f4-35d9589b226b",
-                    "changefeed-id": "simple-replication-task"
-            }
-    ]
-    ```
+        [
+                {
+                        "id": "9f84ff74-abf9-407f-a6e2-56aa35b33888",
+                        "capture-id": "b293999a-4168-4988-a4f4-35d9589b226b",
+                        "changefeed-id": "simple-replication-task"
+                }
+        ]
 
 -   Query a specific `changefeed` which corresponds to the status of a specific replication task:
-
-    {{< copyable "" >}}
 
     ```shell
     cdc cli processor query --pd=http://10.0.10.25:2379 --changefeed-id=simple-replication-task --capture-id=b293999a-4168-4988-a4f4-35d9589b226b
     ```
 
-    ```
-    {
-      "status": {
-        "tables": {
-          "56": {    # ID of the replication table, corresponding to tidb_table_id of a table in TiDB
-            "start-ts": 417474117955485702
+        {
+          "status": {
+            "tables": {
+              "56": {    # ID of the replication table, corresponding to tidb_table_id of a table in TiDB
+                "start-ts": 417474117955485702
+              }
+            },
+            "operation": null,
+            "admin-job-type": 0
+          },
+          "position": {
+            "checkpoint-ts": 417474143881789441,
+            "resolved-ts": 417474143881789441,
+            "count": 0
           }
-        },
-        "operation": null,
-        "admin-job-type": 0
-      },
-      "position": {
-        "checkpoint-ts": 417474143881789441,
-        "resolved-ts": 417474143881789441,
-        "count": 0
-      }
-    }
-    ```
+        }
 
     In the command above:
 
@@ -596,7 +546,7 @@ dispatchers = [
     {matcher = ['test3.*', 'test4.*'], dispatcher = "rowid"},
 ]
 # For the sink of MQ type, you can specify the protocol format of the message.
-# Currently the following protocols are supported: canal-json, open-protocol, canal, avro, and maxwell.
+# Currently the following protocols are supported: canal-json, open-protocol, avro, and maxwell.
 protocol = "canal-json"
 
 ```
@@ -612,8 +562,6 @@ In the default configuration, the Row Changed Event of TiCDC Open Protocol outpu
 
 Starting from v4.0.5, TiCDC supports outputting the historical value of a Row Changed Event. To enable this feature, specify the following configuration in the `changefeed` configuration file at the root level:
 
-{{< copyable "" >}}
-
 ```toml
 enable-old-value = true
 ```
@@ -627,8 +575,6 @@ Starting from v4.0.15, v5.0.4, v5.1.1 and v5.2.0, TiCDC supports tables that hav
 ## Replicate tables without a valid index {#replicate-tables-without-a-valid-index}
 
 Since v4.0.8, TiCDC supports replicating tables that have no valid index by modifying the task configuration. To enable this feature, configure in the `changefeed` configuration file as follows:
-
-{{< copyable "" >}}
 
 ```toml
 enable-old-value = true
@@ -649,8 +595,6 @@ Unified sorter is the sorting engine in TiCDC. It can mitigate OOM problems caus
 For the changefeeds created using `cdc cli` after v4.0.13, Unified Sorter is enabled by default; for the changefeeds that have existed before v4.0.13, the previous configuration is used.
 
 To check whether or not the Unified Sorter feature is enabled on a changefeed, you can execute the following example command (assuming the IP address of the PD instance is `http://10.0.10.25:2379`):
-
-{{< copyable "" >}}
 
 ```shell
 cdc cli --pd="http://10.0.10.25:2379" changefeed query --changefeed-id=simple-replication-task | grep 'sort-engine'
