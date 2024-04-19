@@ -7,7 +7,7 @@ summary: Describes TiDB compatibility issues with third-party tools found during
 
 > **Note:**
 >
-> The [<a href="/mysql-compatibility.md#unsupported-features">Unsupported features</a>](/mysql-compatibility.md#unsupported-features) section lists the unsupported features in TiDB, including:
+> The [Unsupported features](/mysql-compatibility.md#unsupported-features) section lists the unsupported features in TiDB, including:
 >
 > -   Stored procedures and functions
 > -   Triggers
@@ -17,9 +17,9 @@ summary: Describes TiDB compatibility issues with third-party tools found during
 > -   `SPATIAL` functions, data types and indexes
 > -   `XA` syntax
 >
-> The preceding unsupported features are expected behavior and are not listed in this document. For more details, see [<a href="/mysql-compatibility.md">MySQL Compatibility</a>](/mysql-compatibility.md).
+> The preceding unsupported features are expected behavior and are not listed in this document. For more details, see [MySQL Compatibility](/mysql-compatibility.md).
 
-The incompatibility issues listed in this document are found in some [<a href="/develop/dev-guide-third-party-tools-compatibility.md">third-party tools supported by TiDB</a>](/develop/dev-guide-third-party-tools-compatibility.md).
+The incompatibility issues listed in this document are found in some [third-party tools supported by TiDB](/develop/dev-guide-third-party-tools-compatibility.md).
 
 ## General incompatibility {#general-incompatibility}
 
@@ -37,19 +37,19 @@ In a TiDB application, to avoid data overflow, you should use a 64-bit integer o
 
 **Description**
 
-MySQL maintains a series of [<a href="https://dev.mysql.com/doc/refman/8.0/en/server-status-variables.html#statvar_Com_xxx">server status variables starting with `Com_`</a>](https://dev.mysql.com/doc/refman/8.0/en/server-status-variables.html#statvar_Com_xxx) to keep track of the total number of operations you have performed on the database. For example, `Com_select` records the total number of `SELECT` statements initiated by MySQL since it was last started (even if the statements were not queried successfully). TiDB does not maintain these variables. You can use the statement [<a href="/sql-statements/sql-statement-show-status.md">`SHOW GLOBAL STATUS LIKE 'Com_%'`</a>](/sql-statements/sql-statement-show-status.md) to see the difference between TiDB and MySQL.
+MySQL maintains a series of [server status variables starting with `Com_`](https://dev.mysql.com/doc/refman/8.0/en/server-status-variables.html#statvar_Com_xxx) to keep track of the total number of operations you have performed on the database. For example, `Com_select` records the total number of `SELECT` statements initiated by MySQL since it was last started (even if the statements were not queried successfully). TiDB does not maintain these variables. You can use the statement [`SHOW GLOBAL STATUS LIKE 'Com_%'`](/sql-statements/sql-statement-show-status.md) to see the difference between TiDB and MySQL.
 
 **Way to avoid**
 
 <CustomContent platform="tidb">
 
-Do not use these variables. One common scenario is monitoring. TiDB is well observable and does not require querying from server status variables. For custom monitoring tools, refer to [<a href="/tidb-monitoring-framework.md">TiDB Monitoring Framework Overview</a>](/tidb-monitoring-framework.md).
+Do not use these variables. One common scenario is monitoring. TiDB is well observable and does not require querying from server status variables. For custom monitoring tools, refer to [TiDB Monitoring Framework Overview](/tidb-monitoring-framework.md).
 
 </CustomContent>
 
 <CustomContent platform="tidb-cloud">
 
-Do not use these variables. One common scenario is monitoring. TiDB Cloud is well observable and does not require querying from server status variables. For more information about TiDB Cloud monitoring services, refer to [<a href="/tidb-cloud/monitor-tidb-cluster.md">Monitor a TiDB Cluster</a>](/tidb-cloud/monitor-tidb-cluster.md).
+Do not use these variables. One common scenario is monitoring. TiDB Cloud is well observable and does not require querying from server status variables. For more information about TiDB Cloud monitoring services, refer to [Monitor a TiDB Cluster](/tidb-cloud/monitor-tidb-cluster.md).
 
 </CustomContent>
 
@@ -63,13 +63,13 @@ TiDB error messages distinguish between `TIMESTAMP` and `DATETIME`, while MySQL 
 
 <CustomContent platform="tidb">
 
-Do not use the error messages for string matching. Instead, use [<a href="/error-codes.md">Error Codes</a>](/error-codes.md) for troubleshooting.
+Do not use the error messages for string matching. Instead, use [Error Codes](/error-codes.md) for troubleshooting.
 
 </CustomContent>
 
 <CustomContent platform="tidb-cloud">
 
-Do not use the error messages for string matching. Instead, use [<a href="https://docs.pingcap.com/tidb/stable/error-codes">Error Codes</a>](https://docs.pingcap.com/tidb/stable/error-codes) for troubleshooting.
+Do not use the error messages for string matching. Instead, use [Error Codes](https://docs.pingcap.com/tidb/stable/error-codes) for troubleshooting.
 
 </CustomContent>
 
@@ -81,7 +81,7 @@ The `CHECK TABLE` statement is not supported in TiDB.
 
 **Way to avoid**
 
-To check the consistency of data and corresponding indexes, you can use the [<a href="/sql-statements/sql-statement-admin-check-table-index.md">`ADMIN CHECK [TABLE|INDEX]`</a>](/sql-statements/sql-statement-admin-check-table-index.md) statement in TiDB.
+To check the consistency of data and corresponding indexes, you can use the [`ADMIN CHECK [TABLE|INDEX]`](/sql-statements/sql-statement-admin-check-table-index.md) statement in TiDB.
 
 ## Compatibility with MySQL JDBC {#compatibility-with-mysql-jdbc}
 
@@ -109,7 +109,7 @@ Set the collation manually, and do not rely on the client-side default collation
 
 **Description**
 
-In TiDB, you cannot use the `NO_BACKSLASH_ESCAPES` parameter without escaping the `\` character. For more details, track this [<a href="https://github.com/pingcap/tidb/issues/35302">issue</a>](https://github.com/pingcap/tidb/issues/35302).
+In TiDB, you cannot use the `NO_BACKSLASH_ESCAPES` parameter without escaping the `\` character. For more details, track this [issue](https://github.com/pingcap/tidb/issues/35302).
 
 **Way to avoid**
 
@@ -132,7 +132,7 @@ Do not use the `noIndexUsed()` and `noGoodIndexUsed()` functions in TiDB.
 
 **Description**
 
-TiDB does not support the [<a href="https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-debugging-profiling.html">enablePacketDebug</a>](https://dev.mysql.com/doc/connector-j/8.0/en/connector-j-connp-props-debugging-profiling.html) parameter. It is a MySQL Connector/J parameter used for debugging that will keep the buffer of the data packet. This might cause the connection to close unexpectedly. **DO NOT** turn it on.
+TiDB does not support the [enablePacketDebug](https://dev.mysql.com/doc/connector-j/en/connector-j-connp-props-debugging-profiling.html) parameter. It is a MySQL Connector/J parameter used for debugging that will keep the buffer of the data packet. This might cause the connection to close unexpectedly. **DO NOT** turn it on.
 
 **Way to avoid**
 
@@ -154,55 +154,55 @@ To ensure data consistency by transaction, you can use `UPDATE` statements to up
 
 **Description**
 
-When the `useLocalTransactionState` and `rewriteBatchedStatements` parameters are set to `true` at the same time, the transaction might fail to commit. You can reproduce with [<a href="https://github.com/Icemap/tidb-java-gitpod/tree/reproduction-local-transaction-state-txn-error">this code</a>](https://github.com/Icemap/tidb-java-gitpod/tree/reproduction-local-transaction-state-txn-error).
+When using MySQL Connector/J 8.0.32 or an earlier version, if the `useLocalTransactionState` and `rewriteBatchedStatements` parameters are set to `true` at the same time, the transaction might fail to commit. You can reproduce with [this code](https://github.com/Icemap/tidb-java-gitpod/tree/reproduction-local-transaction-state-txn-error).
 
 **Way to avoid**
 
 > **Note:**
 >
-> This bug has been reported to MySQL JDBC. To keep track of the process, you can follow this [<a href="https://bugs.mysql.com/bug.php?id=108643">Bug Report</a>](https://bugs.mysql.com/bug.php?id=108643).
+> `useConfigs=maxPerformance` includes a group of configurations. For detailed configurations in MySQL Connector/J 8.0 and MySQL Connector/J 5.1, see [mysql-connector-j 8.0](https://github.com/mysql/mysql-connector-j/blob/release/8.0/src/main/resources/com/mysql/cj/configurations/maxPerformance.properties) and [mysql-connector-j 5.1](https://github.com/mysql/mysql-connector-j/blob/release/5.1/src/com/mysql/jdbc/configs/maxPerformance.properties) respectively. You need to disable `useLocalTransactionState` when using `maxPerformance`. That is, use `useConfigs=maxPerformance&useLocalTransactionState=false`.
 
-**DO NOT** turn on `useLocalTransactionState` as this might prevent transactions from being committed or rolled back.
+This bug has been fixed in MySQL Connector/J 8.0.33. Considering updates for the 8.0.x series have ceased, it is strongly recommended to upgrade your MySQL Connector/J to [the latest General Availability (GA) version](https://dev.mysql.com/downloads/connector/j/) for improved stability and performance.
 
 ### Connector is incompatible with the server version earlier than 5.7.5 {#connector-is-incompatible-with-the-server-version-earlier-than-5-7-5}
 
 **Description**
 
-The database connection might hang under certain conditions when using MySQL Connector/J 8.0.29 with a MySQL server &#x3C; 5.7.5 or a database using the MySQL server &#x3C; 5.7.5 protocol (such as TiDB earlier than v6.3.0). For more details, see the [<a href="https://bugs.mysql.com/bug.php?id=106252">Bug Report</a>](https://bugs.mysql.com/bug.php?id=106252).
+The database connection might hang under certain conditions when using MySQL Connector/J 8.0.31 or an earlier version with a MySQL server &#x3C; 5.7.5 or a database using the MySQL server &#x3C; 5.7.5 protocol (such as TiDB earlier than v6.3.0). For more details, see the [Bug Report](https://bugs.mysql.com/bug.php?id=106252).
 
 **Way to avoid**
 
-This is a known issue. As of October 12, 2022, MySQL Connector/J has not fixed the issue.
+This bug has been fixed in MySQL Connector/J 8.0.32. Considering updates for the 8.0.x series have ceased, it is strongly recommended to upgrade your MySQL Connector/J to [the latest General Availability (GA) version](https://dev.mysql.com/downloads/connector/j/) for improved stability and performance.
 
-TiDB fixes it in the following ways:
+TiDB also fixes it in the following ways:
 
--   Client side: This bug has been fixed in **pingcap/mysql-connector-j** and you can use the [<a href="https://github.com/pingcap/mysql-connector-j">pingcap/mysql-connector-j</a>](https://github.com/pingcap/mysql-connector-j) instead of the official MySQL Connector/J.
+-   Client side: This bug has been fixed in **pingcap/mysql-connector-j** and you can use the [pingcap/mysql-connector-j](https://github.com/pingcap/mysql-connector-j) instead of the official MySQL Connector/J.
 -   Server side: This compatibility issue has been fixed since TiDB v6.3.0 and you can upgrade the server to v6.3.0 or later versions.
 
 ## Compatibility with Sequelize {#compatibility-with-sequelize}
 
-The compatibility information described in this section is based on [<a href="https://www.npmjs.com/package/sequelize/v/6.32.1">Sequelize v6.32.1</a>](https://www.npmjs.com/package/sequelize/v/6.32.1).
+The compatibility information described in this section is based on [Sequelize v6.32.1](https://www.npmjs.com/package/sequelize/v/6.32.1).
 
-According to the test results, TiDB supports most of the Sequelize features ([<a href="https://sequelize.org/docs/v6/other-topics/dialect-specific-things/#mysql">using `MySQL` as the dialect</a>](https://sequelize.org/docs/v6/other-topics/dialect-specific-things/#mysql)).
+According to the test results, TiDB supports most of the Sequelize features ([using `MySQL` as the dialect](https://sequelize.org/docs/v6/other-topics/dialect-specific-things/#mysql)).
 
 Unsupported features are:
 
 -   Foreign key constraints (including many-to-many relationships) are not supported.
--   [<a href="https://github.com/pingcap/tidb/issues/6347">`GEOMETRY`</a>](https://github.com/pingcap/tidb/issues/6347) is not supported.
+-   [`GEOMETRY`](https://github.com/pingcap/tidb/issues/6347) is not supported.
 -   Modification of integer primary key is not supported.
 -   `PROCEDURE` is not supported.
--   The `READ-UNCOMMITTED` and `SERIALIZABLE` [<a href="/system-variables.md#transaction_isolation">isolation levels</a>](/system-variables.md#transaction_isolation) are not supported.
+-   The `READ-UNCOMMITTED` and `SERIALIZABLE` [isolation levels](/system-variables.md#transaction_isolation) are not supported.
 -   Modification of a column's `AUTO_INCREMENT` attribute is not allowed by default.
 -   `FULLTEXT`, `HASH`, and `SPATIAL` indexes are not supported.
 -   `sequelize.queryInterface.showIndex(Model.tableName);` is not supported.
 -   `sequelize.options.databaseVersion` is not supported.
--   Adding a foreign key reference using [<a href="https://sequelize.org/api/v6/class/src/dialects/abstract/query-interface.js~queryinterface#instance-method-addColumn">`queryInterface.addColumn`</a>](https://sequelize.org/api/v6/class/src/dialects/abstract/query-interface.js~queryinterface#instance-method-addColumn) is not supported.
+-   Adding a foreign key reference using [`queryInterface.addColumn`](https://sequelize.org/api/v6/class/src/dialects/abstract/query-interface.js~queryinterface#instance-method-addColumn) is not supported.
 
 ### Modification of integer primary key is not supported {#modification-of-integer-primary-key-is-not-supported}
 
 **Description**
 
-Modification of integer primary key is not supported. TiDB uses primary key as an index for data organization if the primary key is integer type. Refer to [<a href="https://github.com/pingcap/tidb/issues/18090">Issue #18090</a>](https://github.com/pingcap/tidb/issues/18090) and [<a href="/clustered-indexes.md">Clustered Indexes</a>](/clustered-indexes.md) for more details.
+Modification of integer primary key is not supported. TiDB uses primary key as an index for data organization if the primary key is integer type. Refer to [Issue #18090](https://github.com/pingcap/tidb/issues/18090) and [Clustered Indexes](/clustered-indexes.md) for more details.
 
 ### The <code>READ-UNCOMMITTED</code> and <code>SERIALIZABLE</code> isolation levels are not supported {#the-code-read-uncommitted-code-and-code-serializable-code-isolation-levels-are-not-supported}
 
@@ -214,7 +214,7 @@ TiDB does not support the `READ-UNCOMMITTED` and `SERIALIZABLE` isolation levels
 
 Use only the isolation level that TiDB supports: `REPEATABLE-READ` or `READ-COMMITTED`.
 
-If you want TiDB to be compatible with other applications that set the `SERIALIZABLE` isolation level but not depend on `SERIALIZABLE`, you can set [<a href="/system-variables.md#tidb_skip_isolation_level_check">`tidb_skip_isolation_level_check`</a>](/system-variables.md#tidb_skip_isolation_level_check) to `1`. In such case, TiDB ignores the unsupported isolation level error.
+If you want TiDB to be compatible with other applications that set the `SERIALIZABLE` isolation level but not depend on `SERIALIZABLE`, you can set [`tidb_skip_isolation_level_check`](/system-variables.md#tidb_skip_isolation_level_check) to `1`. In such case, TiDB ignores the unsupported isolation level error.
 
 ### Modification of a column's <code>AUTO_INCREMENT</code> attribute is not allowed by default {#modification-of-a-column-s-code-auto-increment-code-attribute-is-not-allowed-by-default}
 
@@ -224,7 +224,7 @@ Adding or removing the `AUTO_INCREMENT` attribute of a column via `ALTER TABLE M
 
 **Way to avoid**
 
-Refer to the [<a href="/auto-increment.md#restrictions">restrictions of `AUTO_INCREMENT`</a>](/auto-increment.md#restrictions).
+Refer to the [restrictions of `AUTO_INCREMENT`](/auto-increment.md#restrictions).
 
 To allow the removal of the `AUTO_INCREMENT` attribute, set `@@tidb_allow_remove_auto_inc` to `true`.
 
