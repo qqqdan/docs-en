@@ -23,19 +23,13 @@ Take the `/dev/nvme0n1` data disk as an example:
 
 1.  View the data disk.
 
-    {{< copyable "" >}}
-
     ```bash
     fdisk -l
     ```
 
-    ```
-    Disk /dev/nvme0n1: 1000 GB
-    ```
+        Disk /dev/nvme0n1: 1000 GB
 
 2.  Create the partition.
-
-    {{< copyable "" >}}
 
     ```bash
     parted -s -a optimal /dev/nvme0n1 mklabel gpt -- mkpart primary ext4 1 -1
@@ -47,8 +41,6 @@ Take the `/dev/nvme0n1` data disk as an example:
 
 3.  Format the data disk to the ext4 filesystem.
 
-    {{< copyable "" >}}
-
     ```bash
     mkfs.ext4 /dev/nvme0n1p1
     ```
@@ -57,38 +49,28 @@ Take the `/dev/nvme0n1` data disk as an example:
 
     In this example, the UUID of nvme0n1p1 is `c51eb23b-195c-4061-92a9-3fad812cc12f`.
 
-    {{< copyable "" >}}
-
     ```bash
     lsblk -f
     ```
 
-    ```
-    NAME    FSTYPE LABEL UUID                                 MOUNTPOINT
-    sda
-    ├─sda1  ext4         237b634b-a565-477b-8371-6dff0c41f5ab /boot
-    ├─sda2  swap         f414c5c0-f823-4bb1-8fdf-e531173a72ed
-    └─sda3  ext4         547909c1-398d-4696-94c6-03e43e317b60 /
-    sr0
-    nvme0n1
-    └─nvme0n1p1 ext4         c51eb23b-195c-4061-92a9-3fad812cc12f
-    ```
+        NAME    FSTYPE LABEL UUID                                 MOUNTPOINT
+        sda
+        ├─sda1  ext4         237b634b-a565-477b-8371-6dff0c41f5ab /boot
+        ├─sda2  swap         f414c5c0-f823-4bb1-8fdf-e531173a72ed
+        └─sda3  ext4         547909c1-398d-4696-94c6-03e43e317b60 /
+        sr0
+        nvme0n1
+        └─nvme0n1p1 ext4         c51eb23b-195c-4061-92a9-3fad812cc12f
 
 5.  Edit the `/etc/fstab` file and add the `nodelalloc` mount options.
-
-    {{< copyable "" >}}
 
     ```bash
     vi /etc/fstab
     ```
 
-    ```
-    UUID=c51eb23b-195c-4061-92a9-3fad812cc12f /data1 ext4 defaults,nodelalloc,noatime 0 2
-    ```
+        UUID=c51eb23b-195c-4061-92a9-3fad812cc12f /data1 ext4 defaults,nodelalloc,noatime 0 2
 
 6.  Mount the data disk.
-
-    {{< copyable "" >}}
 
     ```bash
     mkdir /data1 && \
@@ -97,23 +79,17 @@ Take the `/dev/nvme0n1` data disk as an example:
 
 7.  Check using the following command.
 
-    {{< copyable "" >}}
-
     ```bash
     mount -t ext4
     ```
 
-    ```
-    /dev/nvme0n1p1 on /data1 type ext4 (rw,noatime,nodelalloc,data=ordered)
-    ```
+        /dev/nvme0n1p1 on /data1 type ext4 (rw,noatime,nodelalloc,data=ordered)
 
     If the filesystem is ext4 and `nodelalloc` is included in the mount options, you have successfully mount the data disk ext4 filesystem with options on the target machines.
 
 ## Check and disable system swap {#check-and-disable-system-swap}
 
 TiDB needs sufficient memory space for operation. When memory is insufficient, using swap as a buffer might degrade performance. Therefore, it is recommended to disable the system swap permanently by executing the following commands:
-
-{{< copyable "" >}}
 
 ```bash
 echo "vm.swappiness = 0">> /etc/sysctl.conf
@@ -129,13 +105,11 @@ sysctl -p
 
 ## Check and stop the firewall service of target machines {#check-and-stop-the-firewall-service-of-target-machines}
 
-In TiDB clusters, the access ports between nodes must be open to ensure the transmission of information such as read and write requests and data heartbeats. In common online scenarios, the data interaction between the database and the application service and between the database nodes are all made within a secure network. Therefore, if there are no special security requirements, it is recommended to stop the firewall of the target machine. Otherwise, refer to [<a href="/hardware-and-software-requirements.md#network-requirements">the port usage</a>](/hardware-and-software-requirements.md#network-requirements) and add the needed port information to the allowlist of the firewall service.
+In TiDB clusters, the access ports between nodes must be open to ensure the transmission of information such as read and write requests and data heartbeats. In common online scenarios, the data interaction between the database and the application service and between the database nodes are all made within a secure network. Therefore, if there are no special security requirements, it is recommended to stop the firewall of the target machine. Otherwise, refer to [the port usage](/hardware-and-software-requirements.md#network-requirements) and add the needed port information to the allowlist of the firewall service.
 
 The rest of this section describes how to stop the firewall service of a target machine.
 
 1.  Check the firewall status. Take CentOS Linux release 7.7.1908 (Core) as an example.
-
-    {{< copyable "" >}}
 
     ```shell
     sudo firewall-cmd --state
@@ -144,23 +118,17 @@ The rest of this section describes how to stop the firewall service of a target 
 
 2.  Stop the firewall service.
 
-    {{< copyable "" >}}
-
     ```bash
     sudo systemctl stop firewalld.service
     ```
 
 3.  Disable automatic start of the firewall service.
 
-    {{< copyable "" >}}
-
     ```bash
     sudo systemctl disable firewalld.service
     ```
 
 4.  Check the firewall status.
-
-    {{< copyable "" >}}
 
     ```bash
     sudo systemctl status firewalld.service
@@ -176,31 +144,23 @@ To check whether the NTP service is installed and whether it synchronizes with t
 
 1.  Run the following command. If it returns `running`, then the NTP service is running.
 
-    {{< copyable "" >}}
-
     ```bash
     sudo systemctl status ntpd.service
     ```
 
-    ```
-    ntpd.service - Network Time Service
-    Loaded: loaded (/usr/lib/systemd/system/ntpd.service; disabled; vendor preset: disabled)
-    Active: active (running) since 一 2017-12-18 13:13:19 CST; 3s ago
-    ```
+        ntpd.service - Network Time Service
+        Loaded: loaded (/usr/lib/systemd/system/ntpd.service; disabled; vendor preset: disabled)
+        Active: active (running) since 一 2017-12-18 13:13:19 CST; 3s ago
 
     -   If it returns `Unit ntpd.service could not be found.`, then try the following command to see whether your system is configured to use `chronyd` instead of `ntpd` to perform clock synchronization with NTP:
-
-        {{< copyable "" >}}
 
         ```bash
         sudo systemctl status chronyd.service
         ```
 
-        ```
-        chronyd.service - NTP client/server
-        Loaded: loaded (/usr/lib/systemd/system/chronyd.service; enabled; vendor preset: enabled)
-        Active: active (running) since Mon 2021-04-05 09:55:29 EDT; 3 days ago
-        ```
+            chronyd.service - NTP client/server
+            Loaded: loaded (/usr/lib/systemd/system/chronyd.service; enabled; vendor preset: enabled)
+            Active: active (running) since Mon 2021-04-05 09:55:29 EDT; 3 days ago
 
         If the result shows that neither `chronyd` nor `ntpd` is configured, it means that neither of them is installed in your system. You should first install `chronyd` or `ntpd` and ensure that it can be automatically started. By default, `ntpd` is used.
 
@@ -212,31 +172,23 @@ To check whether the NTP service is installed and whether it synchronizes with t
     >
     > For the Ubuntu system, you need to install the `ntpstat` package.
 
-    {{< copyable "" >}}
-
     ```bash
     ntpstat
     ```
 
     -   If it returns `synchronised to NTP server` (synchronizing with the NTP server), then the synchronization process is normal.
 
-        ```
-        synchronised to NTP server (85.199.214.101) at stratum 2
-        time correct to within 91 ms
-        polling server every 1024 s
-        ```
+            synchronised to NTP server (85.199.214.101) at stratum 2
+            time correct to within 91 ms
+            polling server every 1024 s
 
     -   The following situation indicates the NTP service is not synchronizing normally:
 
-        ```
-        unsynchronised
-        ```
+            unsynchronised
 
     -   The following situation indicates the NTP service is not running normally:
 
-        ```
-        Unable to talk to NTP daemon. Is it running?
-        ```
+            Unable to talk to NTP daemon. Is it running?
 
 3.  Run the `chronyc tracking` command to check wheter the Chrony service synchronizes with the NTP server.
 
@@ -244,45 +196,35 @@ To check whether the NTP service is installed and whether it synchronizes with t
     >
     > This only applies to systems that use Chrony instead of NTPd.
 
-    {{< copyable "" >}}
-
     ```bash
     chronyc tracking
     ```
 
     -   If the command returns `Leap status     : Normal`, the synchronization process is normal.
 
-        ```
-        Reference ID    : 5EC69F0A (ntp1.time.nl)
-        Stratum         : 2
-        Ref time (UTC)  : Thu May 20 15:19:08 2021
-        System time     : 0.000022151 seconds slow of NTP time
-        Last offset     : -0.000041040 seconds
-        RMS offset      : 0.000053422 seconds
-        Frequency       : 2.286 ppm slow
-        Residual freq   : -0.000 ppm
-        Skew            : 0.012 ppm
-        Root delay      : 0.012706812 seconds
-        Root dispersion : 0.000430042 seconds
-        Update interval : 1029.8 seconds
-        Leap status     : Normal
-        ```
+            Reference ID    : 5EC69F0A (ntp1.time.nl)
+            Stratum         : 2
+            Ref time (UTC)  : Thu May 20 15:19:08 2021
+            System time     : 0.000022151 seconds slow of NTP time
+            Last offset     : -0.000041040 seconds
+            RMS offset      : 0.000053422 seconds
+            Frequency       : 2.286 ppm slow
+            Residual freq   : -0.000 ppm
+            Skew            : 0.012 ppm
+            Root delay      : 0.012706812 seconds
+            Root dispersion : 0.000430042 seconds
+            Update interval : 1029.8 seconds
+            Leap status     : Normal
 
     -   If the command returns the following result, an error occurs in the synchronization:
 
-        ```
-        Leap status    : Not synchronised
-        ```
+            Leap status    : Not synchronised
 
     -   If the command returns the following result, the `chronyd` service is not running normally:
 
-        ```
-        506 Cannot talk to daemon
-        ```
+            506 Cannot talk to daemon
 
 To make the NTP service start synchronizing as soon as possible, run the following command. Replace `pool.ntp.org` with your NTP server.
-
-{{< copyable "" >}}
 
 ```bash
 sudo systemctl stop ntpd.service && \
@@ -291,8 +233,6 @@ sudo systemctl start ntpd.service
 ```
 
 To install the NTP service manually on the CentOS 7 system, run the following command:
-
-{{< copyable "" >}}
 
 ```bash
 sudo yum install ntp ntpdate && \
@@ -312,15 +252,11 @@ Take the following steps to check the current operating system configuration and
 
 1.  Execute the following command to see whether THP is enabled or disabled:
 
-    {{< copyable "" >}}
-
     ```bash
     cat /sys/kernel/mm/transparent_hugepage/enabled
     ```
 
-    ```
-    [always] madvise never
-    ```
+        [always] madvise never
 
     > **Note:**
     >
@@ -328,16 +264,12 @@ Take the following steps to check the current operating system configuration and
 
 2.  Execute the following command to see the I/O Scheduler of the disk where the data directory is located. Assume that you create data directories on both sdb and sdc disks:
 
-    {{< copyable "" >}}
-
     ```bash
     cat /sys/block/sd[bc]/queue/scheduler
     ```
 
-    ```
-    noop [deadline] cfq
-    noop [deadline] cfq
-    ```
+        noop [deadline] cfq
+        noop [deadline] cfq
 
     > **Note:**
     >
@@ -345,16 +277,12 @@ Take the following steps to check the current operating system configuration and
 
 3.  Execute the following command to see the `ID_SERIAL` of the disk:
 
-    {{< copyable "" >}}
-
     ```bash
     udevadm info --name=/dev/sdb | grep ID_SERIAL
     ```
 
-    ```
-    E: ID_SERIAL=36d0946606d79f90025f3e09a0c1f9e81
-    E: ID_SERIAL_SHORT=6d0946606d79f90025f3e09a0c1f9e81
-    ```
+        E: ID_SERIAL=36d0946606d79f90025f3e09a0c1f9e81
+        E: ID_SERIAL_SHORT=6d0946606d79f90025f3e09a0c1f9e81
 
     > **Note:**
     >
@@ -362,17 +290,13 @@ Take the following steps to check the current operating system configuration and
 
 4.  Execute the following command to see the power policy of the cpufreq module:
 
-    {{< copyable "" >}}
-
     ```bash
     cpupower frequency-info --policy
     ```
 
-    ```
-    analyzing CPU 0:
-    current policy: frequency should be within 1.20 GHz and 3.10 GHz.
-                  The governor "powersave" may decide which speed to use within this range.
-    ```
+        analyzing CPU 0:
+        current policy: frequency should be within 1.20 GHz and 3.10 GHz.
+                      The governor "powersave" may decide which speed to use within this range.
 
     > **Note:**
     >
@@ -384,58 +308,48 @@ Take the following steps to check the current operating system configuration and
 
         1.  Execute the `tuned-adm list` command to see the tuned profile of the current operating system:
 
-            {{< copyable "" >}}
-
             ```bash
             tuned-adm list
             ```
 
-            ```
-            Available profiles:
-            - balanced                    - General non-specialized tuned profile
-            - desktop                     - Optimize for the desktop use-case
-            - hpc-compute                 - Optimize for HPC compute workloads
-            - latency-performance         - Optimize for deterministic performance at the cost of increased power consumption
-            - network-latency             - Optimize for deterministic performance at the cost of increased power consumption, focused on low latency network performance
-            - network-throughput          - Optimize for streaming network throughput, generally only necessary on older CPUs or 40G+ networks
-            - powersave                   - Optimize for low power consumption
-            - throughput-performance      - Broadly applicable tuning that provides excellent performance across a variety of common server workloads
-            - virtual-guest               - Optimize for running inside a virtual guest
-            - virtual-host                - Optimize for running KVM guests
-            Current active profile: balanced
-            ```
+                Available profiles:
+                - balanced                    - General non-specialized tuned profile
+                - desktop                     - Optimize for the desktop use-case
+                - hpc-compute                 - Optimize for HPC compute workloads
+                - latency-performance         - Optimize for deterministic performance at the cost of increased power consumption
+                - network-latency             - Optimize for deterministic performance at the cost of increased power consumption, focused on low latency network performance
+                - network-throughput          - Optimize for streaming network throughput, generally only necessary on older CPUs or 40G+ networks
+                - powersave                   - Optimize for low power consumption
+                - throughput-performance      - Broadly applicable tuning that provides excellent performance across a variety of common server workloads
+                - virtual-guest               - Optimize for running inside a virtual guest
+                - virtual-host                - Optimize for running KVM guests
+                Current active profile: balanced
 
             The output `Current active profile: balanced` means that the tuned profile of the current operating system is `balanced`. It is recommended to optimize the configuration of the operating system based on the current profile.
 
         2.  Create a new tuned profile:
-
-            {{< copyable "" >}}
 
             ```bash
             mkdir /etc/tuned/balanced-tidb-optimal/
             vi /etc/tuned/balanced-tidb-optimal/tuned.conf
             ```
 
-            ```
-            [main]
-            include=balanced
+                [main]
+                include=balanced
 
-            [cpu]
-            governor=performance
+                [cpu]
+                governor=performance
 
-            [vm]
-            transparent_hugepages=never
+                [vm]
+                transparent_hugepages=never
 
-            [disk]
-            devices_udev_regex=(ID_SERIAL=36d0946606d79f90025f3e09a0c1fc035)|(ID_SERIAL=36d0946606d79f90025f3e09a0c1f9e81)
-            elevator=noop
-            ```
+                [disk]
+                devices_udev_regex=(ID_SERIAL=36d0946606d79f90025f3e09a0c1fc035)|(ID_SERIAL=36d0946606d79f90025f3e09a0c1f9e81)
+                elevator=noop
 
             The output `include=balanced` means to add the optimization configuration of the operating system to the current `balanced` profile.
 
         3.  Apply the new tuned profile:
-
-            {{< copyable "" >}}
 
             ```bash
             tuned-adm profile balanced-tidb-optimal
@@ -449,8 +363,6 @@ Take the following steps to check the current operating system configuration and
             >
             > Install the `grubby` package first before you execute `grubby`.
 
-            {{< copyable "" >}}
-
             ```bash
             grubby --default-kernel
             ```
@@ -460,8 +372,6 @@ Take the following steps to check the current operating system configuration and
             ```
 
         2.  Execute `grubby --update-kernel` to modify the kernel configuration:
-
-            {{< copyable "" >}}
 
             ```bash
             grubby --args="transparent_hugepage=never" --update-kernel /boot/vmlinuz-3.10.0-957.el7.x86_64
@@ -473,8 +383,6 @@ Take the following steps to check the current operating system configuration and
 
         3.  Execute `grubby --info` to see the modified default kernel configuration:
 
-            {{< copyable "" >}}
-
             ```bash
             grubby --info /boot/vmlinuz-3.10.0-957.el7.x86_64
             ```
@@ -483,18 +391,14 @@ Take the following steps to check the current operating system configuration and
             >
             > `--info` is followed by the actual default kernel version.
 
-            ```
-            index=0
-            kernel=/boot/vmlinuz-3.10.0-957.el7.x86_64
-            args="ro crashkernel=auto rd.lvm.lv=centos/root rd.lvm.lv=centos/swap rhgb quiet LANG=en_US.UTF-8 transparent_hugepage=never"
-            root=/dev/mapper/centos-root
-            initrd=/boot/initramfs-3.10.0-957.el7.x86_64.img
-            title=CentOS Linux (3.10.0-957.el7.x86_64) 7 (Core)
-            ```
+                index=0
+                kernel=/boot/vmlinuz-3.10.0-957.el7.x86_64
+                args="ro crashkernel=auto rd.lvm.lv=centos/root rd.lvm.lv=centos/swap rhgb quiet LANG=en_US.UTF-8 transparent_hugepage=never"
+                root=/dev/mapper/centos-root
+                initrd=/boot/initramfs-3.10.0-957.el7.x86_64.img
+                title=CentOS Linux (3.10.0-957.el7.x86_64) 7 (Core)
 
         4.  Modify the current kernel configuration to immediately disable THP:
-
-            {{< copyable "" >}}
 
             ```bash
             echo never > /sys/kernel/mm/transparent_hugepage/enabled
@@ -502,8 +406,6 @@ Take the following steps to check the current operating system configuration and
             ```
 
         5.  Configure the I/O Scheduler in the udev script:
-
-            {{< copyable "" >}}
 
             ```bash
             vi /etc/udev/rules.d/60-tidb-schedulers.rules
@@ -517,16 +419,12 @@ Take the following steps to check the current operating system configuration and
 
         6.  Apply the udev script:
 
-            {{< copyable "" >}}
-
             ```bash
             udevadm control --reload-rules
             udevadm trigger --type=devices --action=change
             ```
 
         7.  Create a service to configure the CPU power policy:
-
-            {{< copyable "" >}}
 
             ```bash
             cat  >> /etc/systemd/system/cpupower.service << EOF
@@ -542,8 +440,6 @@ Take the following steps to check the current operating system configuration and
 
         8.  Apply the CPU power policy configuration service:
 
-            {{< copyable "" >}}
-
             ```bash
             systemctl daemon-reload
             systemctl enable cpupower.service
@@ -552,46 +448,32 @@ Take the following steps to check the current operating system configuration and
 
 6.  Execute the following command to verify the THP status:
 
-    {{< copyable "" >}}
-
     ```bash
     cat /sys/kernel/mm/transparent_hugepage/enabled
     ```
 
-    ```
-    always madvise [never]
-    ```
+        always madvise [never]
 
 7.  Execute the following command to verify the I/O Scheduler of the disk where the data directory is located:
-
-    {{< copyable "" >}}
 
     ```bash
     cat /sys/block/sd[bc]/queue/scheduler
     ```
 
-    ```
-    [noop] deadline cfq
-    [noop] deadline cfq
-    ```
+        [noop] deadline cfq
+        [noop] deadline cfq
 
 8.  Execute the following command to see the power policy of the cpufreq module:
-
-    {{< copyable "" >}}
 
     ```bash
     cpupower frequency-info --policy
     ```
 
-    ```
-    analyzing CPU 0:
-    current policy: frequency should be within 1.20 GHz and 3.10 GHz.
-                  The governor "performance" may decide which speed to use within this range.
-    ```
+        analyzing CPU 0:
+        current policy: frequency should be within 1.20 GHz and 3.10 GHz.
+                      The governor "performance" may decide which speed to use within this range.
 
 9.  Execute the following commands to modify the `sysctl` parameters:
-
-    {{< copyable "" >}}
 
     ```bash
     echo "fs.file-max = 1000000">> /etc/sysctl.conf
@@ -599,12 +481,18 @@ Take the following steps to check the current operating system configuration and
     echo "net.ipv4.tcp_tw_recycle = 0">> /etc/sysctl.conf
     echo "net.ipv4.tcp_syncookies = 0">> /etc/sysctl.conf
     echo "vm.overcommit_memory = 1">> /etc/sysctl.conf
+    echo "vm.min_free_kbytes = 1048576">> /etc/sysctl.conf
     sysctl -p
     ```
 
-10. Execute the following command to configure the user's `limits.conf` file:
+    > **Note:**
+    >
+    > -   `vm.min_free_kbytes` is a Linux kernel parameter that controls the minimum amount of free memory reserved by the system, measured in KiB.
+    > -   The setting of `vm.min_free_kbytes` affects the memory reclaim mechanism. Setting it too large reduces the available memory, while setting it too small might cause memory request speeds to exceed background reclaim speeds, leading to memory reclamation and consequent delays in memory allocation.
+    > -   It is recommended to set `vm.min_free_kbytes` to `1048576` KiB (1 GiB) at least. If [NUMA is installed](/check-before-deployment.md#install-the-numactl-tool), it is recommended to set it to `number of NUMA nodes * 1048576` KiB.
+    > -   For servers with memory sizes less than 16 GiB, it is recommended to keep the default value of `vm.min_free_kbytes` unchanged.
 
-    {{< copyable "" >}}
+10. Execute the following command to configure the user's `limits.conf` file:
 
     ```bash
     cat << EOF >>/etc/security/limits.conf
@@ -621,8 +509,6 @@ This section describes how to manually configure the SSH mutual trust and sudo w
 
 1.  Log in to the target machine respectively using the `root` user account, create the `tidb` user and set the login password.
 
-    {{< copyable "" >}}
-
     ```bash
     useradd tidb && \
     passwd tidb
@@ -630,19 +516,13 @@ This section describes how to manually configure the SSH mutual trust and sudo w
 
 2.  To configure sudo without password, run the following command, and add `tidb ALL=(ALL) NOPASSWD: ALL` to the end of the file:
 
-    {{< copyable "" >}}
-
     ```bash
     visudo
     ```
 
-    ```
-    tidb ALL=(ALL) NOPASSWD: ALL
-    ```
+        tidb ALL=(ALL) NOPASSWD: ALL
 
 3.  Use the `tidb` user to log in to the control machine, and run the following command. Replace `10.0.1.1` with the IP of your target machine, and enter the `tidb` user password of the target machine as prompted. After the command is executed, SSH mutual trust is already created. This applies to other machines as well. Newly created `tidb` users do not have the `.ssh` directory. To create such a directory, execute the command that generates the RSA key. To deploy TiDB components on the control machine, configure mutual trust for the control machine and the control machine itself.
-
-    {{< copyable "" >}}
 
     ```bash
     ssh-keygen -t rsa
@@ -651,27 +531,19 @@ This section describes how to manually configure the SSH mutual trust and sudo w
 
 4.  Log in to the control machine using the `tidb` user account, and log in to the IP of the target machine using `ssh`. If you do not need to enter the password and can successfully log in, then the SSH mutual trust is successfully configured.
 
-    {{< copyable "" >}}
-
     ```bash
     ssh 10.0.1.1
     ```
 
-    ```
-    [tidb@10.0.1.1 ~]$
-    ```
+        [tidb@10.0.1.1 ~]$
 
 5.  After you log in to the target machine using the `tidb` user, run the following command. If you do not need to enter the password and can switch to the `root` user, then sudo without password of the `tidb` user is successfully configured.
-
-    {{< copyable "" >}}
 
     ```bash
     sudo -su root
     ```
 
-    ```
-    [root@10.0.1.1 tidb]#
-    ```
+        [root@10.0.1.1 tidb]#
 
 ## Install the <code>numactl</code> tool {#install-the-code-numactl-code-tool}
 
@@ -692,7 +564,7 @@ sudo yum -y install numactl
 
 **Method 2**: Install NUMA on an existing cluster in batches by running the `tiup cluster exec` command.
 
-1.  Follow [<a href="/production-deployment-using-tiup.md">Deploy a TiDB Cluster Using TiUP</a>](/production-deployment-using-tiup.md) to deploy a cluster `tidb-test`. If you have installed a TiDB cluster, you can skip this step.
+1.  Follow [Deploy a TiDB Cluster Using TiUP](/production-deployment-using-tiup.md) to deploy a cluster `tidb-test`. If you have installed a TiDB cluster, you can skip this step.
 
     ```bash
     tiup cluster deploy tidb-test v6.1.7 ./topology.yaml --user root [-p] [-i /home/root/.ssh/gcp_rsa]
